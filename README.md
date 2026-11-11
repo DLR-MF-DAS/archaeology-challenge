@@ -3,7 +3,8 @@
 This project provides the shared Python helpers and two standalone notebooks for
 “From Tells to Cyprus”, an archaeological survey prioritisation workshop. See
 [START_HERE.txt](START_HERE.txt) for the workshop instructions, data provenance,
-licensing notices and scientific limitations.
+licensing notices and scientific limitations. The [facilitator guide](FACILITATOR_GUIDE.md)
+contains a teaching plan, discussion feedback and the research informing the design.
 
 ## Install
 

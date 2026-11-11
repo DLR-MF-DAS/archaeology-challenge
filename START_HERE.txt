@@ -2,6 +2,7 @@ FROM TELLS TO CYPRUS — FOUR-HOUR EO WORKSHOP
 
 Participant notebook: archaeology_participants.ipynb
 Instructor notebook:  archaeology_instructor.ipynb
+Facilitation plan and teaching research: FACILITATOR_GUIDE.md
 
 Open https://colab.research.google.com/ and choose File > Upload notebook.
 No paid Colab plan, Earth Engine account, API key or guaranteed GPU is needed.

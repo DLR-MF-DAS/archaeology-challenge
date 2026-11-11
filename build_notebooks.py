@@ -144,6 +144,10 @@ def notebook(instructor, payload):
     what the model does well and what it cannot tell us. A high score is a review priority,
     not proof that a site exists.
 
+    **By the end**, you should be able to explain precision and recall at a fixed review budget,
+    select a model without using the final test, identify possible shortcuts in the images, and
+    describe why the Cyprus examples cannot measure detection accuracy.
+
     ### How to use this notebook
     1. Open it in [Google Colab](https://colab.research.google.com/) (File → Upload notebook),
        or run it with a local Jupyter kernel. Run cells from top to bottom.
@@ -152,26 +156,45 @@ def notebook(instructor, payload):
     3. Read the short explanations and inspect the figures. {'The instructor exercises are solved and can be run in order.' if instructor else 'The exercises contain runnable examples: run them and their checks, then try the optional changes in the comments.'}
     4. In the final section, download the submission ZIP and save your completed notebook.
 
+    **How to learn from this:** pause at each question and write or discuss an answer before
+    opening the feedback. Run the supplied examples, then compare their output with your
+    prediction. These checks are practice, not a grade. The GPU section is optional; leave its
+    switch off. Complete the three response dictionaries before sharing your report.
+
     You need basic Python, pandas and scikit-learn familiarity; the diagrams explain the
     modelling and archaeological decisions. A GPU and API accounts are not required.
     ''')]
     if instructor:
         cells += [md('''
         ### Facilitation notes
-        Share only the participant notebook during the challenge. The saved outputs here were
-        produced using real Enki images and the pinned foundation model; performance is measured,
-        not an expected target that participants must reproduce exactly.
+        Share the participant notebook and reserve this copy for facilitation. Its saved outputs
+        use the real sample; they illustrate one run, not a target score learners must match.
 
-        Prepare by opening the participant notebook in a fresh Colab session and running setup
-        and data acquisition before the session. The embedded feature cache removes GPU queues
-        and model downloads from the critical path. For poor venue connectivity, distribute
-        `enki_workshop_sample.zip` beforehand and upload it to `archaeology_workshop/`.
-        Every member is checked against the original ZIP directory's CRC and decoded pixel hashes.
+        **Before the session:** run the participant notebook in the intended environment, check
+        that the sample downloads, and allow time for setup. The cached features make a GPU
+        unnecessary. If connectivity is unreliable, provide `enki_workshop_sample.zip` for the
+        `archaeology_workshop/` folder. Invite learners to work in pairs, especially if their
+        Python or archaeology experience differs. The optional extensions can be skipped.
 
-        This is an **educational, honour-based holdout** drawn from a public labelled archive.
-        It is not a secure blind competition: labels remain recoverable from the source data.
-        Do not claim geographical independence: this archive supplies no verified site grouping
-        or coordinate manifest. Similar-image deduplication reduces one source of leakage only.
+        **Four-hour guide** (adapt to the group):
+
+        | Time | Focus | Facilitation move |
+        |---|---|---|
+        | 00:00–00:20 | Goal and setup | Ask what an archaeologist gains from a shortlist and what it cannot prove. |
+        | 00:20–00:40 | Images and splits | Have pairs identify a possible visual shortcut before discussing duplicates. |
+        | 00:40–01:05 | Review budget | Ask learners to predict hits, precision and recall before running the example. |
+        | 01:05–01:40 | Features and model choice | Ask why validation, not test, is used to choose between candidates. |
+        | 01:40–01:50 | Break | Pause; help anyone still setting up. |
+        | 01:50–02:15 | Labels and mistakes | Compare the learning curve and examples; separate observation from hypothesis. |
+        | 02:15–02:45 | Cyprus catalogue | Ask why multiple occupation rows do not mean multiple sites. |
+        | 02:45–03:20 | Transfer | Ask what changed in the images and why target accuracy is unavailable. |
+        | 03:20–03:40 | Recommendation | Ask teams to cite one result and one limitation before freezing their choice. |
+        | 03:40–04:00 | Reveal and debrief | Compare reasoning and next-study proposals, not just the ranking score. |
+
+        Give learners time to think independently before discussing in pairs; invite them to
+        explain *why*, then provide feedback and revisit misconceptions. Treat the holdout as
+        educational and honour-based: source labels are publicly recoverable. Similarity filtering
+        does not prove independent sites or geographic generalisation.
         ''')]
     cells += [md('''
     ### Your route through the workshop
@@ -379,6 +402,18 @@ def notebook(instructor, payload):
     Precision asks what fraction of reviewed tiles are positive; recall asks what fraction of
     all positives were reviewed. The colors represent known labels for evaluation, not information
     available to a reviewer before labels are known. Average precision considers the full ranking.
+    '''), md('''
+    **Pause and predict:** A ranked list has labels `[1, 0, 1, 1, 0]`, in that order.
+    If the team reviews the first two tiles, what are the precision and recall?
+    Work it out before opening the explanation.
+
+    <details><summary>Check your reasoning</summary>
+
+    There is one hit in two reviewed tiles, so precision is 1/2. There are three positives
+    in the full list, so recall is 1/3. The denominators answer different questions: precision
+    describes the shortlist, while recall describes coverage of all known positives.
+
+    </details>
     '''), code(METRICS_SOLUTION if instructor else METRICS_EXERCISE, tags=["exercise-1"]),
               code('''
               toy = ranking_metrics(np.array([1, 0, 1, 0]), np.array([.9, .8, .7, .1]), k=2)
@@ -440,6 +475,17 @@ def notebook(instructor, payload):
     pipeline, so validation data cannot influence fitting. `C` controls regularisation: smaller
     values constrain the classifier more strongly. Run the check to fit a colour/texture baseline
     and display its validation metrics.
+    '''), md('''
+    **Pause and explain:** Why does the pipeline learn its scaling from the training tiles,
+    instead of calculating the scaling using training and validation tiles together?
+
+    <details><summary>Check your reasoning</summary>
+
+    Validation data is meant to simulate unseen examples. Using it to calculate feature
+    scaling would leak information into training and make that comparison less independent.
+    The pipeline fits the scaler anew using only the training part of each fit.
+
+    </details>
     '''), code(PROBE_SOLUTION if instructor else PROBE_EXERCISE, tags=["exercise-2"]),
               code('''
               baseline = make_probe(C=1.0).fit(feature_sets["colour_texture"]["train"], y_train)
@@ -458,6 +504,17 @@ def notebook(instructor, payload):
     **Why validation?** Choosing with the test set would make the final assessment less independent.
     Keep the test set untouched until your choice is frozen. Report the baseline if it wins.
     Run the following check to see the comparison and precision–recall curves.
+    '''), md('''
+    **Try a selection:** Model A has validation recall 0.40 and AP 0.90. Model B has
+    validation recall 0.50 and AP 0.60. Which would the workshop rule select, and why?
+
+    <details><summary>Check your reasoning</summary>
+
+    Choose B: recall at the review budget is the primary criterion, and 0.50 exceeds 0.40.
+    AP breaks a tie in recall; it does not override a higher recall under this rule. The
+    rule is a workshop choice, not a universal measure of a model's usefulness.
+
+    </details>
     '''), code(SEARCH_SOLUTION if instructor else SEARCH_EXERCISE, tags=["exercise-3"]),
               code('''
               assert len(validation_results) == 8
@@ -491,7 +548,8 @@ def notebook(instructor, payload):
 
     The following cell shows high-scoring source negatives and low-scoring source positives.
     Look for landscape patterns, rendering or other cues that could explain the scores; images
-    alone cannot prove why the model made a decision.
+    alone cannot prove why the model made a decision. These examples are not necessarily
+    mistakes at the 50-tile cutoff, and source labels are not independent ground truth.
     '''), code('''
     best_dino_key = validation_results.loc[validation_results.representation == "dinov2", "model"].iloc[0]
     dino_probe = candidate_models[best_dino_key][1]
@@ -511,15 +569,15 @@ def notebook(instructor, payload):
     dino_val_scores = dino_probe.predict_proba(feature_sets["dinov2"]["validation"])[:, 1]
     failures = validation.copy()
     failures["score"] = dino_val_scores
-    false_alarms = failures.loc[failures.label == 0].sort_values("score", ascending=False)
-    missed = failures.loc[failures.label == 1].sort_values("score")
-    contact_sheet(false_alarms, false_alarms.score.to_numpy(), n=8, title="Highest-scoring labelled backgrounds")
-    contact_sheet(missed, missed.score.to_numpy(), n=8, title="Lowest-scoring labelled positives")
+    high_negatives = failures.loc[failures.label == 0].sort_values("score", ascending=False)
+    low_positives = failures.loc[failures.label == 1].sort_values("score")
+    contact_sheet(high_negatives, high_negatives.score.to_numpy(), n=8, title="Highest-scoring labelled backgrounds")
+    contact_sheet(low_positives, low_positives.score.to_numpy(), n=8, title="Lowest-scoring labelled positives")
     # Inspect model neighbours for one difficult validation image.
     query_index = int(np.argmax(np.where(y_val == 0, dino_val_scores, -np.inf)))
     neighbours, similarity = nearest_examples(feature_sets["dinov2"]["validation"][query_index],
                                               feature_sets["dinov2"]["train"], train)
-    contact_sheet(neighbours, similarity, n=4, title="Nearest training examples to the strongest false alarm")
+    contact_sheet(neighbours, similarity, n=4, title="Training neighbours of the highest-scoring source negative")
     ''')]
     cells += [md('''
     **Your interpretation:** use the images to suggest two reasons a source-negative tile might
@@ -527,18 +585,18 @@ def notebook(instructor, payload):
     below and note what additional evidence would help an archaeologist check your ideas.
     '''), code('''
     error_notes = {
-        "false_alarm_1": "",
-        "false_alarm_2": "",
-        "missed_positive": "",
+        "high_scoring_negative_1": "",
+        "high_scoring_negative_2": "",
+        "low_scoring_positive": "",
         "next_evidence_needed": "",
     }
     ''')]
     if instructor:
         cells[-1] = code('''
         error_notes = {
-            "false_alarm_1": "Validation tile 2c58b208b shows field boundaries and a road junction; it receives a high score despite its source-negative label. Linear landscape structure is a plausible confounder.",
-            "false_alarm_2": "Tile c77ec1cba contains a rectilinear built or disturbed area. Its high source-negative score suggests that geometry and exposed-soil context merit inspection; this is not a causal attribution.",
-            "missed_positive": "The lowest-ranked source-positive cec8faef9 shows muted, disturbed-looking terrain. It may fall outside a limited shortlist even with a score above 0.5; shortlist misses are not the same as thresholded false negatives.",
+            "high_scoring_negative_1": "Validation tile 2c58b208b shows field boundaries and a road junction; it receives a high score despite its source-negative label. Linear landscape structure is a plausible confounder.",
+            "high_scoring_negative_2": "Tile c77ec1cba contains a rectilinear built or disturbed area. Its high source-negative score suggests that geometry and exposed-soil context merit inspection; this is not a causal attribution.",
+            "low_scoring_positive": "The lowest-ranked source-positive cec8faef9 shows muted, disturbed-looking terrain. It may fall outside a limited shortlist even with a score above 0.5; shortlist misses are not the same as thresholded false negatives.",
             "next_evidence_needed": "Expert image review, source provenance, additional dates and finer-resolution imagery; field evidence for archaeological confirmation.",
         }
         # These visual interpretations refer to the pinned validation contact sheet.
@@ -565,6 +623,18 @@ def notebook(instructor, payload):
     phases = pd.read_csv(assets / "Cyprus_Settlements.csv")
     print("Occupation rows:", len(phases), "Unique settlement IDs:", phases.ID.nunique())
     display(phases[["ID", "Period", "Longitude", "Latitude", "Long_Cord", "Lat_Cord", "LocQual"]].head())
+    '''), md('''
+    **Try a small catalogue:** Suppose three occupation rows have IDs `A`, `A`, and `B`.
+    How many settlement records should a one-row-per-ID summary contain? What should you
+    do if the two rows for `A` report conflicting coordinates?
+
+    <details><summary>Check your reasoning</summary>
+
+    There are two settlement IDs, not three. Keep one row for each ID and flag the
+    coordinate conflict for `A`; leave its summary coordinates missing rather than silently
+    selecting a point. A phase is a record about a settlement, not a separate settlement.
+
+    </details>
     '''), code(CYPRUS_SOLUTION if instructor else CYPRUS_EXERCISE, tags=["exercise-4"]),
               code('''
               sites = summarise_sites(phases)
@@ -655,6 +725,17 @@ def notebook(instructor, payload):
     cyprus.to_csv(ROOT / "cyprus_review.csv", index=False)
     ''')]
     cells += [md('''
+    **Pause and predict:** A high-scoring Cyprus background tile has no catalogue entry.
+    Is that enough evidence to count it as a false alarm? Explain your reasoning.
+
+    <details><summary>Check your reasoning</summary>
+
+    No. The background location is unlabelled, not a verified absence. Nor does a catalogue
+    record prove that archaeology is visible in the satellite image. Independent visibility
+    labels and verified negatives would be needed for a detection-accuracy assessment.
+
+    </details>
+    '''), md('''
     **Your transfer review:**
     1. Compare a high-scoring background and a low-scoring catalogued location.
     2. Identify at least three plausible causes of a source-to-Cyprus performance change.
@@ -702,8 +783,11 @@ def notebook(instructor, payload):
         "training_tiles": len(train), "test_tiles": len(test),
         "dataset": "Enki Normalized_Tell_combined_350.zip, curated 600-image workshop sample",
         "sample_manifest_sha256": file_digest(assets / "sample_manifest.json"),
-        "encoder": MODEL_ID, "encoder_revision": MODEL_REVISION,
-        "preprocessing": PREPROCESS_ID, "geographic_independence_verified": False,
+        "feature_representation": best_representation,
+        "encoder": MODEL_ID if best_representation == "dinov2" else None,
+        "encoder_revision": MODEL_REVISION if best_representation == "dinov2" else None,
+        "preprocessing": PREPROCESS_ID if best_representation == "dinov2" else None,
+        "geographic_independence_verified": False,
     }
     test_scores = best_model.predict_proba(feature_sets[best_representation]["test"])[:, 1]
     submission = write_submission(test, test_scores, ROOT / "submission.csv")
@@ -734,14 +818,43 @@ def notebook(instructor, payload):
     report = {"error_analysis": error_notes, "transfer_review": transfer_review,
               "recommendation": recommendation}
     (ROOT / "team_report.json").write_text(json.dumps(report, indent=2))
+    missing = [f"{section}.{key}" for section, answers in report.items()
+               for key, value in answers.items()
+               if not value or (isinstance(value, str) and not value.strip())]
+    if missing:
+        print("Before sharing, complete these responses and rerun this cell:", ", ".join(missing))
+    else:
+        print("All response fields have entries. Review them for evidence and clarity.")
     output_zip = ROOT / "team_submission.zip"
     with zipfile.ZipFile(output_zip, "w", zipfile.ZIP_DEFLATED) as out:
         for name in ("submission.csv", "configuration.json", "validation_results.csv",
                      "learning_curve.csv", "cyprus_review.csv", "team_report.json"):
             out.write(ROOT / name, name)
-    print("Download", output_zip, "from Colab's Files panel; save your completed notebook too.")
+    print("Submission saved to", output_zip, "(in Colab, use the Files panel). Save your notebook too.")
     ''')]
     cells += [md('''
+    ### Before the final reveal: check what you can explain
+
+    Without looking back, explain these three questions to a partner or jot down your answers.
+    Then compare them with the explanations below. These are practice, not a grade.
+
+    1. What is the difference between precision and recall at the review budget?
+    2. Why should the final model be selected before inspecting the test results?
+    3. What extra evidence would you need before claiming accuracy on the Cyprus images?
+
+    <details><summary>Compare your answers</summary>
+
+    1. Precision is the fraction of reviewed tiles that are positive; recall is the fraction
+       of all known positive tiles that are reviewed.
+    2. Selecting after seeing test performance would reuse the test for tuning. Freezing
+       first leaves it as a more independent final assessment, though the split is not
+       guaranteed to be geographically independent.
+    3. Independently established image-visibility labels and verified negatives, plus an
+       appropriate independent geographic evaluation, are needed. A catalogue location is
+       not itself a visibility label and an unlabelled location is not a known absence.
+
+    </details>
+    '''), md('''
     ### 11. Reveal the final result
 
     After you have submitted, ask the facilitator when to change `REVEAL_TEST` to `True` and run
@@ -764,20 +877,32 @@ def notebook(instructor, payload):
     if instructor:
         cells += [md('''
         ### Instructor: debrief and marking guide
-        - **50% ranking:** compare held-out recall at the same 50-tile budget; use AP to break ties.
-        - **30% reasoning:** recognise unresolved spatial leakage, label/visibility differences,
-          source-prevalence effects and the resolution mismatch in Cyprus.
-        - **20% reproducibility:** correct ID-aligned CSV, pinned provenance, reproducible notebook
-          and a concise recommendation supported by measured results.
+        **Assess reasoning, not who happened to get the highest test score.** One possible
+        rubric is 40% for explaining the shortlist and validation-only model choice, 35% for
+        interpreting limitations and the Cyprus transfer, and 25% for a reproducible submission
+        and evidence-based recommendation. Accept a recommendation against deployment when
+        supported by the results. A correct CSV has one score per requested tile ID; source
+        labels and image similarity are not verified site identities.
 
-        A participant may reasonably recommend against operational deployment. Reward that
-        conclusion when the evidence supports it. The model is an image-ranking aid; it cannot
-        establish chronology, burial, legal status or the presence of a previously unknown site.
+        Use these prompts after learners have attempted the relevant questions:
 
-        Expected exercise outcomes: correct top-k denominators; scaling fitted on training only;
-        model selection on validation only; 1,559 distinct Cyprus IDs; blank/F quality codes and
-        the conflicting coordinates for `CY453` flagged;
-        no numerical transfer-accuracy claim from the unlabelled background sample.
+        - **Precision or recall?** Precision divides hits by reviewed tiles; recall divides hits
+          by all positive tiles. A higher review budget can increase hits without increasing precision.
+        - **Why not choose on the test set?** Repeated choices based on test results adapt the
+          workflow to that set; validation supports the choice and test is reserved for the frozen model.
+        - **Does a high score prove a site?** No. It is a ranking priority; source labels and
+          visually plausible features are not independent archaeological confirmation.
+        - **Can we score Cyprus accuracy?** No. Catalogue presence does not establish visibility,
+          and nearby unlabelled locations are not verified negatives. Ten-metre pixels also limit
+          the visible detail. Ask what expert labels and geographically separate data are needed.
+        - **What is a catalogue row?** A settlement can have several occupation-phase rows.
+          The pinned catalogue has 1,559 IDs; blank/F quality codes are undocumented, and `CY453`
+          has conflicting coordinates. A quality code is not a measured error radius.
+
+        Before revealing the test result, ask teams to state their chosen model, supporting
+        validation evidence, one limitation, and a next study. Afterward, compare the result with
+        the stated expectation and discuss uncertainty and unresolved geographic leakage.
+        The model cannot establish chronology, burial, legal status or a new archaeological site.
         ''')]
         cells += [md('''
         ### Optional instructor refresh of the Cyprus bundle
