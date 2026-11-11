@@ -5,8 +5,8 @@ Instructor notebook:  archaeology_instructor.ipynb
 
 Open https://colab.research.google.com/ and choose File > Upload notebook.
 No paid Colab plan, Earth Engine account, API key or guaranteed GPU is needed.
-Run cells in order. Participants complete four clearly marked TODO cells; the
-instructor version contains the worked code, interpretation notes and saved outputs.
+Run cells in order. Participants follow four runnable examples and optional
+exploration prompts; the instructor version adds interpretation notes and saved outputs.
 
 DEFAULT WORKFLOW
 
@@ -31,10 +31,9 @@ network access once their dependencies and the sample ZIP are available.
 
 KEEP THE INSTRUCTOR NOTEBOOK PRIVATE UNTIL THE DEBRIEF
 
-The participant version includes exercises, hints and small correctness checks,
-but no completed exercise solutions or saved instructor outputs. The four tasks
-cover ranking metrics, a linear probe, validation-only model selection, and the
-Cyprus catalogue audit. Participants also complete error and transfer reviews.
+The participant version includes runnable examples, optional explorations and checks.
+These cover ranking metrics, a linear probe, validation-only model selection, and
+the Cyprus catalogue audit. Participants also complete error and transfer reviews.
 
 The instructor notebook is executed against real imagery and includes plots,
 results, completed exercise code, facilitator guidance and an optional recipe
@@ -62,7 +61,7 @@ src/archaeology_challenge/runtime.py contains the shared helpers embedded in bot
 build_notebooks.py generates the notebooks and embeds the prepared assets.
 prepare_workshop.py and select_enki_sample.py record the data-preparation recipe.
 check_notebooks.py checks metrics, submission ID alignment, duplicate handling and
-notebook structure, and can execute the instructor plus a solved participant copy.
+notebook structure, and can execute the instructor plus a participant copy.
 
 The .work/ directory contains preparation caches and validation artifacts. The
 notebooks do not import these local scripts or depend on .work/ when shared.
@@ -74,7 +73,7 @@ Rebuild after editing (using the prepared assets already present):
   .venv/bin/python check_notebooks.py --execute
 
 Regeneration clears saved outputs; the execution step restores instructor outputs.
-The solved participant validation copy is written only under .work/.
+The participant validation copy is written only under .work/.
 
 SOURCE CREDITS
 

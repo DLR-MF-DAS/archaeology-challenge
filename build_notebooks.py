@@ -39,13 +39,9 @@ def ranking_metrics(y_true, scores, k=50):
     }
 '''
 METRICS_EXERCISE = '''
-def ranking_metrics(y_true, scores, k=50):
-    # TODO 1: implement the metric dictionary described above.
-    # ranking_indices(scores) provides descending, stable ordering.
-    # Use average_precision_score for AP. Clip k to the number of tiles.
-    # Return NaN for AP/recall if there are no positive labels.
-    raise NotImplementedError("Complete Exercise 1: ranking under a review budget")
-'''
+# Worked example: run this cell, then run the check below it.
+# Try later: call ranking_metrics with a different k in a new cell.
+''' + METRICS_SOLUTION
 
 PROBE_SOLUTION = '''
 def make_probe(C=1.0):
@@ -56,12 +52,9 @@ def make_probe(C=1.0):
     )
 '''
 PROBE_EXERCISE = '''
-def make_probe(C=1.0):
-    # TODO 2: return a pipeline containing StandardScaler and LogisticRegression.
-    # Pass C, class_weight="balanced", max_iter=2000 and random_state=SEED.
-    # Do not fit anything in this function.
-    raise NotImplementedError("Complete Exercise 2: the linear probe")
-'''
+# Worked example: this pipeline scales the training features and fits a classifier.
+# Try later: compare a smaller and a larger C using validation data only.
+''' + PROBE_SOLUTION
 
 SEARCH_SOLUTION = '''
 candidate_models = {}
@@ -83,15 +76,9 @@ display(validation_results)
 print("Selected using validation only:", best_key)
 '''
 SEARCH_EXERCISE = '''
-# TODO 3: compare both representations and C in (0.01, 0.1, 1.0, 10.0).
-# Fit on matrices["train"] / y_train; score matrices["validation"] / y_val.
-# Required outputs:
-# candidate_models[key] = (representation, fitted_estimator)
-# validation_results: DataFrame with model, representation, C and metric columns
-# best_key, best_representation, best_model
-# Select highest recall_at_k, breaking ties with AP; never inspect test labels.
-raise NotImplementedError("Complete Exercise 3: validation-only model selection")
-'''
+# Worked example: fit the candidates on training data and compare on validation.
+# Try later: inspect validation_results and explain why the winning model was chosen.
+''' + SEARCH_SOLUTION
 
 CYPRUS_SOLUTION = '''
 def summarise_sites(phases):
@@ -113,19 +100,9 @@ def summarise_sites(phases):
     return sites
 '''
 CYPRUS_EXERCISE = '''
-def summarise_sites(phases):
-    # TODO 4: return one row per ID, with columns:
-    # ID, Toponym, lon, lat, LocQual, occupation_rows, periods, quality_documented,
-    # quality_conflict, coordinate_conflict.
-    # lon/lat come from Long_Cord/Lat_Cord, NOT Longitude/Latitude.
-    # Strip whitespace in LocQual; only A-E have documented definitions.
-    # Keep unknown values and mark quality_documented=False. Join distinct quality
-    # codes with "|" and flag quality_conflict if a site has multiple codes.
-    # Count distinct (ID, Long_Cord, Lat_Cord) rows per ID. For sites with multiple
-    # locations, set coordinate_conflict=True and lon/lat=NaN rather than choosing one.
-    # Use groupby(...).agg(...) and count distinct Period values.
-    raise NotImplementedError("Complete Exercise 4: occupation phases versus sites")
-'''
+# Worked example: combine occupation rows into one record per settlement ID.
+# Try later: inspect sites with quality_conflict or coordinate_conflict set to True.
+''' + CYPRUS_SOLUTION
 
 
 def embedded_assets():
@@ -150,27 +127,33 @@ def embedded_assets():
 def notebook(instructor, payload):
     role = "Instructor — worked solution" if instructor else "Participant challenge"
     cells = [md(f'''
-    # From Tells to Cyprus
-    ## Foundation models for archaeological survey prioritisation
-    **{role} · four hours · Python / Google Colab · no paid services required**
+    # Can AI help archaeologists decide where to look?
+    **{role} · approximately 4 hours · Python / Google Colab**
 
-    You support an archaeological team with time to review **50 image tiles**. Can a
-    frozen foundation model improve their shortlist with only **up to 100 training
-    examples per class**? What happens when its image features are transferred to Cyprus?
+    Archaeologists often have more imagery than they have time to inspect. A **tell** is a
+    mound formed by repeated human occupation. In this workshop, you will use labelled image
+    tiles from the Enki dataset to rank likely tells for an expert to review.
 
-    **You will produce:** a ranked CSV, a validation comparison, a label-budget experiment,
-    a Cyprus transfer review, and a short recommendation to an archaeologist.
+    **Your task:** imagine the team can inspect only **50 tiles**. Train a simple classifier
+    with at most 100 labelled examples per class, then rank the remaining images. Compare two
+    ways to describe each image: simple colour/texture measurements and features from a
+    pretrained image model called DINOv2. Finally, explore what happens when that model is
+    applied to a different landscape in Cyprus.
 
-    This notebook is self-contained. Upload it at [Google Colab](https://colab.research.google.com/)
-    using **File → Upload notebook**. A standard CPU runtime is enough for the default path:
-    verified DINOv2 features and 12 real Cyprus Sentinel-2 chips are embedded below.
-    The first data cell downloads a **600-image, balanced Enki sample (~73 MB transfer)** using
-    indexed HTTP byte ranges. It does not download the complete 1.7 GB training or 12 GB test
-    archive. Allow roughly 400 MB of free disk for the workshop.
-    Optional feature extraction uses a small pretrained model and benefits from a T4 GPU;
-    GPU availability in Colab is not guaranteed.
+    **What you will deliver:** a ranked CSV and a short evidence-based recommendation, including
+    what the model does well and what it cannot tell us. A high score is a review priority,
+    not proof that a site exists.
 
-    **Run cells in order.** {'All exercises below are solved; this notebook can run top to bottom.' if instructor else 'Complete the four TODO cells and their checks as you go. Do not use Run all until those exercises are complete.'}
+    ### How to use this notebook
+    1. Open it in [Google Colab](https://colab.research.google.com/) (File → Upload notebook),
+       or run it with a local Jupyter kernel. Run cells from top to bottom.
+    2. Setup downloads a curated sample of 600 real images (about 73 MB); allow about 400 MB
+       of free disk. It can take a few minutes. The default workflow runs on CPU.
+    3. Read the short explanations and inspect the figures. {'The instructor exercises are solved and can be run in order.' if instructor else 'The exercises contain runnable examples: run them and their checks, then try the optional changes in the comments.'}
+    4. In the final section, download the submission ZIP and save your completed notebook.
+
+    You need basic Python, pandas and scikit-learn familiarity; the diagrams explain the
+    modelling and archaeological decisions. A GPU and API accounts are not required.
     ''')]
     if instructor:
         cells += [md('''
@@ -191,26 +174,20 @@ def notebook(instructor, payload):
         or coordinate manifest. Similar-image deduplication reduces one source of leakage only.
         ''')]
     cells += [md('''
-    ### Schedule and scientific framing
+    ### Your route through the workshop
 
-    | Time | Task |
-    |---|---|
-    | 00:00–00:20 | Briefing; launch data download |
-    | 00:20–00:45 | Inspect imagery, labels and duplicate audit |
-    | 00:45–01:10 | Implement ranking metrics; run baseline |
-    | 01:10–01:55 | Frozen foundation-model features and model selection |
-    | 01:55–02:05 | Break |
-    | 02:05–02:40 | Label efficiency and error analysis |
-    | 02:40–03:15 | Cyprus catalogue and image-transfer audit |
-    | 03:15–03:35 | Freeze model; export shortlist and recommendation |
-    | 03:35–04:00 | Presentations and debrief |
+    | Stage | What you do | Why it matters |
+    |---|---|---|
+    | 1. Understand the images | Inspect labels and filter similar images | Spot shortcuts and reduce duplication |
+    | 2. Build a shortlist | Use ranking metrics and fit a simple model | Measure what an expert can review |
+    | 3. Compare models | Choose a model using validation data | Avoid choosing on the final test |
+    | 4. Examine limits | Inspect mistakes and apply the model to Cyprus | Understand what might not transfer |
+    | 5. Report | Freeze the model and export results | Make the recommendation reproducible |
 
-    Enki's labels concern tells and mound-like features in rendered RGB imagery. A high score
-    is a review priority, not evidence of a newly discovered site. The Cyprus catalogue records
-    settlement locations and occupation periods; it does **not** provide image visibility labels.
-    Our Cyprus images are **1 km windows at 10 m/pixel** from a single Sentinel-2 scene.
-    This introduces resolution, rendering, landscape and target differences simultaneously.
-    The Cyprus task is a stress test of interpretation, not a numerical detection benchmark.
+    Enki labels come from the source archive; they are not independently verified site identities.
+    The Cyprus catalogue describes settlement locations and occupation periods, not whether a
+    site is visible in a modern image. Cyprus images are 1 km square at 10 m per pixel, from one
+    satellite scene. They are for interpreting transfer, not measuring detection accuracy.
     ''')]
     cells += [md("### 1. Setup\nInstall only the small core dependencies. Existing Colab PyTorch is not replaced."),
               code('''
@@ -236,10 +213,9 @@ def notebook(instructor, payload):
                    tags=["infrastructure"],
                    **{"jupyter": {"source_hidden": True}, "colab": {"cellView": "form"}})]
     cells += [md('''
-    The next collapsed cell unpacks the embedded **frozen features**, Cyprus catalogue and
-    Cyprus sample. Features are bound to image pixel hashes, model revision and preprocessing.
-    They contain no fitted classifier or solution to the exercises. The full Enki imagery is
-    downloaded from its original repository in the next section.
+    The next cell unpacks the provided image features, Cyprus catalogue and 12 satellite images.
+    **Run it; you do not need to edit it.** The Enki images themselves are downloaded next.
+    Cached features let the workshop run without downloading or running the pretrained model.
     '''), code(f'''
     # Embedded reproducible workshop assets; no edits needed.
     ASSET_B64 = "{payload}"
@@ -255,19 +231,24 @@ def notebook(instructor, payload):
     print("Unpacked frozen embeddings, Cyprus catalogue and 12 Sentinel-2 chips.")
     ''', tags=["infrastructure"], **{"jupyter": {"source_hidden": True}, "colab": {"cellView": "form"}})]
     cells += [md('''
-    ### 2. Load and audit Enki
-    We use **600 images from the published training archive**: 300 negatives and 300 positives
-    sampled across five RGB landscape-context folders. The explicitly masked and black-and-white
-    positive folders are excluded. The fixed manifest samples blocks of ten files to reduce network
-    requests; this is a curated teaching sample, not a representative prevalence estimate.
-    Our train/validation/test names are workshop splits, not the authors' original experiment.
-    Labels come from the archive's `Tell` and `Negative` directories; macOS sidecars are excluded.
-    Context subfolders are retained for error analysis, never as features. Byte ranges and ZIP-member
-    CRCs are verified, then decoded image hashes are checked against the embedding cache.
+    ### 2. Meet the Enki images
 
-    We group images with close 64-bit perceptual hashes (Hamming distance ≤4), exclude groups
-    with contradictory labels, and retain one representative per group. This can miss shifted,
-    rotated or differently rendered views of the same site. Similarity is not a site identifier.
+    **Question:** what examples are we learning from, and can very similar images make a
+    model look better than it is?
+
+    The workshop uses 600 archive images: 300 source-labelled negative examples and 300
+    positives from five landscape categories. A positive is labelled as a tell in the source;
+    a negative comes from its negative folder. The sample is deliberately balanced for teaching,
+    so its 50% positive rate is not an estimate of how common tells are in the world.
+
+    Run the next two cells. They download and verify the selected images, group visually similar
+    images, remove contradictory groups, and keep one image per group. Then they split the
+    remaining images into training, validation and test sets and show some training images.
+    Context categories are for inspection, not model inputs.
+
+    **Why filter?** Near-duplicates across splits can give an overly optimistic result. Visual
+    similarity checks miss some repeated sites, however, and do not prove geographic independence.
+    These workshop splits are not the original authors’ experimental splits.
     ''')]
     cells += [code('''
     archive = download_enki_sample(assets / "sample_manifest.json", ROOT / "enki_workshop_sample.zip")
@@ -282,7 +263,7 @@ def notebook(instructor, payload):
     train, validation, test = (splits[k] for k in ("train", "validation", "test"))
     REVIEW_BUDGET = 50
     display(pd.DataFrame({name: part.label.value_counts().sort_index()
-                          for name, part in splits.items()}).rename_axis("label"))
+                          for name, part in (("train", train), ("validation", validation))}).rename_axis("label"))
     contact_sheet(train.sample(12, random_state=SEED), title="Training examples: 1=tell; 0=background")
     # The remaining unused training-pool images are not extra labels for this challenge.
     print("Do not inspect test labels or test images until model selection is frozen.")
@@ -358,16 +339,21 @@ def notebook(instructor, payload):
     plt.show()
     ''', tags=["visual-explanation"])]
     cells += [md('''
-    ### 3. Exercise 1 — evaluate the archaeologist's shortlist
-    Implement `ranking_metrics(y_true, scores, k)` returning:
-    - `AP`: average precision over the full ranked set.
-    - `recall_at_k`: positives in the top k / all positives.
-    - `precision_at_k`: positives in the top k / number actually reviewed.
-    - `hits` and `reviewed`: integer counts.
+    ### 3. Exercise 1 — measure a useful shortlist
 
-    Use `min(k, number_of_tiles)` as the effective review budget. With no positives,
-    AP and recall are undefined: return `np.nan`. Rank by score descending; score ties follow
-    the tile-ID order. A score is not automatically a calibrated archaeological probability.
+    **Question:** if an expert can inspect only `k` tiles, how many known positives reach the
+    shortlist? The picture below uses an invented ranking to show the idea.
+
+    Run the example `ranking_metrics(y_true, scores, k)` below. It returns:
+    - `hits`: number of positive tiles among the top `k` scores.
+    - `reviewed`: number actually reviewed, `min(k, number_of_tiles)`.
+    - `recall_at_k`: hits divided by *all* positive tiles.
+    - `precision_at_k`: hits divided by tiles reviewed.
+    - `AP`: average precision, a measure over the complete ranking.
+
+    `y_true` contains source labels (1 or 0); `scores` are model priorities. Higher scores rank
+    first. If there are no positives, return `np.nan` for AP and recall. Use the provided stable
+    ordering helper for ties. Run the check cell, then experiment with the optional change in the comments.
     '''), code('''
     # A schematic, not a result from the Enki test set.
     from matplotlib.patches import Patch
@@ -405,16 +391,18 @@ def notebook(instructor, payload):
               print("Metric checks passed.")
               ''')]
     cells += [md('''
-    ### 4. Conventional features and foundation-model features
-    The conventional baseline uses RGB histograms, moments and gradient statistics. DINOv2-small
-    supplies 384-dimensional frozen CLS-token embeddings. It is a general visual foundation
-    model, **not an EO-specialised model**. Comparing its features to the baseline is the main
-    experiment; an EO-specific encoder such as RemoteCLIP is a follow-on experiment.
+    ### 4. Describe each image in two ways
 
-    Both representations use the same tiles and training labels. The bundled DINOv2 features
-    were computed without adapting the encoder to any workshop labels. Each full image is
-    resized to 224×224, normalised using ImageNet channel statistics, and the CLS vector is L2
-    normalised. We use the same preprocessing for Cyprus.
+    A classifier needs numbers, not image files. We compare two sets of numbers for the same tiles:
+
+    - **Colour and texture:** simple summaries of colours, brightness and edges. This is our baseline.
+    - **DINOv2:** a pretrained general-purpose image model turns each tile into a 384-number
+      description called an *embedding*. Its encoder stays frozen: it is not trained on our labels.
+
+    Run the next cell to calculate the baseline and load the provided DINOv2 features. Comparing
+    both on the same splits helps us ask whether the pretrained representation adds value here.
+    DINOv2 is not specialised for Earth observation. The same DINOv2 preprocessing is used
+    for Enki and Cyprus.
     '''), code('''
     X_handcrafted = handcrafted_features(clean_images.path.tolist())
     X_dino = load_embedding_cache(clean_images, assets / "enki_embeddings.npz")
@@ -427,11 +415,10 @@ def notebook(instructor, payload):
     print("Feature shapes:", X_handcrafted.shape, X_dino.shape)
     print("Pinned model:", MODEL_ID, MODEL_REVISION)
     '''), md('''
-    **Optional GPU exercise:** set `RECOMPUTE_DINO=True` below. In Colab, select
-    **Runtime → Change runtime type → T4 GPU** before starting if one is available.
-    The default cached path needs no model download. Recomputing downloads about 90 MB of
-    weights and uses batches of 16 at 224×224; it does not fine-tune the model.
-    A CPU also works, but allow additional time. This cell must precede model fitting.
+    **Optional:** the next cell normally reuses the cached features and needs no GPU. Leave
+    `RECOMPUTE_DINO = False` for the main workshop. To reproduce the features yourself, set it to
+    `True`; this downloads model weights (~90 MB) and may take time on a CPU. In Colab you can
+    select a T4 GPU if one is available. Do this before fitting models.
     '''), code('''
     RECOMPUTE_DINO = False
     if RECOMPUTE_DINO:
@@ -444,10 +431,15 @@ def notebook(instructor, payload):
         print("Using verified cached embeddings; no GPU required.")
     ''')]
     cells += [md('''
-    ### 5. Exercise 2 — a lightweight classifier
-    Return a scikit-learn pipeline with `StandardScaler` followed by `LogisticRegression`.
-    The pipeline ensures that feature scaling is learned from training data only.
-    `C` controls inverse regularisation strength: smaller values mean stronger regularisation.
+    ### 5. Exercise 2 — build a simple classifier
+
+    **Question:** can a small model learn to score tiles using their features?
+
+    The `make_probe(C)` example returns a scikit-learn pipeline with `StandardScaler` followed by
+    `LogisticRegression`. The scaler learns feature ranges from the training data inside the
+    pipeline, so validation data cannot influence fitting. `C` controls regularisation: smaller
+    values constrain the classifier more strongly. Run the check to fit a colour/texture baseline
+    and display its validation metrics.
     '''), code(PROBE_SOLUTION if instructor else PROBE_EXERCISE, tags=["exercise-2"]),
               code('''
               baseline = make_probe(C=1.0).fit(feature_sets["colour_texture"]["train"], y_train)
@@ -457,10 +449,15 @@ def notebook(instructor, payload):
               assert not hasattr(make_probe().steps[0][1], "mean_")
               ''')]
     cells += [md('''
-    ### 6. Exercise 3 — select on validation data only
-    Compare the two representations with `C ∈ {0.01, 0.1, 1, 10}`. Use validation
-    recall at the fixed review budget as the primary criterion, then AP as a tie-breaker.
-    Keep the test set untouched. Even if the conventional baseline wins, report that result.
+    ### 6. Exercise 3 — choose a model fairly
+
+    The next cell compares both feature sets and four `C` values: `0.01`, `0.1`, `1`, `10`. It fits each candidate
+    on training data and scores it on validation data. It chooses the highest validation recall at
+    the 50-tile budget, using AP to break ties. This gives eight candidates.
+
+    **Why validation?** Choosing with the test set would make the final assessment less independent.
+    Keep the test set untouched until your choice is frozen. Report the baseline if it wins.
+    Run the following check to see the comparison and precision–recall curves.
     '''), code(SEARCH_SOLUTION if instructor else SEARCH_EXERCISE, tags=["exercise-3"]),
               code('''
               assert len(validation_results) == 8
@@ -485,11 +482,16 @@ def notebook(instructor, payload):
         frozen evaluation, and keep any future comparisons on new development splits.
         ''')]
     cells += [md('''
-    ### 7. Label efficiency and failure analysis
-    Compare 10, 25, 50 and 100 training labels **per class**, with three random selections at each
-    budget. The validation set and selected regularisation stay fixed. These curves describe
-    variation in training-label sampling, not uncertainty across independent geographical regions.
-    Choose one result to explain: a small-label gain, a plateau, or a failure mode.
+    ### 7. How many labels help, and where does the model struggle?
+
+    The next cell fits the DINOv2 classifier with 10, 25, 50 and 100 labelled training examples
+    per class. It repeats each selection three times and plots validation recall at the review
+    budget. A rising curve suggests more labels helped; a flat curve suggests diminishing returns.
+    The variation reflects these three training samples, not independent geographic regions.
+
+    The following cell shows high-scoring source negatives and low-scoring source positives.
+    Look for landscape patterns, rendering or other cues that could explain the scores; images
+    alone cannot prove why the model made a decision.
     '''), code('''
     best_dino_key = validation_results.loc[validation_results.representation == "dinov2", "model"].iloc[0]
     dino_probe = candidate_models[best_dino_key][1]
@@ -520,9 +522,9 @@ def notebook(instructor, payload):
     contact_sheet(neighbours, similarity, n=4, title="Nearest training examples to the strongest false alarm")
     ''')]
     cells += [md('''
-    **Record your interpretation:** identify two false-alarm mechanisms and one missed-positive
-    mechanism from the actual images. Are the nearest neighbours similar because of morphology,
-    colour or land use? What extra evidence would resolve the ambiguity?
+    **Your interpretation:** use the images to suggest two reasons a source-negative tile might
+    rank highly and one reason a source-positive tile might rank poorly. Fill in the dictionary
+    below and note what additional evidence would help an archaeologist check your ideas.
     '''), code('''
     error_notes = {
         "false_alarm_1": "",
@@ -543,19 +545,22 @@ def notebook(instructor, payload):
         # They are not new archaeological ground-truth annotations or causal explanations.
         ''')
     cells += [md('''
-    ### 8. Exercise 4 — Cyprus catalogue audit
-    Load the pinned catalogue and produce one record per settlement `ID`. Occupation-phase
-    rows must not become independent training examples. `Long_Cord` / `Lat_Cord` contain
-    longitude / latitude in degrees; the misleadingly named `Longitude` / `Latitude` contain
-    UTM zone 36N metres. The dictionary defines location quality A–E; retain and flag other values.
-    Check whether all occupation rows for an ID agree on coordinates and quality. Retain IDs with
-    conflicting locations, flag them and leave their single-point coordinates missing; do not invent
-    a centroid or silently choose one location.
+    ### 8. Exercise 4 — understand the Cyprus catalogue
 
-    [Field definitions](https://github.com/K-A-Crawford/Cyprus_Settlements/blob/70a5c3d399a2451e1d8dd5eb947eb80055276b44/settlement_key.txt):
-    A = supplied projected coordinates; B = cadastral plans; C = maps with UTM references;
-    D = maps without coordinate references; E = modern locality names.
-    These are provenance categories, not numerical error radii.
+    **Question:** how many distinct settlements are represented, and how reliable are their
+    locations? Each catalogue row is an occupation phase, so a settlement can appear multiple
+    times. The next cell loads the catalogue. Run `summarise_sites(phases)` to return one row
+    per settlement ID and run the check to plot the sites.
+
+    Use `Long_Cord` and `Lat_Cord` for longitude and latitude in degrees. Despite their names,
+    `Longitude` and `Latitude` are UTM zone 36N coordinates in metres. For each ID, the function counts
+    occupation rows and distinct periods, checks location quality and flags conflicting coordinates.
+    When coordinates conflict, keep the ID but leave its summary longitude and latitude missing.
+
+    The [field dictionary](https://github.com/K-A-Crawford/Cyprus_Settlements/blob/70a5c3d399a2451e1d8dd5eb947eb80055276b44/settlement_key.txt)
+    defines quality A–E by the source used to locate a settlement (from supplied coordinates to
+    modern place names). Keep other or blank codes and flag them as undocumented. These codes
+    are provenance categories, not numerical error radii.
     '''), code('''
     phases = pd.read_csv(assets / "Cyprus_Settlements.csv")
     print("Occupation rows:", len(phases), "Unique settlement IDs:", phases.ID.nunique())
@@ -593,19 +598,21 @@ def notebook(instructor, payload):
         mean no archaeology, and known occupation does not imply visibility in today's imagery.
         ''')]
     cells += [md('''
-    ### 9. Transfer stress test using real Cyprus imagery
-    The embedded sample contains six catalogue locations with `LocQual=A`, plus six nearby
-    **unlabelled** background locations. Background centres were placed 2 km east and checked
-    to be at least 750 m from catalogue points. This does not establish archaeological absence.
-    Windows with less than 90% clear-land pixels in Sentinel-2's scene classification were rejected.
+    ### 9. What happens in Cyprus?
 
-    All chips use the same pinned scene from 5 August 2024, in southwest Cyprus. They were
-    read from the public Planetary Computer Sentinel-2 L2A collection using COG windows.
-    Each chip is 100×100 pixels (1 km square) before model resizing. Display interpolation or
-    resizing cannot restore spatial detail missing at 10 m. Six pairs cannot establish transfer accuracy.
+    **Question:** does a model trained on Enki give meaningful priorities in a different place
+    and type of imagery? We apply the Enki-trained DINOv2 classifier unchanged, even if the
+    baseline won the source comparison, to inspect how that representation transfers.
 
-    We deliberately transfer the Enki-trained **DINOv2 probe**, even if a different model won the
-    source comparison, to examine what that representation does in a different domain.
+    The sample contains 12 real Sentinel-2 chips from one day in southwest Cyprus: six centred
+    on catalogue locations and six nearby **unlabelled** locations. Each chip covers 1 km × 1 km
+    at 10 m per pixel. A catalogue entry does not guarantee that archaeology is visible in the
+    image; an unlabelled location is not a confirmed absence. Therefore these chips cannot give
+    us a valid detection-accuracy score.
+
+    Background centres were placed 2 km east and checked to be at least 750 m from catalogue
+    points. Images with less than 90% clear-land pixels were excluded. A larger, independently
+    labelled geographic study would be needed to measure transfer.
     '''), md('''
     **What changes during transfer?** The model is carried across domains unchanged, but the
     imagery and meaning of available labels differ. A catalogue location is not an image-visibility
@@ -680,10 +687,15 @@ def notebook(instructor, payload):
         display(transfer_review)
         ''')
     cells += [md('''
-    ### 10. Freeze your model and submit
-    Freeze the selected representation and classifier before touching the test set. Export one
-    score per test tile and your scientific recommendation. The test labels are recoverable from
-    the public archive, so this is an educational holdout rather than a secure competition.
+    ### 10. Freeze your choice and prepare your submission
+
+    You have chosen a model using validation data. **Freeze it before looking at the test labels.**
+    Run the next cell to score each test tile and write `submission.csv` and `configuration.json`.
+    Then fill in the recommendation and run the final cell to create `team_submission.zip`.
+
+    The archive is publicly labelled, so this is an educational holdout, not a secure blind test.
+    Your recommendation should describe the intended use, validation evidence, limitations and
+    the next study an archaeologist would need.
     '''), code('''
     frozen_configuration = {
         "selected_model": best_key, "seed": SEED, "review_budget": REVIEW_BUDGET,
@@ -730,11 +742,12 @@ def notebook(instructor, payload):
     print("Download", output_zip, "from Colab's Files panel; save your completed notebook too.")
     ''')]
     cells += [md('''
-    ### 11. Final reveal — only after submission
-    Ask the facilitator when to enable this cell. Do not use the result to tune or replace your model.
-    Recall is measured on positive **tiles**, not independently verified archaeological sites.
-    For a random ranking, expected recall@k is k/N; expected precision is the positive fraction.
-    Neither this prevalence nor this small sample represents the operational archaeological base rate.
+    ### 11. Reveal the final result
+
+    After you have submitted, ask the facilitator when to change `REVEAL_TEST` to `True` and run
+    the cell. Do not use this result to choose a replacement model: the test is the final check.
+    Recall counts positive **tiles**, not independently verified sites. The random-ranking
+    comparison is a reference for this small, balanced sample, not operational prevalence.
     '''), code(f'''
     REVEAL_TEST = {instructor}
     if REVEAL_TEST:

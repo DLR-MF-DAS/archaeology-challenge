@@ -62,21 +62,11 @@ class ScientificChecks(unittest.TestCase):
                     if any(t.startswith('exercise-') for t in cell.metadata.get('tags', [])):
                         exercises.append(cell)
             self.assertEqual(len(exercises), 4)
-            if 'instructor' in filename:
-                self.assertTrue(all('NotImplementedError' not in c.source for c in exercises))
-            else:
-                self.assertTrue(all('NotImplementedError' in c.source for c in exercises))
+            self.assertTrue(all('NotImplementedError' not in c.source for c in exercises))
 
 
 def execute_notebook(filename, participant=False):
     nb = nbformat.read(filename, as_version=4)
-    if participant:
-        solutions = {'exercise-1': builder.METRICS_SOLUTION, 'exercise-2': builder.PROBE_SOLUTION,
-                     'exercise-3': builder.SEARCH_SOLUTION, 'exercise-4': builder.CYPRUS_SOLUTION}
-        for cell in nb.cells:
-            for tag in cell.metadata.get('tags', []):
-                if tag in solutions:
-                    cell.source = solutions[tag]
     workspace = Path('.work/participant_execution' if participant else '.work/instructor_execution').resolve()
     data_dir = workspace / 'archaeology_workshop'
     data_dir.mkdir(parents=True, exist_ok=True)
@@ -96,7 +86,7 @@ def execute_notebook(filename, participant=False):
     try:
         client.execute(env=env)
     finally:
-        target = Path('.work/participant_solved_validation.ipynb') if participant else Path(filename)
+        target = Path('.work/participant_validation.ipynb') if participant else Path(filename)
         nbformat.write(nb, target)
     errors = [o for c in nb.cells if c.cell_type == 'code' for o in c.outputs if o.output_type == 'error']
     assert not errors

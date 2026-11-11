@@ -1,9 +1,8 @@
 Validation completed on real data, 11 November 2026.
 
 Instructor: 26 code cells executed successfully, including final holdout evaluation.
-Participant: end-to-end execution validated with the four reference exercise
-solutions inserted into a temporary copy. The delivered participant notebook
-retains its TODOs and contains no saved instructor outputs.
+Participant: the guided version ran end to end on the prepared sample with its
+examples unchanged. The validation copy is saved under .work/.
 
 Checks passed for metric denominators and undefined recall, score/ID alignment,
 duplicate submission rejection, conflicting image-label groups, notebook schema,
