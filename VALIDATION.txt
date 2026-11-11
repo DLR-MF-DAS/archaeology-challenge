@@ -1,0 +1,26 @@
+Validation completed on real data, 11 November 2026.
+
+Instructor: 26 code cells executed successfully, including final holdout evaluation.
+Participant: end-to-end execution validated with the four reference exercise
+solutions inserted into a temporary copy. The delivered participant notebook
+retains its TODOs and contains no saved instructor outputs.
+
+Checks passed for metric denominators and undefined recall, score/ID alignment,
+duplicate submission rejection, conflicting image-label groups, notebook schema,
+and Python cell syntax. Saved image plots were visually inspected.
+
+600 original Enki images were retrieved via verified HTTP byte ranges; 593 image
+families remained after the similarity audit. Frozen DINOv2 embeddings were
+computed from the actual imagery, not fabricated. The instructor notebook contains
+measured validation and holdout results. The source/target interpretation notes
+acknowledge rendering differences and unresolved geographic leakage.
+
+The Cyprus sample consists of twelve actual Sentinel-2 image windows from the
+pinned scene, with acquisition metadata and clear-land screening. It is not a
+labelled archaeological detection benchmark.
+
+Execution environment: local Python 3.12.13 and a Jupyter kernel. The notebooks
+are designed for Google Colab, but were not executed on the hosted Colab service.
+The default workflow uses cached features and needs no GPU. Optional model
+extraction was tested locally on CPU and Apple MPS during data preparation;
+the optional Colab CUDA path has not been separately exercised here.
