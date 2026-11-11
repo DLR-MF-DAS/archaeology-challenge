@@ -70,8 +70,8 @@ notebooks do not import these local scripts or depend on .work/ when shared.
 For package installation and optional dependencies, see README.md.
 
 Rebuild after editing (using the prepared assets already present):
-  .venv/bin/python build_notebooks.py
-  .venv/bin/python check_notebooks.py --execute
+  uv run --locked --extra dev python build_notebooks.py
+  uv run --locked --extra dev python check_notebooks.py --execute
 
 Regeneration clears saved outputs; the execution step restores instructor outputs.
 The participant validation copy is written only under .work/.

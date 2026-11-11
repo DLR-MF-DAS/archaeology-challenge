@@ -6,38 +6,37 @@ This project provides the shared Python helpers and two standalone notebooks for
 licensing notices and scientific limitations. The [facilitator guide](FACILITATOR_GUIDE.md)
 contains a teaching plan, discussion feedback and the research informing the design.
 
-## Install
+## Install and run
 
-From a checkout, using Python 3.10 or newer:
+Install [uv](https://docs.astral.sh/uv/getting-started/installation/) and run
+these commands from the checkout (Python 3.10 or newer):
 
 ```sh
-python -m pip install -e '.[dev]'
+uv sync --locked
+ARCHAEOLOGY_SKIP_INSTALL=1 uv run --locked jupyter notebook archaeology_participants.ipynb
 ```
 
-The core installation supports the cached-feature workflow. Install `.[model]`
-to recompute DINOv2 embeddings, or `.[refresh]` for the instructor's live
-Sentinel-2 refresh utility. These optional workflows also require external data
-or model downloads. The notebooks remain self-contained and do not require an
-installed copy of this package.
-
-Import shared helpers with:
-
-```python
-from archaeology_challenge import runtime
-```
+`uv` creates the project environment and installs the locked dependencies.
+The environment variable tells the notebook setup cell to use those dependencies
+without running its standalone installation step. On Windows, set it in the
+shell before launching Jupyter.
+The core installation supports the cached-feature workflow. To recompute
+DINOv2 embeddings, run with `uv run --extra model ...`; the instructor live
+Sentinel-2 refresh utility requires `uv run --extra refresh ...`. These optional
+workflows also require external data or model downloads. The notebooks remain
+self-contained and can also be used in Colab without this project environment.
 
 ## Development
 
-Run commands from the repository root. The quick checks validate scientific
-helpers and the generated notebook structure:
+Run the quick checks from the repository root:
 
 ```sh
-python check_notebooks.py
+uv run --locked --extra dev python check_notebooks.py
 ```
 
-`python build_notebooks.py` regenerates both notebooks from the shared runtime
-and prepared assets in `.work/`. Those caches are not included in the package;
-see `START_HERE.txt` for the data-preparation context. Regeneration clears saved
-outputs. `python check_notebooks.py --execute` runs both notebook paths against
-the prepared sample and writes instructor outputs, so it requires the local
-assets and a suitable Jupyter kernel.
+`uv run --locked --extra dev python build_notebooks.py` regenerates both
+notebooks from the shared runtime and prepared assets in `.work/`. Those caches
+are not included in the package; see `START_HERE.txt` for data preparation.
+Regeneration clears saved outputs. `uv run --locked --extra dev python check_notebooks.py --execute` runs both notebook paths against the prepared
+sample and writes instructor outputs, so it requires local assets and a
+suitable Jupyter kernel.
