@@ -6,8 +6,9 @@ Facilitation plan and teaching research: FACILITATOR_GUIDE.md
 
 Open https://colab.research.google.com/ and choose File > Upload notebook.
 No paid Colab plan, Earth Engine account, API key or guaranteed GPU is needed.
-Run cells in order. Participants follow four runnable examples and optional
-exploration prompts; the instructor version adds interpretation notes and saved outputs.
+Run cells in order. Six sections lead from image inspection to a two-model
+comparison, mistake review, Cyprus transfer and one short recommendation.
+The instructor version adds discussion notes, a sample recommendation and saved outputs.
 
 DEFAULT WORKFLOW
 
@@ -18,9 +19,8 @@ The download uses original ZIP-directory offsets and verifies every member's CRC
 Decoded pixel hashes are then checked against the feature cache. No full 1.7 GB
 training archive or 12 GB test archive is needed.
 
-The optional feature-extraction cell recomputes DINOv2 embeddings. A free Colab T4,
-when available, is sufficient; the cached default also works on CPU. The default
-path does not require installing or downloading the neural-network checkpoint.
+Both notebooks use the cached features on CPU. Model extraction and live imagery
+acquisition are preparation utilities, outside the notebooks' main path.
 
 FOR A WORKSHOP WITH UNRELIABLE INTERNET
 
@@ -32,13 +32,14 @@ network access once their dependencies and the sample ZIP are available.
 
 KEEP THE INSTRUCTOR NOTEBOOK PRIVATE UNTIL THE DEBRIEF
 
-The participant version includes runnable examples, optional explorations and checks.
-These cover ranking metrics, a linear probe, validation-only model selection, and
-the Cyprus catalogue audit. Participants also complete error and transfer reviews.
+The participant version runs without filling in code stubs. It compares colour/texture
+features with frozen DINOv2 features at fixed C=1, chooses using validation recall
+at 50 reviews, and uses that same selected model for the mistake and Cyprus reviews.
+Participants write one 4–6 sentence recommendation; the export cell packages it
+with the ranked CSV and supporting results. The final test reveal starts disabled.
 
 The instructor notebook is executed against real imagery and includes plots,
-results, completed exercise code, facilitator guidance and an optional recipe
-for refreshing the public Sentinel-2 sample. Scores are measurements from this
+results and facilitator guidance. Scores are measurements from this
 curated split, not promised performance on other archaeological landscapes.
 
 SCIENTIFIC SCOPE
@@ -58,18 +59,21 @@ notebooks explicitly avoid reporting detection accuracy for this sample.
 
 EDITING AND VALIDATION
 
-src/archaeology_challenge/runtime.py contains the shared helpers embedded in both notebooks.
-build_notebooks.py generates the notebooks and embeds the prepared assets.
+src/archaeology_challenge/runtime.py contains the shared helpers bundled in both notebooks.
+One folded setup cell extracts them as archaeology_workshop/assets/workshop_helpers.py.
+build_notebooks.py generates the notebooks, reusing their bundled data. A fresh
+checkout can rebuild without the original .work/ preparation cache.
 prepare_workshop.py and select_enki_sample.py record the data-preparation recipe.
-check_notebooks.py checks metrics, submission ID alignment, duplicate handling and
-notebook structure, and can execute the instructor plus a participant copy.
+check_notebooks.py checks metrics, submission ID alignment, duplicate handling,
+catalogue conflicts, both model paths in Cyprus, exports and notebook/source agreement.
+It can execute the instructor plus a participant copy on the real sample.
 
 The .work/ directory contains preparation caches and validation artifacts. The
 notebooks do not import these local scripts or depend on .work/ when shared.
 
 For package installation and optional dependencies, see README.md.
 
-Rebuild after editing (using the prepared assets already present):
+Rebuild after editing:
   uv run --locked --extra dev python build_notebooks.py
   uv run --locked --extra dev python check_notebooks.py --execute
 

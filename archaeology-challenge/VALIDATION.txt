@@ -1,25 +1,41 @@
 Validation completed on real data, 11 November 2026.
 
-Instructor: 30 code cells executed successfully, including final holdout evaluation.
-Participant: all 29 code cells in the guided version ran end to end on the prepared
-sample with the examples unchanged. The validation copy is saved under .work/.
+Instructor: all 10 code cells executed, including the final holdout evaluation.
+Participant: all 10 code cells executed in an isolated working directory with
+its recommendation left blank and test reveal disabled. The draft export warns
+that the recommendation must be completed before sharing. The executed participant
+copy is under .work/participant_validation.ipynb; the distributed copy has no outputs.
 
-Checks passed for metric denominators and undefined recall, score/ID alignment,
-duplicate submission rejection, conflicting image-label groups, notebook schema,
-and Python cell syntax. Saved image plots were visually inspected.
+Eight automated checks passed: metric denominators and stable ties; invalid inputs;
+submission ID alignment and duplicate rejection; conflicting similarity families;
+catalogue coordinate/quality conflicts; both model paths in the Cyprus notebook
+cell; complete exports; notebook schema, Python syntax and agreement with the builder.
 
-600 original Enki images were retrieved via verified HTTP byte ranges; 593 image
-families remained after the similarity audit. Frozen DINOv2 embeddings were
-computed from the actual imagery, not fabricated. The instructor notebook contains
-measured validation and holdout results. The source/target interpretation notes
-acknowledge rendering differences and unresolved geographic leakage.
+The notebooks now have six main sections. The participant notebook has 25 cells
+(previously 58), 10 code cells (previously 29), and 90 visible lines of code
+(previously 344). Infrastructure is one folded setup cell. The instructor has 27 cells.
+The model search is now a direct comparison at fixed C=1, followed by one written
+recommendation. Model selection, shortlist inspection, Cyprus scoring and export
+use the same selected classifier.
 
-The Cyprus sample consists of twelve actual Sentinel-2 image windows from the
-pinned scene, with acquisition metadata and clear-land screening. It is not a
-labelled archaeological detection benchmark.
+The existing 600-image ZIP was checked and reused; 593 image families remained
+after the similarity audit. The split contains 200 training, 119 validation and
+119 test tiles. All 18 original bundled data files are unchanged byte-for-byte.
+The pinned catalogue audit still yields 8,766 occupation rows and 1,559 IDs;
+CY453 has conflicting coordinates and retains no summary point.
 
-Execution environment: local Python 3.12.13 and a Jupyter kernel. The notebooks
-are designed for Google Colab, but were not executed on the hosted Colab service.
-The default workflow uses cached features and needs no GPU. Optional model
-extraction was tested locally on CPU and Apple MPS during data preparation;
-the optional Colab CUDA path has not been separately exercised here.
+Measured at a review budget of 50, DINOv2 finds 50 validation positives (recall
+0.833, precision 1.0) versus 40 for colour/texture (recall 0.667, precision 0.8).
+There are 60 validation positives, so 0.833 is the maximum possible recall at this
+budget; the notebook displays that ceiling. The selected model finds 49 test
+positives (recall 0.817, precision 0.98). These are results for this teaching split,
+not estimates for independent sites or new regions.
+
+Saved training, shortlist and Cyprus figures were visually inspected. The Cyprus
+sample remains an interpretation exercise without image-visibility ground truth.
+The exported ZIP contains submission.csv, configuration.json, validation_results.csv,
+cyprus_review.csv and recommendation.md. Source notices and provenance are retained.
+
+Execution used local Python 3.13.18 and Jupyter kernels with cached features on CPU.
+No hosted Colab run, fresh network download, model extraction or live Sentinel-2
+refresh was performed during this revision.

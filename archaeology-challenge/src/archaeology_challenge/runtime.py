@@ -1,12 +1,9 @@
 """Shared source embedded into both standalone Colab notebooks by build_notebooks.py."""
 from pathlib import Path
-import base64
-import gzip
 import hashlib
 import io
 import json
 import os
-import random
 import time
 import zipfile
 import struct
@@ -19,11 +16,8 @@ import pandas as pd
 import requests
 from PIL import Image
 from sklearn.base import clone
-from sklearn.linear_model import LogisticRegression
-from sklearn.metrics import average_precision_score, PrecisionRecallDisplay
+from sklearn.metrics import average_precision_score
 from sklearn.model_selection import train_test_split
-from sklearn.pipeline import make_pipeline
-from sklearn.preprocessing import StandardScaler
 from tqdm.auto import tqdm
 
 SEED = 42
@@ -234,7 +228,7 @@ def workshop_split(clean, per_class=100):
 def contact_sheet(frame, scores=None, n=12, title="Image tiles", show_labels=True):
     subset = frame.head(n).reset_index(drop=True)
     if subset.empty:
-        print("No images in this selection.")
+        print(f"{title}: none.")
         return
     fig, axes = plt.subplots(int(np.ceil(len(subset) / 4)), 4,
                              figsize=(12, 3.1 * int(np.ceil(len(subset) / 4))), squeeze=False)
@@ -244,9 +238,12 @@ def contact_sheet(frame, scores=None, n=12, title="Image tiles", show_labels=Tru
         ax = axes.flat[i]
         with Image.open(row.path) as im:
             ax.imshow(im)
-        label = f" | y={row.label}" if show_labels and "label" in row else ""
-        score = f" | score={float(scores[i]):.3f}" if scores is not None else ""
-        ax.set_title(f"{row.tile_id[:9]}{label}{score}", fontsize=9)
+        label = f"label {row.label}" if show_labels and "label" in row else ""
+        if "kind" in row:
+            label = "catalogued location" if row.kind == "catalogued_location" else "unlabelled location"
+        score = f"score {float(scores[i]):.3f}" if scores is not None else ""
+        details = " · ".join(part for part in (label, score) if part)
+        ax.set_title(f"{row.tile_id}\n{details}", fontsize=9)
     fig.suptitle(title)
     plt.tight_layout()
     plt.show()
@@ -334,6 +331,89 @@ def ranking_indices(scores):
         raise ValueError("Scores must be a finite one-dimensional array.")
     # Stable tie-breaking follows the tile_id-sorted input manifest.
     return np.argsort(-values, kind="stable")
+
+
+def ranking_metrics(y_true, scores, k=50):
+    """Count positives in a fixed-budget shortlist; AP describes the full ranking."""
+    labels = np.asarray(y_true)
+    order = ranking_indices(scores)
+    if labels.ndim != 1 or len(labels) != len(order) or len(labels) == 0:
+        raise ValueError("Use nonempty, aligned one-dimensional labels and scores.")
+    if not np.isin(labels, [0, 1]).all():
+        raise ValueError("Labels must be 0 or 1.")
+    if not isinstance(k, (int, np.integer)) or isinstance(k, bool) or k < 1:
+        raise ValueError("The review budget must be a positive integer.")
+    reviewed = min(k, len(labels))
+    hits = int(labels[order[:reviewed]].sum())
+    positives = int(labels.sum())
+    return {
+        "hits": hits,
+        "reviewed": reviewed,
+        "precision_at_k": hits / reviewed,
+        "recall_at_k": hits / positives if positives else float("nan"),
+        "AP": float(average_precision_score(labels, scores)) if positives else float("nan"),
+    }
+
+
+def summarise_sites(phases):
+    """Keep one record per settlement, flagging conflicting coordinates and quality codes."""
+    frame = phases.copy()
+    frame["LocQual"] = frame.LocQual.fillna("").astype(str).str.strip()
+    for column in ("Long_Cord", "Lat_Cord"):
+        frame[column] = pd.to_numeric(frame[column], errors="coerce")
+    locations = frame[["ID", "Long_Cord", "Lat_Cord"]].drop_duplicates().groupby("ID").size()
+    sites = frame.groupby("ID", sort=True).agg(
+        Toponym=("Toponym", "first"), lon=("Long_Cord", "first"), lat=("Lat_Cord", "first"),
+        LocQual=("LocQual", lambda s: "|".join(sorted(set(s)))), occupation_rows=("Period", "size"),
+        periods=("Period", "nunique"),
+        quality_documented=("LocQual", lambda s: set(s).issubset(set("ABCDE"))),
+        quality_conflict=("LocQual", lambda s: s.nunique() > 1),
+    ).reset_index()
+    sites["coordinate_conflict"] = sites.ID.map(locations).gt(1)
+    sites.loc[sites.coordinate_conflict, ["lon", "lat"]] = np.nan
+    return sites
+
+
+def load_cyprus(assets):
+    """Read the bundled imagery and align the frozen features with the image manifest."""
+    directory = Path(assets) / "cyprus"
+    frame = pd.read_csv(directory / "manifest.csv")
+    frame["path"] = [str(directory / name) for name in frame.filename]
+    with np.load(directory / "embeddings.npz", allow_pickle=False) as cache:
+        if not (np.array_equal(cache["tile_ids"], frame.tile_id.to_numpy())
+                and str(cache["model_id"]) == MODEL_ID
+                and str(cache["revision"]) == MODEL_REVISION
+                and str(cache["preprocessing"]) == PREPROCESS_ID):
+            raise ValueError("Cyprus features do not match the manifest or pinned model.")
+        vectors = cache["embeddings"].copy()
+    return frame, vectors
+
+
+def export_results(root, validation_results, cyprus, recommendation, configuration):
+    """Package the ranked submission, evidence and one plain-text recommendation."""
+    root = Path(root)
+    configuration = {
+        **configuration,
+        "seed": SEED,
+        "dataset": "Enki Normalized_Tell_combined_350.zip, curated 600-image workshop sample",
+        "geographic_independence_verified": False,
+        "encoder": MODEL_ID if configuration["selected_model"] == "dinov2" else None,
+        "encoder_revision": MODEL_REVISION if configuration["selected_model"] == "dinov2" else None,
+        "preprocessing": PREPROCESS_ID if configuration["selected_model"] == "dinov2" else None,
+    }
+    validation_results.to_csv(root / "validation_results.csv", index=False)
+    cyprus.drop(columns=["path"], errors="ignore").to_csv(root / "cyprus_review.csv", index=False)
+    (root / "configuration.json").write_text(json.dumps(configuration, indent=2), encoding="utf-8")
+    report = recommendation.strip() or "Recommendation not yet written."
+    (root / "recommendation.md").write_text(report + "\n", encoding="utf-8")
+    bundle = root / "team_submission.zip"
+    with zipfile.ZipFile(bundle, "w", zipfile.ZIP_DEFLATED) as output:
+        for name in ("submission.csv", "configuration.json", "validation_results.csv",
+                     "cyprus_review.csv", "recommendation.md"):
+            output.write(root / name, name)
+    if not recommendation.strip():
+        print("Draft saved. Write your recommendation and rerun the export cell before sharing.")
+    return bundle
 
 
 def nearest_examples(query_vector, train_vectors, train_frame, k=4):

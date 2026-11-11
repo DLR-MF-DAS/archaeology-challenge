@@ -12,7 +12,7 @@ By the end, participants should be able to:
 4. Describe at least two ways the Cyprus imagery and labels differ from the source task, and propose evidence needed for a defensible transfer study.
 5. Make a proportionate recommendation supported by the workshop results and their limitations.
 
-The intended audience has basic Python, pandas and scikit-learn familiarity; archaeological or remote-sensing expertise is useful but not assumed. The examples run as supplied. Invite participants to explain and modify them rather than requiring everyone to implement them from scratch.
+The intended audience has basic Python, pandas and scikit-learn familiarity; archaeological or remote-sensing expertise is useful but not assumed. The notebook has six sections and runs as supplied. Participants inspect the outputs and write one 4–6 sentence recommendation. There are no code stubs or separate response dictionaries to complete.
 
 ## Before the session
 
@@ -30,12 +30,12 @@ The intended audience has basic Python, pandas and scikit-learn familiarity; arc
 | 00:45–01:15 | Understand review metrics | Use the ranked example below; let learners predict and explain the denominators before checking. |
 | 01:15–01:50 | Compare image features and models | Explain the fixed DINOv2 encoder, the simpler baseline and the roles of training and validation. |
 | 01:50–02:00 | Break | If setup is still running, use the metrics and splitting discussions offline. |
-| 02:00–02:30 | Explore label efficiency and errors | Ask learners to identify evidence in the example images, then distinguish observation from speculation. |
-| 02:30–03:05 | Audit the Cyprus catalogue and imagery | Contrast one settlement with its occupation rows; examine what a catalogue location and an unlabelled location mean. |
+| 02:00–02:30 | Inspect shortlist mistakes | Ask learners to identify an image observation, then distinguish it from a hypothesis about the model. |
+| 02:30–03:05 | Examine Cyprus transfer | Examine what a catalogue location and an unlabelled location mean. Use the catalogue audit only if useful to the group. |
 | 03:05–03:35 | Freeze the choice and prepare the report | Have teams cite their validation evidence, limitations and proposed next study. |
 | 03:35–04:00 | Debrief and final reveal | Discuss competing recommendations, then reveal the held-out results once choices are frozen. |
 
-If the group is behind, keep the three decision points—review metrics, validation versus test, and Cyprus label limitations—and shorten optional model recomputation and extended discussion. Do not require the optional live imagery refresh. Run prerequisite cells in order; skipping an upstream computation can make a later cell fail.
+If the group is behind, keep the three decision points—review metrics, validation versus test, and Cyprus label limitations—and shorten the discussion. Label efficiency and catalogue auditing are optional extensions below. Model recomputation and live imagery acquisition are preparation tasks, outside class. Run the six main sections in order.
 
 ## Prompts and feedback
 
@@ -51,9 +51,9 @@ Give people time to make a prediction or write a one-sentence reason before show
 
 ### 2. What does a shortlist measure?
 
-**Ask:** “In a ranking whose labels are `1, 0, 1, 0, 0, 1, 0, 1, 0, 0`, an expert reviews the first four tiles. What are precision and recall?”
+**Ask:** “In a ranking whose labels are `1, 0, 1, 1, 0`, an expert reviews the first two tiles. What are precision and recall?”
 
-**Look for:** two positives are reviewed. Precision is 2/4 = 0.5 because four were reviewed; recall is 2/4 = 0.5 because there are four positives in the full ten. With a budget of six, precision is 3/6 = 0.5 and recall is 3/4 = 0.75. The example is invented; it is not an Enki result. Average precision summarises the full ranking and is not the same as either single-budget measure.
+**Look for:** one positive is reviewed. Precision is 1/2 because two were reviewed; recall is 1/3 because there are three positives in the full list. With a budget of four, precision is 3/4 and recall is 3/3. The example is invented; it is not an Enki result. Average precision summarises the full ranking and breaks a tie in validation recall.
 
 **If someone uses the same denominator for both:** ask “Of what set are we taking a fraction: the reviewed tiles, or all positives?” Evaluation needs labels; a reviewer making a new shortlist does not know them in advance.
 
@@ -61,7 +61,7 @@ Give people time to make a prediction or write a one-sentence reason before show
 
 **Ask:** “If DINOv2 wins the validation comparison, what can we conclude? Why not choose using the test set?”
 
-**Look for:** compare two representations on the workshop split and stated review budget. A better validation score is evidence about this selected sample, not proof of archaeological detection generally. The DINOv2 encoder is pretrained and frozen; a simple classifier is fitted to each representation on training data. Validation selects among candidates; the held-out test is for assessing the frozen choice. Repeated choices based on test results make it part of model selection.
+**Look for:** compare two representations on the workshop split and stated review budget. Both use logistic regression with `C=1`; there is no required parameter search. A better validation score is evidence about this selected sample, not proof of archaeological detection generally. The DINOv2 encoder is pretrained and frozen. Validation selects the model used in both the mistake review and Cyprus transfer; the held-out test assesses that frozen choice. Repeated choices based on test results make it part of model selection.
 
 **If someone says “the pretrained model must win”:** invite them to read the table. A simpler colour/texture baseline might do well because of useful signal, shortcuts or dataset-specific rendering; performance alone does not reveal which explanation is correct.
 
@@ -87,11 +87,46 @@ Ask each group for a concise claim, one supporting measurement, one limitation, 
 
 For an optional later follow-up, revisit the shortlist and transfer prompts with a different example and ask learners to reconstruct their reasoning before comparing with feedback. A single workshop does not itself establish long-term retention.
 
+## Optional experiments
+
+Use validation only, before the final test reveal. These are extensions, not prerequisites
+for the submission. If learners change `C`, rerun sections 3–6 so the figures and export
+agree with the new choice.
+
+For label efficiency, run this in a new cell after model comparison:
+
+```python
+curve = workshop.learning_curve_rows(
+    models["dinov2"], feature_sets["dinov2"]["train"], train.label.to_numpy(),
+    feature_sets["dinov2"]["validation"], validation.label.to_numpy(),
+    workshop.ranking_metrics, REVIEW_BUDGET,
+)
+summary = curve.groupby("labels_per_class").recall_at_k.agg(["mean", "std"])
+summary["mean"].plot(yerr=summary["std"], marker="o", ylim=(0, 1),
+                     xlabel="Training labels per class", ylabel="Validation recall")
+plt.show()
+```
+
+The variation is across three training samples, not independent geographic regions.
+For the optional catalogue audit:
+
+```python
+phases = pd.read_csv(assets / "Cyprus_Settlements.csv")
+sites = workshop.summarise_sites(phases)
+print(f"{len(phases)} occupation rows; {len(sites)} settlement IDs")
+display(sites.loc[sites.coordinate_conflict | ~sites.quality_documented])
+```
+
+Expect 8,766 rows and 1,559 IDs. `CY453` has conflicting coordinates; its summary
+coordinates stay missing. Blank/F quality codes are undocumented. `Long_Cord` and
+`Lat_Cord` are degrees; `Longitude` and `Latitude` are UTM zone 36N metres. Quality
+codes describe source provenance, not numerical error radii.
+
 ## If something goes wrong
 
 - **Cell reports an undefined name:** restart the kernel if needed, then rerun setup and every prerequisite cell in order. Restarting clears variables; save any written reflections first.
-- **Download fails or the server ignores range requests:** retry later or use the facilitator-supplied sample ZIP at the expected path. Do not rename the full archive to the sample ZIP name. The optional Cyprus refresh is not required.
-- **Model weights or GPU unavailable:** leave DINOv2 recomputation disabled and use the supplied feature cache. The default task uses no live GPU or model download.
+- **Download fails or the server ignores range requests:** retry later or use the facilitator-supplied sample ZIP at the expected path. Do not rename the full archive to the sample ZIP name.
+- **Model weights or GPU unavailable:** use the supplied feature cache. Both notebooks use no GPU or model download.
 - **No image or progress widget is visible:** confirm the active kernel matches the environment with notebook dependencies and restart it after installation. Some notebook frontends cannot render widgets; a plain-text progress indicator is sufficient. Check that the frontend can display ordinary Matplotlib figures.
 - **Session reset or interrupted execution:** rerun in order, reuse the validated sample when available, and save/export the submission and notebook before the session ends. Colab runtime files are not permanent.
 
