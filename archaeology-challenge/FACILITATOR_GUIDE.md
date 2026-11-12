@@ -1,6 +1,8 @@
 # Facilitator guide: From Tells to Cyprus
 
-This guide supports the participant and instructor notebooks. The workshop asks learners to decide whether a model can help an archaeologist prioritise imagery for review. A high model score is a reason to inspect a tile, not evidence that it contains an archaeological site.
+This guide supports the participant and instructor notebooks. Frame the task as helping a survey team identify locations that deserve further investigation. Image review includes interpreting possible traces of settlement, comparing them with existing records and deciding where better imagery or a field visit would be useful. The budget of 50 images is an explicit teaching assumption for a first review pass; it is not a real team's measured capacity.
+
+Explain the data choice before starting the code. Enki supplies image-class labels for learning and evaluating a ranking. Cyprus supplies a settlement catalogue and satellite imagery for asking whether the model's assumptions carry over to a different setting. The bundled Cyprus records describe locations and occupation periods, not image visibility or verified absences. A project intended for Cyprus would need representative local imagery, suitable expert labels and an independent geographic evaluation. A high score is a reason to inspect a tile, not evidence that it contains an archaeological site.
 
 ## Learning goals
 
@@ -12,7 +14,11 @@ By the end, participants should be able to:
 4. Describe at least two ways the Cyprus imagery and labels differ from the source task, and propose evidence needed for a defensible transfer study.
 5. Make a proportionate recommendation supported by the workshop results and their limitations.
 
-The intended audience has basic Python, pandas and scikit-learn familiarity; archaeological or remote-sensing expertise is useful but not assumed. The notebook has six sections and runs as supplied. Participants inspect the outputs and write one 4–6 sentence recommendation. There are no code stubs or separate response dictionaries to complete.
+The audience has basic Python and pandas; previous scikit-learn experience helps
+but is not required. The core path has one short coding exercise (two expressions),
+short parameter-change experiments, image discussion and one 4–6 sentence report.
+The optional block between sections 5 and 6 offers three alternatives. Choose one,
+or use that time for support; completing every lab is not the four-hour task.
 
 ## Before the session
 
@@ -21,21 +27,60 @@ The intended audience has basic Python, pandas and scikit-learn familiarity; arc
 - Review the instructor notebook's outputs and source notices. Do not share it with participants until your planned debrief; it includes worked interpretation and held-out results. Treat the public-source holdout as educational: source labels are recoverable and it is not a secure competition.
 - Choose how learners will answer prompts: individually in notes, in pairs, or in a brief group discussion. If tools for displaying notebook widgets are unavailable, text progress displays are acceptable. Set expectations that time estimates vary across groups.
 
+## Completion-time estimate
+
+This is a planning estimate, not a timed learner study. Count the participant copy,
+excluding optional labs, credits and the folded setup source. It has about **3,713
+words of core explanation**. At an assumed 150 technical words per minute, reading
+takes about **25 minutes**. The active-work allowance below covers running and
+understanding code, completing tasks and discussion; it excludes that reading allowance.
+
+| Core block | Prose words | Reading minutes | Active-work minutes |
+|---|---:|---:|---:|
+| Orientation and setup | 467 | 3.1 | 18 |
+| 1. Images and split | 339 | 2.3 | 16 |
+| 2. Shortlist metrics | 320 | 2.1 | 14 |
+| 3. Model comparison | 1299 | 8.7 | 40 |
+| 4. Mistake inspection | 287 | 1.9 | 17 |
+| 5. Cyprus comparison | 510 | 3.4 | 17 |
+| 6. Report, export and debrief | 491 | 3.3 | 35 |
+| Total | 3713 | 24.8 | 157 |
+
+Calculation: **24.8 + 157 + 10-minute break + 15 minutes for support
+= 207 minutes**, approximately **3 hours 25–30 minutes** for the core path.
+One optional lab adds 25–35 minutes, giving roughly **3 hours 50 minutes to 4 hours**.
+All three labs add 75–100 minutes and belong in a longer session or follow-up.
+
+Assumptions: a working Python environment, the supplied cached features, basic Python
+and pandas, and a normal first image download. The setup allowance covers routine
+installation and loading; 15 minutes is contingency, not a guarantee against network
+problems. A cold setup or learners new to notebooks can take longer. Reading aloud
+and extended discussion can also change the balance. Use the checkpoints below to
+adjust the session; the arithmetic does not establish a precise human completion time.
+
 ## Four-hour suggested sequence
+
+The slots below round the estimate into a teaching schedule. Support is absorbed
+within the slots and the optional/catch-up block, rather than added again.
 
 | Time | Activity | Facilitator action |
 |---|---|---|
-| 00:00–00:20 | Frame the task and run setup | Define a tell, an image tile and a review budget. Ask what a ranked tile can and cannot establish. |
-| 00:20–00:45 | Inspect Enki images and sampling | Ask learners what the labels and image categories mean and what visual shortcuts might exist. |
-| 00:45–01:15 | Understand review metrics | Use the ranked example below; let learners predict and explain the denominators before checking. |
-| 01:15–01:50 | Compare image features and models | Explain the fixed DINOv2 encoder, the simpler baseline and the roles of training and validation. |
-| 01:50–02:00 | Break | If setup is still running, use the metrics and splitting discussions offline. |
-| 02:00–02:30 | Inspect shortlist mistakes | Ask learners to identify an image observation, then distinguish it from a hypothesis about the model. |
-| 02:30–03:05 | Examine Cyprus transfer | Examine what a catalogue location and an unlabelled location mean. Use the catalogue audit only if useful to the group. |
-| 03:05–03:35 | Freeze the choice and prepare the report | Have teams cite their validation evidence, limitations and proposed next study. |
-| 03:35–04:00 | Debrief and final reveal | Discuss competing recommendations, then reveal the held-out results once choices are frozen. |
+| 00:00–00:20 | Orientation and setup | Explain the 50-image scenario and start loading. |
+| 00:20–00:40 | 1. Inspect images and the split | Discuss one labelled pair; keep the three data roles clear. |
+| 00:40–01:00 | 2. Shortlist metrics | Walk through two entries, then predict and check four. |
+| 01:00–01:50 | 3. Compare models | Fit, score, complete two expressions and interpret the selection. PCA comes later. |
+| 01:50–02:00 | Break | Check who needs setup or coding support. |
+| 02:00–02:20 | 4. Inspect mistakes | Keep one observation and try ten extra review slots. |
+| 02:20–02:40 | 5. Compare Cyprus pairs | Compare the two pairs and record the missing evidence. |
+| 02:40–03:10 | Optional lab or catch-up | Choose A, B or C; skip extensions if the core work needs support. |
+| 03:10–03:40 | 6. Recommendation and export | Reuse the earlier notes, exchange drafts and save the evidence. |
+| 03:40–04:00 | Final reveal and debrief | Assess the saved choice once; discuss which limitations remain. |
 
-If the group is behind, keep the three decision points—review metrics, validation versus test, and Cyprus label limitations—and shorten the discussion. Label efficiency and catalogue auditing are optional extensions below. Model recomputation and live imagery acquisition are preparation tasks, outside class. Run the six main sections in order.
+**Pacing decisions:** by 01:50 aim to have chosen a model; by 02:40 aim to have the
+Cyprus notes. If behind, skip the optional lab and the five-minute all-positives
+challenge in section 4. Preserve the two-expression metrics exercise, the distinction
+between Cyprus records and labels, and time to write and share the recommendation.
+If ahead, choose one lab; do not repeat every earlier discussion or start new downloads.
 
 ## Prompts and feedback
 
@@ -49,23 +94,149 @@ Give people time to make a prediction or write a one-sentence reason before show
 
 **If someone says “half of all tiles contain tells”:** distinguish the selected teaching sample from the population of future survey imagery. Ask what sampling design and independent labels would be needed to estimate prevalence.
 
+For the image discussion, use the 12 training images displayed in the notebook. Ask each
+pair to choose one image with each label, record both tile IDs, and describe a visible
+difference before suggesting an explanation. Participants are not being asked to authenticate
+archaeological sites from these thumbnails. A possible mound shape is a candidate cue related
+to the task; a systematic difference in sharpness could let a model predict labels from image
+quality instead. Present that sharpness example as a hypothesis, not an established result.
+Colour and land cover are not automatically shortcuts. Accept uncertainty and ask what further
+image comparisons or archaeological evidence would distinguish the explanations. This small
+preview cannot establish a pattern across the dataset or show which features a model uses.
+
 ### 2. What does a shortlist measure?
 
-**Ask:** “In a ranking whose labels are `1, 0, 1, 1, 0`, an expert reviews the first two tiles. What are precision and recall?”
+**Set up the task:** this section is a counting exercise on the invented list
+`[1, 1, 0, 1, 0]`. No images are loaded or judged. The list does not refer to the
+training-image grid. Explain that taking the first `k` entries represents selecting
+which images would be opened first in a real review; the calculations use labels
+already supplied with the dataset.
 
-**Look for:** one positive is reviewed. Precision is 1/2 because two were reviewed; recall is 1/3 because there are three positives in the full list. With a budget of four, precision is 3/4 and recall is 3/3. The example is invented; it is not an Enki result. Average precision summarises the full ranking and breaks a tie in validation recall.
+**Walk through:** selecting the first two entries gives `[1, 1]`. There are two entries
+and two `1`s in that selection, while the complete list has three `1`s. Precision is
+`2/2 = 100%`; recall is `2/3 ≈ 67%`.
 
-**If someone uses the same denominator for both:** ask “Of what set are we taking a fraction: the reviewed tiles, or all positives?” Evaluation needs labels; a reviewer making a new shortlist does not know them in advance.
+**Ask:** change `k` to four, giving `[1, 1, 0, 1]`. Count its `1`s, divide by four for
+precision, and divide by three for recall. Which extra entries changed the fractions?
+
+**Look for:** precision is `3/4 = 75%` and recall is `3/3 = 100%`. The extra entries are
+`0` and `1`: the selection now includes every positive, but also includes a negative.
+The example is invented; it is not an Enki result. Section 3 applies the calculation
+to actual model rankings of the same validation images, with `k = 50`. More positives
+in that shortlist means higher recall at the fixed budget. AP evaluates the whole
+ranking and breaks a tie; it is not part of this five-label calculation.
+
+**If someone uses the same denominator for both:** point to the two lists. Precision
+uses the number of entries in the selection; recall uses the number of `1`s in the
+complete list. A real reviewer would inspect images for possible archaeological
+features, but learners do not need to do that to calculate these metrics.
 
 ### 3. What does the comparison establish?
 
-**Ask:** “If DINOv2 wins the validation comparison, what can we conclude? Why not choose using the test set?”
+**Frame the comparison:** return to the real Enki images from section 1. We are asking
+which representation helps a logistic regression classifier put more source positives
+into a 50-image shortlist. Both classifiers use the same training images, labels,
+validation images and settings. Their input features differ, and each learns its own
+weights. Do not describe this as training DINOv2 to detect archaeology.
 
-**Look for:** compare two representations on the workshop split and stated review budget. Both use logistic regression with `C=1`; there is no required parameter search. A better validation score is evidence about this selected sample, not proof of archaeological detection generally. The DINOv2 encoder is pretrained and frozen. Validation selects the model used in both the mistake review and Cyprus transfer; the held-out test assesses that frozen choice. Repeated choices based on test results make it part of model selection.
+**Walk through the five steps in the notebook:**
 
-**If someone says “the pretrained model must win”:** invite them to read the table. A simpler colour/texture baseline might do well because of useful signal, shortcuts or dataset-specific rendering; performance alone does not reveal which explanation is correct.
+1. **Features:** one image becomes one row of numbers. Colour/texture supplies 68 fixed
+   measurements; DINOv2 supplies 384 cached values from a pretrained image encoder.
+   “Frozen” means the encoder's parameters stay unchanged. The cache avoids running
+   the neural network during the workshop. In the summary table, 200 training images
+   and 68 features means 200 rows and 68 columns, not 68 training images.
+2. **Fit:** a pipeline first scales the features using training means and standard
+   deviations, then learns logistic regression weights from the training labels.
+   Ask learners to point to the two arguments of `.fit()`. Validation and test data
+   are not used to fit either step. `C=1` fixes the penalty on large weights; this is
+   a comparison at shared settings, not a search for the best possible configuration.
+3. **Score:** `predict_proba` receives validation features only. Its second column is
+   the score for label `1`. The preview attaches existing labels after prediction and
+   shows the four highest-scoring images for each model, colour/texture then DINOv2,
+   with a matching table and row of thumbnails for each.
+   Image captions give rank, score and tile ID; read left to right in descending score order.
+   This preview does not select a winner.
+   Both full rankings enter the next calculation. No new image labelling is required.
+4. **Compare:** use the table and printed fractions to connect `hits`, `reviewed`,
+   precision and recall to actual counts. Higher recall at 50 wins. Equal recall means
+   equal hits on the same pool; AP then compares ordering across the full ranking.
+   An exact tie in both metrics is resolved by name for reproducibility, not evidence.
+5. **Interpret:** compare recall with the random reference and budget ceiling. With the
+   supplied split, validation has 119 images and 60 positives. A random 50-image selection
+   includes about 25.2 positives on average: expected recall is 50/119, about 42.0%.
+   At most 50 of 60 positives fit, so the recall ceiling is 83.3%. Read model results
+   from the current run rather than assuming a particular winner.
 
-### 4. Similar images versus new places
+PCA is no longer part of the fitting sequence. Move directly from the pipeline
+explanation to fitting, scoring and comparing; lab A offers the separate visualisation.
+
+**Section 3.4 short exercise (2–3 minutes):** pause before displaying the comparison
+table. The supplied code takes the first 50 rows of the full colour/texture ranking
+from section 3.3 and counts their positives. Learners fill in
+`precision = hits / reviewed` and `recall = hits / total_positives`, then run the
+comparison cell to check their answers. Explain that each earlier four-image display
+was only a preview of its model's full ranking. The instructor copy includes both expressions.
+
+**Ask:** “What was learned in this session, and what was already fixed? Which data were
+used to learn, which to choose, and which are reserved for the final assessment?”
+
+**Look for:** both scalers and logistic regressions were fitted on training data.
+The colour/texture calculation and DINOv2 encoder were fixed. Validation selects the
+pipeline reused for mistakes and Cyprus; test assesses the frozen choice later.
+Computing fixed features for held-out images does not fit a classifier on their labels.
+Using test performance to change the choice would turn test into selection data.
+
+**For the output discussion:** ask learners to state the extra hit count, explain each
+fraction's denominator, and compare recall with both references. If they report “83%
+means it made 17% mistakes”, distinguish recall from overall accuracy and show why
+some positives cannot fit into the budget. If both models have equal hits, neither
+finds more positives in 50 slots; a higher AP describes a better full ranking.
+
+**If AP remains unclear:** use the supplied `[1, 1, 0, 1, 0]` label order, assuming no
+tied scores. Positives occur at ranks 1, 2 and 4; average the precisions at those ranks:
+`(1/1 + 2/2 + 3/4) / 3 ≈ 0.917`. AP is not the average of the two models' precisions.
+The helper handles tied scores using scikit-learn's definition.
+
+**Conclude within the evidence:** the comparison establishes performance on this
+selected sample and budget. It does not show which visual cues caused a score or
+establish transfer to a new region. If someone says “the pretrained model must win”,
+return to the results: feature count or prior training alone does not decide the winner.
+A simple baseline can capture useful cues or source-specific rendering differences.
+Proceed to section 4 to inspect actual mistakes; keep test results for the final reveal.
+
+### 4. Inspect mistakes and the review budget
+
+**Clarify the decision:** source negatives inside the shortlist are false alarms;
+source positives outside are misses. These categories depend on the review budget,
+not a score threshold of 0.5. A high-scoring positive at rank 51 is outside a 50-image
+shortlist. Neither category independently verifies archaeological presence or absence.
+
+The cell prints complete group counts and shows at most four examples per group,
+highest score first. The default DINOv2 result has no false alarms in its first 50
+images and ten missed positives. An empty false-alarm gallery is expected, not a
+plotting failure. Direct learners to the missed positives in that case.
+
+**Image reading:** ask for a tile ID, rank and visible observation, then distinguish
+that observation from a hypothesis about the model. Accept uncertainty. A rounded
+boundary or vegetation is observable; saying the classifier used it requires further
+evidence. Ask which comparison with other images would test the proposed explanation.
+The default recommendation's tile, `8bf27fc6264ea16a`, is a missed positive at rank 52.
+
+**Exercise (about five minutes):** before running the budget cell, ask whether ten
+extra reviews necessarily recover ten positives. Participants change just
+`inspection_budget = 50` to `60`, then inspect the added-image table and the newly
+included source-negative images. Which original missed example was recovered?
+
+For the default run, ranks 51–60 add seven positives and three source negatives,
+leaving three positives outside. The model's order is unchanged; the budget decides
+how far down it we inspect. The harder extension reaches every positive at rank 64:
+14 extra reviews in total, including four source negatives. If learners changed the
+training settings or selected model, use their actual ranking instead of these numbers.
+The instructor copy runs the 60-review example. The original comparison and export
+retain `REVIEW_BUDGET = 50`.
+
+**Geographic independence:** connect this error review to the limits of the split.
 
 **Ask:** “Does removing perceptually similar images guarantee the model will work in a new region?”
 
@@ -75,52 +246,147 @@ Give people time to make a prediction or write a one-sentence reason before show
 
 ### 5. What does Cyprus tell us?
 
-**Ask:** “A catalogue location gets a low score; a nearby unlabelled location gets a high score. Are these a false negative and a false positive?”
+Begin with the changed data. The fitted Enki pipeline and training scaler are reused;
+there is no Cyprus classifier fit. The twelve chips are 1 km squares at 10 m per pixel
+from 5 August 2024, paired into six catalogued and six nearby unlabelled locations.
+`paired_site` joins the two images of a pair; `tile_id` identifies one image.
+The table ranks all twelve images; the first gallery previews four.
 
-**Look for:** not necessarily. A catalogue entry records a location and periods, not whether archaeological remains are visible in the chosen image. An unlabelled location is not a verified absence. Each Cyprus chip is a 1 km square from one Sentinel-2 scene at 10 m per pixel; this differs from the rendered source imagery. Resolution, rendering, target morphology, land cover and location uncertainty may all matter. Scores permit an interpretation exercise, not a numerical target-domain detection accuracy.
+**Clarify the records:** catalogue membership says where a settlement is recorded,
+not whether remains are visible in this image. `unlabelled_background` is a stored
+category name, not a confirmed negative class. Several occupation rows can describe
+one settlement. Do not calculate detection precision or recall using these categories
+as image labels. Differences in resolution, land cover, rendering, target form and
+location uncertainty can matter; a score alone cannot identify which caused its value.
 
-**If someone treats an unlabelled location as a negative:** ask what independent expert visibility labels, confirmed absences, imagery and geographically separated sites would be needed before calculating error rates. A site can have several occupation-period rows; counting rows as separate sites inflates the apparent number of sites.
+**Pair exercise (8–10 minutes):** run `pair_id = "CY5"`, then change the ID to
+`"CY479"`. The catalogued image is on the left, its nearby unlabelled image on the
+right, with ranks and scores for reference. Ask learners for a two- or three-sentence
+comparison that names the images, records an observation and explains the missing
+evidence needed to judge a detection error. They can edit the supplied Markdown notes cell.
 
-### 6. Recommendation and transfer
+For the default DINOv2 run, `CY5_background` scores 0.232614 and `CY5_site` 0.004146.
+The direction reverses for `CY479`: its catalogued tile scores 0.214828 and its unlabelled
+neighbour 0.014940. The `CY5` images show larger bright angular patches in the catalogued
+tile and winding pale lines through darker terrain in the other. These observations
+do not show which cues the classifier used. Neither ordering is evidence of a false
+positive or false negative without suitable independent image labels.
 
-Ask each group for a concise claim, one supporting measurement, one limitation, and the next decision or piece of evidence. Accept “do not deploy yet” when it follows from the evidence. Separate observations in the plots from proposed explanations, and avoid treating scores as calibrated probabilities in Cyprus.
+Use current outputs if settings change. The colour/texture model can score both tiles
+very close to 1; displayed scores can round to the same value. High scores do not
+establish presence, and close scores should not invite a strong interpretation of rank.
+Accept uncertainty about what is visible in these small images.
 
-For an optional later follow-up, revisit the shortlist and transfer prompts with a different example and ask learners to reconstruct their reasoning before comparing with feedback. A single workshop does not itself establish long-term retention.
+The main task stops at identifying the missing evidence. Lab C combines the local
+evaluation design and decision-rule prompts, avoiding two separate proposals.
 
-## Optional experiments
+### 6. Recommendation, export and final assessment
 
-Use validation only, before the final test reveal. These are extensions, not prerequisites
-for the submission. If learners change `C`, rerun sections 3–6 so the figures and export
-agree with the new choice.
+**Writing exercise (about ten minutes):** use the five prompts in section 6.1: a
+decision, a validation measurement with its denominators, an identified image
+observation, a Cyprus limitation, and a concrete next study. Ask for 4–6 sentences;
+the instructor example uses six. A recommendation against deployment is valid when
+supported by the evidence. Participants write prose between the triple quotes rather
+than recalculate results. The headline measurement remains the original 50-image
+comparison; identify the 60-image experiment separately if it is discussed.
 
-For label efficiency, run this in a new cell after model comparison:
+**Peer feedback:** can another learner identify the proposed use, supporting evidence
+and a claim that still needs testing? Ask for one revision if the recommendation
+equates a source-positive tile with a newly found site, treats Cyprus scores as calibrated
+probabilities, or asserts a visual explanation without testing it. There is no single
+required decision, provided its scope matches the available evidence.
+
+If learners chose lab C, use its proposed next study in the recommendation;
+otherwise one concrete next step is sufficient. Do not require a second study plan.
+
+**Export:** the cell predicts test scores without using test labels and packages the
+ranked CSV, settings, validation results, Cyprus scores and recommendation. It records
+the current run; it does not prevent later edits or serialize the fitted estimator.
+Rerunning replaces the ZIP. An empty recommendation produces a draft message, so have
+learners finish their prose, rerun export, download the ZIP and save their notebook.
+The notebook preserves the image-pair notes that are not separate files in the ZIP.
+
+**Reveal after sharing:** the participant copy keeps `REVEAL_TEST = False` until the
+debrief; the instructor copy includes the worked final result. The reveal matches
+the saved submission's IDs to the Enki test labels, then reports the same budgeted
+metrics and a random-order reference. Compare test and validation counts, but do not
+select a different model using test performance. Neither result establishes geographic
+independence, Cyprus accuracy or a count of newly discovered sites.
+
+For an optional later follow-up, revisit the shortlist and transfer prompts with a
+different example and ask learners to reconstruct their reasoning before comparing
+with feedback. A single workshop does not itself establish long-term retention.
+
+## Optional lab facilitation
+
+These activities appear **between sections 5 and 6**, before export and the final
+reveal. Choose one for the 30-minute slot. The instructor notebook runs both plots
+for reference; this does not imply that participants should do both labs.
+
+**Lab A: PCA (25–35 minutes, including interpretation):** ask learners to project the same
+200 training images for both feature representations. The participant function has
+three blanks; the separate plotting cell is supplied and starts with
+`RUN_PROJECTION = False`. After completing the function, run it, enable plotting and
+run the plotting cell. This guard allows a fresh notebook to run before the exercise
+is completed. The instructor copy supplies the solution and enables the plot.
+
+The three replacements are:
 
 ```python
-curve = workshop.learning_curve_rows(
-    models["dinov2"], feature_sets["dinov2"]["train"], train.label.to_numpy(),
-    feature_sets["dinov2"]["validation"], validation.label.to_numpy(),
-    workshop.ranking_metrics, REVIEW_BUDGET,
-)
-summary = curve.groupby("labels_per_class").recall_at_k.agg(["mean", "std"])
-summary["mean"].plot(yerr=summary["std"], marker="o", ylim=(0, 1),
-                     xlabel="Training labels per class", ylabel="Validation recall")
-plt.show()
+X = feature_sets[name]["train"]
+X_scaled = scaler.fit_transform(X)
+coordinates = pca.fit_transform(X_scaled)
 ```
 
-The variation is across three training samples, not independent geographic regions.
-For the optional catalogue audit:
+PCA uses feature variation to choose its axes; it never receives the class labels.
+Labels are added as colours and marker shapes afterwards. Each dot is one training
+image; each axis combines many original features. Standardisation matches the scaling
+used by our classifiers, and a separate scaler and PCA are fitted for each representation.
+Keep validation and test out of this exploration. The code leaves the original matrices
+intact, so the fitted classifiers still use all 68 or 384 features.
 
-```python
-phases = pd.read_csv(assets / "Cyprus_Settlements.csv")
-sites = workshop.summarise_sites(phases)
-print(f"{len(phases)} occupation rows; {len(sites)} settlement IDs")
-display(sites.loc[sites.coordinate_conflict | ~sites.quality_documented])
-```
+**Debrief the plots:** ask learners to describe an area of overlap or separation and
+report the retained variance for each representation. That percentage measures variation
+preserved in the standardised features, not classification accuracy or archaeological
+relevance. PCA's leading directions need not carry the differences between labels.
+Overlap can hide separation in omitted dimensions; visible training separation does
+not establish generalisation. Each panel has its own axes, so coordinates cannot be
+matched across representations. The model comparison already used validation recall; this plot does not replace it.
 
-Expect 8,766 rows and 1,559 IDs. `CY453` has conflicting coordinates; its summary
-coordinates stay missing. Blank/F quality codes are undocumented. `Long_Cord` and
-`Lat_Cord` are degrees; `Longitude` and `Latitude` are UTM zone 36N metres. Quality
-codes describe source provenance, not numerical error radii.
+For the extension, set `N_COMPONENTS = 3`. Inline plots may be static; change `AZIMUTH`
+and rerun to inspect another viewing angle. A third component can expose hidden structure,
+but neither a favourable angle nor a higher retained-variance percentage establishes
+a better classifier. If someone used `.fit(...)` in a blank, explain that it returns
+the fitted estimator; `.fit_transform(...)` returns the transformed numeric rows needed
+by the next operation. Rerun the function-definition cell after editing it.
+
+**Lab B: label efficiency (25–35 minutes):** ask for a prediction, then enable
+`RUN_LEARNING_CURVES`. The supplied helper clones each fitted pipeline and fits on
+10, 25, 50 and 100 training examples per class with three seeds. That is 24 fits
+across the two representations. It never fits on validation labels and never uses
+the test set. The source comparison remains unchanged.
+
+The table and plot show mean, minimum and maximum validation recall. These are
+training-subsample ranges, not confidence intervals or independent geographic samples.
+At the largest budget, all 200 training images are reused. A strong answer compares
+the observed gains for both representations, cites an intermediate-budget range and
+connects the gain to the cost of labelling. Do not assume monotonic improvement or
+recommend a fixed budget without reading the current results. Repeated use of one
+validation set still leaves local and geographic transfer unmeasured.
+
+**Lab C: Cyprus study design (25–30 minutes):** ask for one half-page proposal, not
+another model run. Look for a defined visible target, appropriate imagery, expert
+labels that retain uncertainty, sampling across scores and areas, and a geographic
+assessment set. The proposed decision rule should name a budget, metric and justified
+threshold before future test results are seen. Ask what would make the team change
+its decision. Accept different plans whose assumptions are explicit.
+
+**Extra reference for catalogue questions:** this is not another required exercise.
+`workshop.summarise_sites(pd.read_csv(assets / "Cyprus_Settlements.csv"))` audits the
+catalogue. Expect 8,766 occupation rows and 1,559 settlement IDs. `CY453` has conflicting
+coordinates and no summary point. Blank/F quality codes are undocumented;
+`Long_Cord`/`Lat_Cord` are degrees, while `Longitude`/`Latitude` are UTM zone 36N metres.
+These codes describe provenance, not numerical error radii.
 
 ## If something goes wrong
 

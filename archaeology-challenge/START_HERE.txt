@@ -8,7 +8,19 @@ Open https://colab.research.google.com/ and choose File > Upload notebook.
 No paid Colab plan, Earth Engine account, API key or guaranteed GPU is needed.
 Run cells in order. Six sections lead from image inspection to a two-model
 comparison, mistake review, Cyprus transfer and one short recommendation.
-The instructor version adds discussion notes, a sample recommendation and saved outputs.
+The instructor version adds worked exercises, optional lab plots and final test outputs.
+
+PURPOSE
+
+Imagine helping archaeologists plan a survey: image review identifies locations
+worth checking against records, inspecting in better imagery or visiting in the field.
+The exercise assumes a first pass of 50 image reviews so we can compare rankings
+at the same effort. This is a teaching budget; a real team can review more as time permits.
+Enki supplies labelled tell/negative image examples for training and evaluation.
+We also use Cyprus data, but its settlement catalogue records locations and occupation
+periods, not whether archaeology is visible in each image or absent elsewhere.
+The Cyprus images therefore support inspecting transfer and identifying missing
+evidence. A project intended for Cyprus would need appropriate local image labels.
 
 DEFAULT WORKFLOW
 
@@ -32,15 +44,38 @@ network access once their dependencies and the sample ZIP are available.
 
 KEEP THE INSTRUCTOR NOTEBOOK PRIVATE UNTIL THE DEBRIEF
 
-The participant version runs without filling in code stubs. It compares colour/texture
-features with frozen DINOv2 features at fixed C=1, chooses using validation recall
-at 50 reviews, and uses that same selected model for the mistake and Cyprus reviews.
-Participants write one 4–6 sentence recommendation; the export cell packages it
-with the ranked CSV and supporting results. The final test reveal starts disabled.
+CORE PATH AND TIME
 
-The instructor notebook is executed against real imagery and includes plots,
-results and facilitator guidance. Scores are measurements from this
-curated split, not promised performance on other archaeological landscapes.
+Allow about 3 hours 25–30 minutes for the core path, including discussion, a short
+break and routine setup support. The four-hour schedule leaves about 30 minutes for
+one optional lab or catch-up. This is an estimate for basic Python/pandas users;
+slow downloads or unfamiliar software can add time. The calculation and checkpoints
+are in FACILITATOR_GUIDE.md.
+
+Run sections 1–5 in order. Section 2 works through an invented label list, section
+3.4 asks for two precision/recall expressions before the comparison table, section 4
+changes the review budget, and section 5 compares two pairs of Cyprus images.
+Keep brief notes for one 4–6 sentence recommendation in section 6.
+
+The optional block is BEFORE section 6. Choose ONE lab, or skip it:
+  A. Complete three PCA expressions and compare 2D/3D feature projections (25–35 min).
+  B. Run learning curves for both models and assess a labelling budget (25–35 min).
+  C. Design a Cyprus evaluation with labels, sampling and a decision rule (25–30 min).
+
+For A, complete and run the function before enabling RUN_PROJECTION.
+For B, set RUN_LEARNING_CURVES = True. The default participant copy skips both plots.
+The instructor copy completes A and runs A and B for reference; participants are not
+expected to finish all labs. No new model weights or imagery downloads are needed.
+
+The main comparison uses fixed C=1, chooses using validation recall at 50 reviews
+(AP breaks a tie), and reuses that model for the mistake and Cyprus reviews.
+Finish experiments, write the recommendation, export and share before enabling
+REVEAL_TEST for the final debrief. Do not use test performance to select another model.
+Download team_submission.zip AND save the notebook to retain your notes and figures.
+An empty recommendation produces a draft; finish it and rerun export before sharing.
+
+The instructor notebook contains worked results from the real sample. They describe
+this curated split, not promised performance on other archaeological landscapes.
 
 SCIENTIFIC SCOPE
 

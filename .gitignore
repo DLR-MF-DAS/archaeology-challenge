@@ -8,3 +8,6 @@ enki_workshop_sample.zip
 *.egg-info/
 build/
 dist/
+
+# Local notebook copies
+/archaeology-challenge/*-Copy*.ipynb

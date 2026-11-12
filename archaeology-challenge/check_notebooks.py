@@ -84,7 +84,8 @@ class ScientificChecks(unittest.TestCase):
         nb = builder.notebook(False, "")
         source = next(cell.source for cell in nb.cells if cell.id == "cyprus")
         frame = pd.DataFrame({"tile_id": ["site", "background"], "path": ["a", "b"],
-                              "kind": ["catalogued_location", "unlabelled_background"]})
+                              "kind": ["catalogued_location", "unlabelled_background"],
+                              "paired_site": ["pair", "pair"]})
         matrices = {"colour_texture": np.array([[1, 2], [3, 4]]),
                     "dinov2": np.array([[5, 6, 7], [8, 9, 10]])}
         for selected in matrices:
@@ -138,6 +139,15 @@ class ScientificChecks(unittest.TestCase):
             if not instructor:
                 reveal = next(c for c in nb.cells if c.id == "reveal")
                 self.assertIn("REVEAL_TEST = False", reveal.source)
+                by_id = {cell.id: cell for cell in nb.cells}
+                order = [cell.id for cell in nb.cells]
+                self.assertLess(order.index("train-models"), order.index("score-validation"))
+                self.assertLess(order.index("cyprus-pair"), order.index("optional-experiments"))
+                for identifier in ("projection-exercise", "learning-curve", "cyprus-study-design"):
+                    self.assertLess(order.index("optional-experiments"), order.index(identifier))
+                    self.assertLess(order.index(identifier), order.index("report-introduction"))
+                self.assertIn("RUN_PROJECTION = False", by_id["projection-plot"].source)
+                self.assertIn("RUN_LEARNING_CURVES = False", by_id["learning-curve"].source)
 
 
 def execute_notebook(filename, participant=False):

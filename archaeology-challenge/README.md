@@ -3,7 +3,8 @@
 Two standalone notebooks for “From Tells to Cyprus”, an archaeological survey
 prioritisation workshop. The six sections cover image inspection, shortlist metrics,
 a two-model comparison, mistakes, Cyprus transfer and one written recommendation.
-The instructor copy adds discussion notes and the final test results. See
+The core path is estimated at about 3½ hours; the four-hour plan adds one optional
+lab or catch-up. The instructor copy adds worked exercises and the final test results. See
 [START_HERE.txt](START_HERE.txt) for the workshop instructions, data provenance,
 licensing notices and scientific limitations. The [facilitator guide](FACILITATOR_GUIDE.md)
 contains a teaching plan, discussion feedback and the research informing the design.
@@ -46,7 +47,9 @@ environment. It reuses `archaeology_workshop/enki_workshop_sample.zip` or
 the sample. It saves outputs in the instructor notebook and writes
 `.work/participant_validation.ipynb` separately.
 
-Optional label-efficiency and catalogue-audit recipes are in the facilitator guide.
+Optional PCA, label-efficiency and Cyprus-study labs appear before section 6 in the
+notebooks. Choose one before the final test reveal; timing assumptions and facilitation
+notes are in the facilitator guide.
 Preparing new DINOv2 features requires `uv run --extra model ...`; the
 `runtime.make_cyprus_bundle` acquisition utility requires `uv run --extra refresh ...`.
 These are preparation tasks with additional network/model downloads, outside the main lesson.
