@@ -1,148 +1,125 @@
-Validation completed on real data, 13 November 2026.
+Notebook review and validation — 13 November 2026
 
-Instructor: all 34 code cells executed, including the optional PCA plot, Lab B
-experiments, Lab C image retrieval and final test evaluation. Participant: all 33 code cells executed in an
-isolated working directory; optional labs and test reveal remain disabled and the
-recommendation remains blank. Its draft export requests completion before sharing.
-The executed participant copy is .work/participant_validation.ipynb; the distributed
-participant notebook has no saved outputs. There are 72 participant cells and 74
-instructor cells, retaining the six-section workshop and choice of optional lab.
+Scope
+-----
+Both standalone notebooks were reviewed as a lesson for someone with basic Python
+and no previous machine learning. The revision explains learning from labelled
+examples before training code, distinguishes scores from measured performance,
+and gives explicit actions and editable answer locations. Arithmetic is retained
+for precision/recall and Cyprus catalogue agreement. Optional labs supply working
+functions and ask learners to predict, change settings, inspect images and conclude.
 
-Nineteen automated checks passed: shared image preprocessing; rejection of stale,
-misaligned, nonfinite or pixel-mismatched caches (including edited Cyprus images);
-training-only size probe and single-class strata; transfer score summaries without
-target labels; metric denominators and ties; invalid inputs; submission alignment;
-contradictory image families; catalogue conflicts; both model paths in Cyprus;
-complete exports; notebook schema, Python syntax and agreement with the builder;
-Cyprus catalogue counts/random references; pair/cutoff ties and invalid pairs;
-runnable participant arithmetic blanks and correct instructor solutions; disabled
-test reveal and use of the exported model/budget despite later setting changes;
-Lab B fitting on selected training rows with a fresh pipeline; Lab C cosine retrieval,
-descending rank and ties. Both labs' disabled and unfilled-function paths also pass.
-The lab and reveal checks execute their separate settings cells first and verify
-that settings stay visible while supplied runners are marked for folding.
-A new check covers printed colour/texture counts, runnable arithmetic blanks,
-correct answers, swapped denominators and recalculation with different counts.
+AP, original-size subgroup tables and score-distribution audits are no longer part
+of the learner path. They are computed during export and explained in the README.
+Section 3.6 explains the image-collection problem using a concrete size-based guess.
+Model selection now uses tells found at the shared 50-review budget. Equal counts
+are reported as no winner; name order chooses one only to continue reproducibly.
+AP remains in exported results but is not a tie-breaker. The default choice is unchanged.
 
-The source-size audit found 300 retained tells at 350 x 350, 249 negatives at
-64 x 64 and 44 negatives at 350 x 350. Both feature branches and both regions now
-use a common full-frame bicubic 64 x 64 RGB input. DINO enlarges that input to
-224 x 224 before ImageNet normalization and frozen CLS/L2 feature extraction.
-The pinned DINOv2-small revision is unchanged. A size-only reference learned on
-training metadata achieves 92.4% validation accuracy; the notebooks expose it and
-report validation AP within each original size. Common resizing reduces a known
-detail shortcut, but does not match geographic scale or remove all acquisition bias.
+Independent learner review
+--------------------------
+A separate agent began without conversation history, read only the participant
+notebook and attempted the calculations, parameter changes, labs B/C, recommendation,
+export and final reveal. It did not use the instructor notebook, source generator,
+tests or facilitator guide for answers. Its initial attempt ran on the real data.
 
-Both feature caches were genuinely recomputed for all 600 Enki and 12 Cyprus images
-using the pinned weights. Image IDs are unchanged and embedding L2 norms are one
-within floating-point precision. The 256 original 64-pixel images have bit-identical
-embeddings to the old cache, providing a control for the encoder/preprocessing update.
-Only the two feature caches and helper source changed inside the notebook bundle;
-the image chips, catalogue, sample manifest and acquisition provenance are unchanged.
-Both caches now bind features to IDs, decoded-pixel hashes and preprocessing version.
-prepare_workshop.py rebuilds them from the committed bundle without private prep files.
+The review identified missing explanations of the training/validation/test roles,
+the learning-to-ranking process, and the difference between image similarity and
+a learned classifier. It also found unsupported AP interpretation, unnecessary
+NumPy syntax exercises, and a Lab B question that presumed total improvement even
+though a prescribed run leaves the total unchanged. These issues informed the rewrite.
+The revised participant notebook was then attempted independently. Both calculations,
+the prescribed core setting changes, all three Lab B runs, both Lab C pairs,
+recommendation, export and post-save test reveal completed successfully. The reviewer
+reported no remaining core completion blocker and could explain the principal
+conclusions from the lesson alone. Two misleading phrases were corrected: Enki's
+supplied labels are not presented as verified expert visibility labels, and the Cyprus
+pair comparison no longer presupposes that the first pair favours the recorded location.
 
-The existing 600-image ZIP was verified and reused. Similarity filtering still
-retains 593 images; training has 200, validation 119 and test 119. At 50 reviews:
-  DINOv2 validation: 47 hits, precision 0.940, recall 0.783, AP 0.956.
-  Colour/texture validation: 40 hits, precision 0.800, recall 0.667, AP 0.864.
-  Selected DINOv2 test: 48 hits, precision 0.960, recall 0.800, AP 0.961.
-The validation recall ceiling remains 50/60 = 0.833. Within the native 350-pixel
-validation subset (60 tells, nine negatives), AP is 0.996 for DINOv2 and 0.960 for
-colour/texture, against a positive fraction of 0.870. Native 64-pixel validation
-images are all negative, so within-stratum AP is undefined. These are results for
-the existing teaching split, not a fresh geographic or site-independent benchmark.
+The completed attempts, notes, figures and execution logs are under
+.work/beginner-review/ at the repository root. The reviewer did not see the instructor answers. This is an
+agent simulation of a learner review, not evidence from a human usability study.
+The agent retains machine-learning knowledge, and its second pass had seen the
+first pass's outcomes. It tested code and outputs, not notebook interface controls
+or installation on a clean machine. Workshop timing remains a planning estimate.
 
-DINOv2 Cyprus scores now span 0.029189 to 0.974996 with median 0.786875; the old
-median was 0.040930. Colour/texture scores still saturate near one. Higher scores
-do not establish better archaeological detection: the twelve chips have no expert
-image-visibility labels and nearby unlabelled locations are not verified absences.
-Both models' score distributions are shown against Enki validation, and the notes
-explain the remaining target, scale, rendering and annotation differences.
+Execution and checks
+--------------------
+The existing verified Enki sample ZIP and frozen feature caches were reused.
+No source imagery, feature arrays, preprocessing or model weights were changed.
+Notebook execution uses the existing Python 3.13 environment on CPU. It needs no
+GPU or model download. Hosted Colab execution was not tested.
 
-Section 5.3 now contains a quantitative Cyprus exercise with three arithmetic
-blanks, a supplied answer check and worked instructor expressions. DINOv2 wins
-four of six pairs (66.7% agreement), includes three catalogue locations in four
-reviews (75% catalogue fraction), and recovers three of six catalogue locations
-(50% catalogue recovery). Random reference expectations are 50%, 50% and 33.3%.
-Colour/texture has two wins and four exact ties (also 66.7% with half credit),
-and two catalogue locations in its four-image shortlist under image-ID tie order.
-Its cutoff tie permits zero to four catalogue locations under different tie
-orderings; this uncertainty is explicitly reported. These numbers measure catalogue
-agreement, not detection accuracy. Both complete notebooks ran successfully with
-the existing corrected caches; no new model extraction was needed for this exercise.
+21 automated checks cover preprocessing, feature-cache integrity and alignment,
+training-only metadata diagnostics, ranking metrics and tie handling, catalogue
+counts and random references, submission alignment, exports, notebook generation,
+worked arithmetic, both model choices and an exact selection tie, both Cyprus
+ranking paths, supplied training/retrieval functions, and the reserved test reveal.
+The reveal uses the model and budget saved at export rather than later settings.
 
-Saved Cyprus, pair-comparison, mistake, training-change and neighbour galleries were visually
-inspected. Both exports contain submission.csv, configuration.json,
+Both notebooks execute in isolated directories. The distributed participant copy
+has no saved outputs; the validation run is .work/participant_validation.ipynb.
+It keeps arithmetic placeholders, a blank recommendation and disabled optional
+labs/test reveal. These defaults produce completion or skipped messages, not errors.
+The instructor copy has saved outputs, completed calculations, enabled lab examples
+and the final test result. It includes worked interpretations of the image inspection,
+metrics, model choice, extra review slots, Cyprus examples and optional experiments.
+
+Results on the supplied data
+----------------------------
+The 600-image sample retains 593 after similar-image filtering. Training uses 200
+images (100 per label), validation 119 (60 tells) and test 119 (60 tells).
+
+At 50 reviews:
+  Colour/texture validation: 40 tells, precision 80.0%, recall 66.7%.
+  DINOv2 validation:         47 tells, precision 94.0%, recall 78.3%.
+  Selected DINOv2 test:      48 tells, precision 96.0%, recall 80.0%.
+Random selection averages 25.2 validation tells; a perfect list can include at most
+50 of 60. Ten extra reviews add five tells and five negatives, leaving eight tells.
+
+Cyprus has twelve images in six pairs. The selected DINOv2 model wins four pairs,
+loses two and ties none: pair agreement 66.7%. Three of its four review images are
+recorded locations (75% catalogue fraction); it recovers three of six recorded
+locations (50%). Random averages are 50%, 50% and 33.3%, respectively. These are
+catalogue measures, not accuracy for detecting visible archaeology. Colour/texture
+has two wins and four exact ties; a tie across fourth place permits zero to four
+recorded locations in its shortlist. Both models' complete metrics remain exported.
+
+Lab B, DINOv2, comparing each small training set with the 200-image classifier:
+  20 images, seed 0: 45 versus 47 tells; 9 enter and 7 leave the shortlist.
+  50 images, seed 0: 47 versus 47 tells; 5 enter and 5 leave.
+  20 images, seed 1: 45 versus 47 tells; 6 enter and 4 leave.
+At a fixed seed, subsets are nested. Changing the seed changes selected examples.
+The main fitted classifiers remain unchanged.
+
+Lab C: CY754_site scores 0.829 with one tell-labelled match among four;
+CY754_background scores 0.060 with four. Both CY479 images have one tell-labelled
+match, despite scores 0.810 and 0.431. The search ignores labels when choosing
+matches. The classifier does not vote among those four matches, and their labels
+do not supply missing Cyprus visibility labels.
+
+Scientific limits and retained audit
+-----------------------------------
+All 300 retained tells were originally 350 x 350 pixels. Negatives comprise 249
+at 64 x 64 and 44 at 350 x 350. The separate rule using original dimensions alone
+gets 110/119 validation labels correct (92.4%). This is not image-model accuracy
+and does not prove which cues the classifiers use. Both pipelines receive common
+64 x 64 RGB input; DINO enlarges it to 224 x 224 before frozen feature extraction.
+Common resizing does not equalise ground resolution or remove every collection cue.
+The teaching split has no verified geographic independence.
+
+The audit retains whole-ranking AP and within-size results: the 350-pixel validation
+group has 60 tells and nine negatives; AP is 0.996 for DINOv2 and 0.960 for colour/texture.
+The 64-pixel group has 50 negatives and no tells, so AP is not reported for that group.
+Cyprus lacks expert image-visibility labels, has only six selected pairs and includes
+overlapping image areas. Neither large scores nor catalogue agreement establish
+archaeological detection accuracy.
+
+Each evidence ZIP contains ten files: submission.csv, configuration.json,
 validation_results.csv, cyprus_review.csv, recommendation.md, data_audit.json,
-validation_diagnostics.csv, transfer_diagnostics.csv, cyprus_catalogue_metrics.csv
-and cyprus_pairs.csv. Configuration records common input size, preprocessing,
-the separate Cyprus review budget and the absence of Cyprus calibration/labels.
-The instructor's recommendation uses current metrics and a displayed Cyprus image;
-stale score/rank examples have been removed from the generated text and guide.
-Lab B now asks participants to implement a small-training function and inspect
-changed mistakes. It clones the pipeline, fits the scaler/classifier on selected
-training rows and scores the fixed validation pool at 50 reviews. DINOv2 with 20
-training images and seed 0 finds 45 tells versus 47 for the full 200-image model:
-nine tells enter the shortlist and seven leave. With 50 images/seed 0, both models
-find 47 but five tells enter and five leave. With 20 images/seed 1, the smaller
-model finds 45, with six entering and four leaving. The instructor computes all
-three comparisons and shows recovered/newly missed image galleries. The experiment
-uses balanced subsets of seeded class permutations; subsets at a fixed seed are nested.
+validation_diagnostics.csv, transfer_diagnostics.csv, cyprus_catalogue_metrics.csv,
+and cyprus_pairs.csv. Test labels are absent from submission.csv. The notebook
+must also be saved to retain notes, figures and the debrief.
 
-Lab C replaces the invented study and arithmetic with cosine image retrieval.
-Participants implement a dot product and descending sort, then inspect nearest
-Enki training images for real Cyprus pairs. IDs and vectors are loaded together,
-avoiding section 5's reordered table. CY754_site scores 0.829 with one tell-labelled
-neighbour among four; CY754_background scores 0.060 with four. The CY479 queries
-both have one tell-labelled neighbour, with scores 0.810 and 0.431. The instructor
-shows all four query galleries. Neighbour labels do not establish Cyprus visibility,
-and their majority need not agree with a weighted logistic classifier. The gallery
-captions separate cosine similarity from classifier score. The source images,
-feature caches, selected main-path model and final metrics are unchanged. Optional
-code remains disabled in the participant copy. Supporting instructions match the labs.
-
-Section 6 now has three steps: recommend, save/share, and check. Its participant
-prose is now 268 words. A live evidence summary supplies the selected
-model's Enki counts, precision and recall plus actual Cyprus catalogue recovery,
-including a warning for an ambiguous tied shortlist. Five prompts lead to a
-five-sentence recommendation; the instructor example uses current results.
-The detailed ZIP inventory has moved to README.md. Exports still contain ten files.
-The reveal compares validation and test in one table with counts and percentages,
-using the choice and budget captured at export. Default results remain 47 versus
-48 hits in 50 reviews. A one-sentence debrief preserves the original recommendation
-and identifies remaining uncertainty. Both notebooks executed without errors;
-the participant copy keeps its blank report and disabled reveal. Model results,
-imagery and cached features are unchanged by this section 6 revision.
-
-The notebooks have been edited to remove repeated explanations and output. Participant
-core prose falls from 4,376 to 1,802 words; total Markdown, including labs and credits,
-falls from 5,745 to 2,458. Instructor Markdown falls from 6,740 to 2,478 words. Detailed
-teaching notes remain in FACILITATOR_GUIDE.md; provenance, parameters and setup help
-are in README.md, linked from the standalone notebooks. Source attribution is retained.
-
-Short visible settings cells now precede the supplied lab runners and final reveal.
-The participant copy marks 11 code cells for folding (including setup), and the
-instructor copy marks 12. Visible participant code drops from 526 to 252 lines in
-frontends honouring that metadata. Exercise functions, arithmetic and settings stay
-visible. Duplicate preview/pair tables and repeated result narration are removed;
-validation captions retain the source labels. Cyprus results use one percentage
-table with win/tie/loss counts and the existing cutoff-tie warning. All calculations,
-19 checks, both full executions and ten-file exports pass. The two updated validation
-preview figures were inspected. Embedded assets and helper source are byte-for-byte
-unchanged, and the main Enki/Cyprus metrics and lab results are unchanged.
-
-Section 3.4 now displays the counts before asking participants to calculate anything:
-50 reviewed images, 40 tell-labelled images among them, and 60 available tells. The
-prompt names the two questions, variables and division operator. Its answer cell
-prints percentages and checks both denominators; the instructor obtains 80.0%
-precision and 66.7% recall. The model comparison follows the exercise and also displays
-percentages, while stored results retain numeric fractions. Cyprus instructions
-likewise name each question and the exact count variables to use. Default participant
-blanks produce a completion message; no answer or test reveal is enabled automatically.
-
-Execution used Python 3.13.18, the locked dependencies and Jupyter kernels. Feature
-re-extraction used torch 2.15.0 and transformers 4.57.6 on MPS; notebook execution
-uses cached features on CPU and needs no model download. The pinned weights were
-downloaded for preparation. No hosted Colab execution or live Sentinel refresh was
-performed. Local personal *-Copy notebooks remain historical snapshots.
+Visual checks inspect the saved image galleries, PCA panels and neighbour captions.
+Local personal *-Copy notebooks are unchanged historical snapshots.

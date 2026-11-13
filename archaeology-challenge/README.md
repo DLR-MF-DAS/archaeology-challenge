@@ -3,8 +3,10 @@
 Two standalone notebooks for “From Tells to Cyprus”, an archaeological survey
 prioritisation workshop. The six sections cover image inspection, shortlist metrics,
 a two-model comparison, mistakes, Cyprus transfer and one written recommendation.
-The core path is estimated at about 3¼ hours; the four-hour plan adds one optional
-lab and room for discussion or support. The instructor copy adds worked exercises and the final test results. See
+The audience knows basic Python; no prior machine learning or pandas is required.
+Allow roughly three to three-and-a-half hours for the core, with one optional lab
+and discussion in the four-hour plan. This is a planning estimate, not a timed learner study.
+The instructor copy adds worked exercises and the final test results. See
 [START_HERE.txt](START_HERE.txt) for the workshop instructions, data provenance,
 licensing notices and scientific limitations. The [facilitator guide](FACILITATOR_GUIDE.md)
 contains a teaching plan, discussion feedback and the research informing the design.
@@ -27,7 +29,13 @@ frozen image features and Cyprus assets; the Enki images download on first use.
 No GPU or model download is needed. `ARCHAEOLOGY_SKIP_INSTALL=1` disables installation
 entirely for offline validation.
 
-The notebooks keep exercise code and settings visible. Cells marked **Supplied**
+The notebooks explain features, training, validation and ranking before asking learners
+to interpret results. The two calculation exercises use counts printed immediately
+above them, with feedback after running. Editable notes cells collect evidence for
+the final recommendation. Model comparisons show counts, precision and recall in
+plain-language columns; technical audit measures are reserved for the export and notes below.
+
+The notebooks keep calculation code, training code and settings visible. Cells marked **Supplied**
 contain loading, plotting, checking or export code and start folded in frontends
 that support the metadata. Run these cells normally; expand them to inspect the code.
 After changing lab or reveal settings, run the settings cell and then its supplied
@@ -35,8 +43,9 @@ runner. Detailed teaching prompts stay in the facilitator guide.
 
 Both feature pipelines now start from the same 64 × 64 RGB input, including Cyprus.
 This reduces the original size/detail confound (all Enki tells are 350 × 350, while
-most negatives are 64 × 64). The notebooks expose a size-only reference and validation
-results within original-size groups. Matching pixel dimensions does not match ground
+most negatives are 64 × 64). Section 3.6 explains this problem with the example of
+guessing labels from image dimensions. The detailed size-only reference and results
+within original-size groups remain in the exported audit. Matching pixel dimensions does not match ground
 resolution or remove all acquisition differences. Cyprus has no image-visibility labels;
 its scores remain an uncalibrated transfer exercise. Both models' score distributions
 and the data audit are included in the exported evidence.
@@ -46,10 +55,10 @@ how many are tells, and how many tells exist in the full validation set. Partici
 use those counts to calculate precision and recall, with an immediate answer check.
 The subsequent model comparison displays both measures as percentages.
 
-Section 5.3 now asks participants to calculate three Cyprus catalogue measures:
+Section 5.3 asks participants to calculate three Cyprus catalogue measures:
 paired ranking agreement (with half credit for ties), the catalogue fraction in a
 four-image shortlist, and recovery of the six catalogue locations. It includes an
-automatic answer check, random references, tie diagnostics and worked instructor
+automatic answer check, explained random references, tie diagnostics and worked instructor
 answers. These measure catalogue agreement, not accuracy for visible archaeology.
 The exports include `cyprus_catalogue_metrics.csv` and `cyprus_pairs.csv`.
 
@@ -70,8 +79,9 @@ rejected. Local `*-Copy*.ipynb` files are personal snapshots and are not regener
   filename; the full source archive is not interchangeable with this sample ZIP.
 - After a reset or an undefined-name error, rerun from setup in order. Save written
   answers first. Colab runtime files are temporary, so download the ZIP and notebook.
-- A skipped lab message means its flag is still `False`. Complete the function, run
-  its settings cell with the flag enabled, then run the supplied plotting cell.
+- A skipped lab message means its flag is still `False`. Run the supplied function
+  as given, run its settings cell with the flag enabled, then run the supplied plotting
+  cell. After changing a setting, rerun settings and plotting; no earlier sections need rerunning.
 
 ## Submission files
 
@@ -121,11 +131,40 @@ has no effect on class totals in the balanced training sample. See the
 and [classifier](https://scikit-learn.org/stable/modules/generated/sklearn.linear_model.LogisticRegression.html)
 references for their parameters.
 
-Average precision (AP) describes the full ranking. For untied labels `[1, 1, 0, 1, 0]`,
+### Technical audit: original image sizes
+
+The retained sample has 300 tell images originally at 350 × 350 pixels, 249 negatives
+at 64 × 64 and 44 negatives at 350 × 350. Original dimensions are therefore associated
+with the supplied label. The audit tests a simple rule that uses only width and height:
+learn the tell fraction for each original size from training images, then predict
+tell when that fraction is at least one-half. On the default validation set it gets
+110 of 119 labels correct (92.4%), without inspecting any pixels. This is the accuracy
+of that metadata rule, not the accuracy of either image classifier. It demonstrates
+a collection problem; it does not prove which cues the fitted image classifiers use.
+
+`validation_diagnostics.csv` also evaluates each image classifier separately on images
+that had the same original dimensions. The 350 × 350 validation group contains 60 tells
+and nine negatives; the 64 × 64 group contains 50 negatives and no tells. This check
+helps separate ranking within a size group from separating the size groups themselves.
+It cannot rule out other collection differences, and it is not a geographic evaluation.
+
+For this optional audit, **average precision (AP)** summarises the whole ranking, rather
+than just its first 50 images. Higher values mean tell-labelled images tend to appear
+earlier; 1 is a perfect ranking. For untied labels `[1, 1, 0, 1, 0]`,
 average precision at the positive ranks: `(1/1 + 2/2 + 3/4) / 3 ≈ 0.917`.
 The workshop uses scikit-learn's [AP implementation](https://scikit-learn.org/stable/modules/generated/sklearn.metrics.average_precision_score.html),
-including its handling of ties. For the within-size audit, compare AP with the
-positive fraction and avoid drawing strong conclusions from small groups.
+including its handling of ties. The `positive_fraction` column is simply tells divided
+by all images in the group: `60/69 ≈ 0.870` in the 350-pixel group. This is a population
+reference for a ranking with no useful information, not the exact expected AP of every
+finite random sample. Default within-group AP is 0.996 for DINOv2 and 0.960 for
+colour/texture. AP is not reported for groups containing only one label because they
+cannot test separation of tells from negatives. These technical measures are not
+required for the participant exercises or used to break model-selection ties.
+
+`transfer_diagnostics.csv` preserves both models' score distributions on Enki and Cyprus.
+It may reveal changes in the outputs, but cannot measure Cyprus detection accuracy
+without suitable image labels. These tables are computed during export, away from
+the core learning sequence.
 
 ## Development
 
@@ -148,12 +187,13 @@ the sample. It saves outputs in the instructor notebook and writes
 `.work/participant_validation.ipynb` separately.
 
 Optional labs appear before section 6. Choose one before the final test reveal.
-Lab A covers PCA. In lab B, learners complete a training function, compare smaller
-training sets with the full model, and inspect actual tells entering and leaving the
-50-image shortlist. They vary the sample size and seed to check whether their conclusion
-holds. In lab C, learners implement cosine similarity search and retrieve Enki training
-images for two real Cyprus pairs. They compare visual matches, source labels and
-classifier scores without treating resemblance as detection accuracy. Both labs have
+All labs supply complete working functions; the tasks are experiments and interpretation,
+not syntax completion. Lab A explains PCA as a compressed picture of feature values.
+In lab B, learners predict the effect of more training examples, compare 20/50-image
+training sets with the 200-image classifier, inspect tells entering and leaving the
+50-image shortlist, and record three controlled runs. Lab C explains the difference
+between a classifier score and an image-similarity score, then asks learners to inspect
+named Cyprus/Enki matches and compare neighbour-label counts. Both labs have
 worked instructor results. Timing and teaching notes are in the guide.
 Preparing new DINOv2 features requires `uv run --extra model ...`; the
 `runtime.make_cyprus_bundle` acquisition utility requires `uv run --extra refresh ...`.

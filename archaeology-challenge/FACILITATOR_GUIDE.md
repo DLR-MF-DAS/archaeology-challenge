@@ -14,8 +14,10 @@ By the end, participants should be able to:
 4. Calculate Cyprus catalogue agreement, distinguish it from detection accuracy, and propose evidence needed for a defensible transfer study.
 5. Make a proportionate recommendation supported by the workshop results and their limitations.
 
-The audience has basic Python and pandas; previous scikit-learn experience helps
-but is not required. The core path has two short coding exercises (two Enki and three Cyprus expressions),
+The audience has basic Python (variables, lists and division), with no machine-learning
+or pandas prerequisite. The notebook introduces labels, feature tables, learning a rule,
+and checking new examples before asking learners to interpret model results.
+The core path has two short calculation exercises (two Enki and three Cyprus expressions),
 short parameter-change experiments, image discussion and one five-sentence report.
 The optional block between sections 5 and 6 offers three alternatives. Choose one,
 or use that time for support; completing every lab is not the four-hour task.
@@ -25,41 +27,26 @@ or use that time for support; completing every lab is not the four-hour task.
 - Run the participant notebook from top to bottom in a fresh environment. Confirm the Jupyter kernel, dependencies, internet access, and that figures and the final files appear. The default cached-feature path needs a CPU, not a GPU.
 - Budget roughly 73 MB of network transfer for the first Enki sample download and about 400 MB of free space. Download time and service availability vary. For weak connectivity, distribute a previously prepared `enki_workshop_sample.zip`; place it in `archaeology_workshop/` before the Enki data cell. It is validated before reuse. The ZIP may be supplied separately from the repository. Package installation still needs network access unless dependencies are already present.
 - Review the instructor notebook's outputs and source notices. Do not share it with participants until your planned debrief; it includes worked interpretation and held-out results. Treat the public-source holdout as educational: source labels are recoverable and it is not a secure competition.
-- Choose how learners will answer prompts: individually in notes, in pairs, or in a brief group discussion. If tools for displaying notebook widgets are unavailable, text progress displays are acceptable. Set expectations that time estimates vary across groups.
+- Show how to edit the notebook's **Your notes** cells: double-click the text, replace
+  the prompts and press Shift+Enter. Learners can discuss in pairs, but should retain
+  their own observations for the recommendation. If widgets are unavailable, text
+  progress displays are acceptable.
 - Point out the short settings cells and the folded **Supplied** cells. Participants
-  edit their exercise functions and settings, then run the supplied cell below.
-  Supporting code can be expanded; detailed teaching explanations stay in this guide.
+  edit their calculations and settings, then run the supplied cell below.
+  All optional lab functions are complete. Supporting code can be expanded, but
+  completing unfamiliar array syntax is not a learning objective.
 
 ## Completion-time estimate
 
-This is a planning estimate, not a timed learner study. Count the participant copy,
-excluding optional labs, credits and supplied code. It has about **1,802
-words of core explanation**. At an assumed 150 technical words per minute, reading
-takes about **12 minutes**. The active-work allowance below covers running and
-understanding code, completing tasks and discussion; it excludes that reading allowance.
+Allow roughly three to three-and-a-half hours for the core, including setup, discussion,
+writing and a break. One optional lab adds about 25–35 minutes. The four-hour schedule
+below is a planning estimate, not a timed learner study. Reading speed or code execution
+time does not measure whether someone understands an exercise.
 
-| Core block | Prose words | Reading minutes | Active-work minutes |
-|---|---:|---:|---:|
-| Orientation and setup | 124 | 0.8 | 18 |
-| 1. Images and split | 168 | 1.1 | 16 |
-| 2. Shortlist metrics | 135 | 0.9 | 14 |
-| 3. Model comparison | 569 | 3.8 | 40 |
-| 4. Mistake inspection | 124 | 0.8 | 17 |
-| 5. Cyprus comparison and calculations | 414 | 2.8 | 17 |
-| 6. Recommend, save and check | 268 | 1.8 | 35 |
-| Total | 1802 | 12.0 | 157 |
-
-Calculation: **12.0 + 157 + 10-minute break + 15 minutes for support
-≈ 194 minutes**, approximately **3¼ hours** for the core path.
-One optional lab adds 25–35 minutes; the four-hour schedule leaves further room for discussion and support.
-All three labs add 75–100 minutes and belong in a longer session or follow-up.
-
-Assumptions: a working Python environment, the supplied cached features, basic Python
-and pandas, and a normal first image download. The setup allowance covers routine
-installation and loading; 15 minutes is contingency, not a guarantee against network
-problems. A cold setup or learners new to notebooks can take longer. Reading aloud
-and extended discussion can also change the balance. Use the checkpoints below to
-adjust the session; the arithmetic does not establish a precise human completion time.
+Assume basic Python, a working notebook environment and the supplied cached features.
+Cold setup, network problems or learners new to notebooks can need more time. Use the
+checkpoints below to adjust: protect the calculation, interpretation and recommendation
+tasks, and skip optional labs when needed. All three labs belong in a longer session.
 
 ## Four-hour suggested sequence
 
@@ -131,8 +118,8 @@ precision, and divide by three for recall. Which extra entries changed the fract
 `0` and `1`: the selection now includes every positive, but also includes a negative.
 The example is invented; it is not an Enki result. Section 3 applies the calculation
 to actual model rankings of the same validation images, with `k = 50`. More positives
-in that shortlist means higher recall at the fixed budget. AP evaluates the whole
-ranking and breaks a tie; it is not part of this five-label calculation.
+in that shortlist means higher recall at the fixed budget. Do not introduce additional
+ranking metrics here; the two denominators are the learning objective.
 
 **If someone uses the same denominator for both:** point to the two lists. Precision
 uses the number of entries in the selection; recall uses the number of `1`s in the
@@ -166,10 +153,10 @@ weights. Do not describe this as training DINOv2 to detect archaeology.
    Image captions give rank, score, tile ID and source label; read left to right in descending score order.
    This preview does not select a winner.
    Both full rankings enter the next calculation. No new image labelling is required.
-4. **Compare:** use the table and participants' calculated fractions to connect `hits`, `reviewed`,
-   precision and recall to actual counts. Higher recall at 50 wins. Equal recall means
-   equal hits on the same pool; AP then compares ordering across the full ranking.
-   An exact tie in both metrics is resolved by name for reproducibility, not evidence.
+4. **Compare:** the displayed columns are Model, Tells found, Images reviewed, Precision
+   and Recall. The model finding more tells in the same 50 reviews is retained. Equal
+   counts are explicitly reported as no winner; name order chooses one for continuity,
+   not because it is better. AP remains in the technical export but is not part of selection.
 5. **Interpret:** compare recall with the random reference and budget ceiling. With the
    supplied split, validation has 119 images and 60 positives. A random 50-image selection
    includes about 25.2 positives on average: expected recall is 50/119, about 42.0%.
@@ -203,12 +190,7 @@ Using test performance to change the choice would turn test into selection data.
 fraction's denominator, and compare recall with both references. If they report “83%
 means it made 17% mistakes”, distinguish recall from overall accuracy and show why
 some positives cannot fit into the budget. If both models have equal hits, neither
-finds more positives in 50 slots; a higher AP describes a better full ranking.
-
-**If AP remains unclear:** use the supplied `[1, 1, 0, 1, 0]` label order, assuming no
-tied scores. Positives occur at ranks 1, 2 and 4; average the precisions at those ranks:
-`(1/1 + 2/2 + 3/4) / 3 ≈ 0.917`. AP is not the average of the two models' precisions.
-The helper handles tied scores using scikit-learn's definition.
+finds more positives in 50 slots. Keep the focus on those counts and the same review effort.
 
 **Conclude within the evidence:** the comparison establishes performance on this
 selected sample and budget. It does not show which visual cues caused a score or
@@ -217,15 +199,17 @@ return to the results: feature count or prior training alone does not decide the
 A simple baseline can capture useful cues or source-specific rendering differences.
 Proceed to section 4 to inspect actual mistakes; keep test results for the final reveal.
 
-**Resolution audit:** a metadata-only reference learns the positive fraction for each
-original width/height on training rows, then predicts validation labels. It achieves
-92.4% accuracy on the default split without seeing pixels. It does not compete for
-model selection. The following table measures each image model within each native
-size after common preprocessing. Native 350 × 350 validation images include 60 tells
-and nine negatives: compare AP with the positive fraction (about 0.870), not with zero.
-The 50 native 64 × 64 validation images are all negatives, so their AP is undefined.
-The small same-size subset tests one confound; it does not establish geographic
-generalisation or prove that the common resizing removed every source cue.
+**Collection limitation:** section 3.6 now uses a concrete example: a rule guessing
+“tell” for large original images could get many labels right without recognising a mound.
+Both image models receive resized 64 × 64 inputs, but that does not prove they learned
+archaeological cues or will work in another region. Ask learners to explain this in
+ordinary language. Do not make them interpret the former AP/positive-fraction audit table.
+
+The audit is still computed at export and explained in the
+[technical notes](README.md#technical-audit-original-image-sizes). Its width/height-only
+rule gets 110/119 validation labels right (92.4%). Be explicit that this is a separate
+metadata rule's accuracy, not the image classifiers' accuracy or evidence of which cues
+they used. Same-size subgroup results remain available for technical discussion if requested.
 
 ### 4. Inspect mistakes and the review budget
 
@@ -303,8 +287,9 @@ For the current DINOv2 run, these are 4/6 = 66.7%, 3/4 = 75%, and 3/6 = 50%.
 Random ordering averages 50% pair agreement, 50% catalogue fraction and 4/12 = 33.3%
 catalogue recovery. Have learners explain why the last two calculations have different
 denominators, connecting them to Enki precision and recall. The next cell checks their
-answers and computes both models' references; unfilled blanks produce a completion
-prompt so that a fresh notebook still runs. The instructor supplies the expressions.
+answers and displays the selected model beside random-selection averages; unfilled blanks
+produce a completion prompt so that a fresh notebook still runs. Both models' full
+metrics remain in the export. The instructor supplies the expressions.
 
 Ties use unrounded scores. Pair ties receive half credit. The colour/texture model
 has two wins and four ties, also giving 66.7% agreement; that is different evidence
@@ -318,9 +303,8 @@ precision, recall or accuracy. The six pairs are selected, small in number, and
 some nearby image footprints overlap. Independent visibility labels and geographic
 sampling remain necessary for a performance claim about archaeological detection.
 
-Read both models' current score distributions against Enki validation before the pair
-exercise. An overall shift towards zero or one, or disagreement between the models,
-exposes a transfer concern; it does not measure Cyprus accuracy or establish causality.
+The score-distribution audit is in the exported evidence, not the learner path. It can
+raise questions about changed outputs, but cannot establish accuracy or its cause.
 Read the image captions to compare `CY5` and `CY479`. The `CY5` images show larger bright angular patches in the catalogued
 tile and winding pale lines through darker terrain in the other. These observations
 do not show which cues the classifier used. Neither ordering is evidence of a false
@@ -365,7 +349,9 @@ lists the ZIP contents; the export records the run without serializing the fitte
 copy already displays the result. The table compares validation with the saved test
 ranking at the exported budget, using counts and percentages, followed by a random
 reference. Keep the original recommendation and add one debrief sentence: does the
-test support or weaken it, why, and what still needs testing? Save the notebook again.
+test support, weaken or leave it unchanged, why, and what still needs testing? The
+Enki result can strengthen the ranking evidence while leaving a decision to defer
+Cyprus use unchanged. Save the notebook again.
 Stop model selection here. This Enki check establishes neither geographic independence
 nor Cyprus detection accuracy.
 
@@ -379,109 +365,84 @@ These activities appear **between sections 5 and 6**, before export and the fina
 reveal. Choose one for the 30-minute slot. The instructor notebook shows both plots
 and both image investigations for reference; participants still choose just one lab.
 
-**Lab A: PCA (25–35 minutes, including interpretation):** ask learners to project the same
-200 training images for both feature representations. The participant function has
-three blanks; the short settings cell starts with `RUN_PROJECTION = False`.
-After completing the function, run it, enable the flag, run the settings cell and
-then the supplied plotting cell. This guard allows a fresh notebook to run before the exercise
-is completed. The instructor copy supplies the solution and enables the plot.
+**Lab A: picture the features (25–35 minutes)**
 
-The three replacements are:
+The supplied function makes a PCA plot; learners do not implement PCA. Explain it
+as compressing the feature table into two coordinates per image. Ask for a prediction,
+then enable `RUN_PROJECTION`, run settings and the supplied plot. Each point is one
+training image. The labels determine colours and markers only, not positions.
 
-```python
-X = feature_sets[name]["train"]
-X_scaled = scaler.fit_transform(X)
-coordinates = pca.fit_transform(X_scaled)
-```
+Ask learners to describe actual overlap or separation, allowing “no clear winner”.
+Two coordinates discard information, and the percentage of variation retained is not
+accuracy. DINOv2 can perform better in validation even if this compressed training
+picture does not make that obvious. Separate scalers and PCA are fitted to each
+representation's training features; the original models and feature matrices stay intact.
+For the extension, set `N_COMPONENTS = 3`, then change `AZIMUTH` and rerun settings
+and plotting. A different viewpoint is not evidence of better classification.
 
-PCA uses feature variation to choose its axes; it never receives the class labels.
-Labels are added as colours and marker shapes afterwards. Each dot is one training
-image; each axis combines many original features. Standardisation matches the scaling
-used by our classifiers, and a separate scaler and PCA are fitted for each representation.
-Keep validation and test out of this exploration. The code leaves the original matrices
-intact, so the fitted classifiers still use all 68 or 384 features.
+**Lab B: does learning from more examples help? (25–35 minutes)**
 
-**Debrief the plots:** ask learners to describe an area of overlap or separation and
-report the retained variance for each representation. That percentage measures variation
-preserved in the standardised features, not classification accuracy or archaeological
-relevance. PCA's leading directions need not carry the differences between labels.
-Overlap can hide separation in omitted dimensions; visible training separation does
-not establish generalisation. Each panel has its own axes, so coordinates cannot be
-matched across representations. The model comparison already used validation recall; this plot does not replace it.
+The task is a controlled experiment with working code. Start by separating two counts:
+training images are examples used for learning; review images are examples inspected
+after ranking. Reducing training from 200 to 20 does not reduce the 50-review budget.
+The supplied function clones the pipeline and fits both scaler and classifier on the
+selected subset, leaving the section 3 models and test data alone.
 
-For the extension, set `N_COMPONENTS = 3`. Inline plots may be static; change `AZIMUTH`
-and rerun to inspect another viewing angle. A third component can expose hidden structure,
-but neither a favourable angle nor a higher retained-variance percentage establishes
-a better classifier. If someone used `.fit(...)` in a blank, explain that it returns
-the fitted estimator; `.fit_transform(...)` returns the transformed numeric rows needed
-by the next operation. Rerun the function-definition cell after editing it.
+Ask learners to predict whether more training images will improve the total and whether
+every previously found tell will remain in the list. Run the supplied function, enable
+`RUN_LABEL_EXPERIMENT`, then run settings and comparison. Use 20 images/seed 0 first,
+50/seed 0 next, and 20/seed 1 last. The same seed makes the example selection repeatable;
+the first 20 are included in the 50. A different seed changes which examples are chosen.
 
-**Lab B: which mistakes does more training data fix? (25–35 minutes)**
+The output compares the same validation images at 50 reviews. “Enter” means a tell
+was outside the small-training classifier's first 50 and inside the 200-image
+classifier's first 50; “leave” means the reverse. A displayed rank change of 58 to 42
+crosses that boundary. Have learners fill the notes table and name a changed image.
 
-Participants implement a small-training function and investigate individual ranking
-changes. Allow about eight minutes to complete and run the function, ten to inspect
-the first comparison, and ten for the two reruns and discussion. Their deliverable is
-working code, hit counts for three runs, and a conclusion citing a changed tile.
+| Training images | Seed | Tells found | Found with 200 images | Tells entering | Tells leaving |
+|---:|---:|---:|---:|---:|---:|
+| 20 | 0 | 45 | 47 | 9 | 7 |
+| 50 | 0 | 47 | 47 | 5 | 5 |
+| 20 | 1 | 45 | 47 | 6 | 4 |
 
-The three expressions select training features and labels at the same row positions,
-then validation features for prediction. `clone` creates an unfitted copy of the full
-pipeline: both the scaler and classifier learn only from the selected training rows.
-The experiment leaves the main fitted models and test data alone. Check especially
-for learners accidentally passing all training labels alongside a feature subset.
-
-Start with DINOv2, 20 training images and seed 0. The sample has ten tells and ten
-negatives; the full comparison model uses 200 images. Both get the same 50-image
-review budget on the same validation set. Before running, ask whether every previously
-found tell will remain in the larger model's shortlist. Use the two galleries to
-inspect both recovered and newly missed tells. A visible feature is an observation,
-not an established explanation of the change in rank.
-
-For the supplied data, 20 images/seed 0 finds 45 tells versus 47 for the full model:
-nine previously missed tells enter and seven previously found tells leave. With
-50 images/seed 0, both find 47, but five tells enter and five leave. With 20 images/
-seed 1, the smaller model again finds 45; six enter and four leave. The instructor
-computes this table from the current run. These cases distinguish total performance
-from which images are found. At a fixed seed, the smaller training sample is contained
-in the larger one; changing the seed changes the sampled examples.
-
-Accept a conclusion that more labels helped in some runs but did not consistently
-improve every tile or the total. Do not infer a universal label requirement or a cost
-benefit for a new region. The optional extension changes `B_MODEL` to `colour_texture`;
-it is another validation experiment, not a reason to use the final test labels.
+These default results show why total performance and individual examples are different
+questions. More labels help the total in two comparisons and leave it equal in one;
+some individual tells leave in every comparison. Do not claim that more data must
+help, or that three runs determine the label requirement for a new region. An optional
+extension repeats the experiment with `B_MODEL = "colour_texture"`.
 
 **Lab C: what does Cyprus resemble in the training set? (25–30 minutes)**
 
-Participants implement image retrieval and inspect real query/match galleries. Allow
-about seven minutes for the two expressions, eight for the first pair, and ten for a
-second pair and discussion. The deliverable is working search code and a comparison
-that names a Cyprus image and an Enki match, with a resemblance, difference and limit.
+The supplied function is an image search. Learners are not asked to derive cosine
+similarity. Its task is to compare named images and distinguish two quantities:
+the classifier score comes from a rule learned using labels; feature similarity
+compares two DINOv2 descriptions without consulting labels. More tell-labelled
+matches need not give a higher classifier score, because the classifier does not
+vote among the four neighbours.
 
-The first expression is `training_vectors @ query_vector`. The cached DINOv2 vectors
-have unit length, so the dot product is cosine similarity. The second expression is
-`np.argsort(-similarities, kind="stable")[:k]`. Negation sorts the largest values first.
-Use the original vectors, not classifier-standardised features. Labels are attached
-after retrieval; they do not choose the matches. The runner loads query IDs and vectors
-together because section 5's ranking has been sorted into a different order.
+Run the supplied function, enable `RUN_CYPRUS_NEIGHBOURS`, run settings and the search.
+Start with `C_PAIR_IDS = ["CY754"]`. The gallery has the Cyprus image at the left and
+four Enki training matches on the right, with labels and similarity values. Ask for
+a named match, one visible resemblance and one difference before discussing the table.
 
-Start with `C_PAIR_IDS = ["CY754"]` and four neighbours. The site-centred query has a
-classifier score of about 0.829 but only one tell-labelled neighbour; the nearby
-unlabelled query scores about 0.060 with four tell-labelled neighbours. Ask learners
-to describe the actual images before interpreting those counts. Then rerun with
-`["CY479"]`: both queries have one tell-labelled neighbour, although the site-centred
-and nearby queries score about 0.810 and 0.431. The instructor displays both pairs.
-
-The classifier uses learned weights on scaled features; retrieval compares directions
-of the original embeddings. A neighbour majority therefore need not agree with the
-classifier. Do not call either ordering a Cyprus detection error: neighbour labels
-belong to Enki images, and the queries have no expert visibility labels. Likewise,
-a visual resemblance does not establish which features caused a classifier score.
-The useful outcome is an image-supported transfer question for local experts, not a
-new accuracy claim or an attempt to tune scores on these twelve images.
+`CY754_site` scores about 0.829 with one tell-labelled match; `CY754_background`
+scores about 0.060 with four. Then change to `["CY479"]` and rerun settings and search:
+both images have one tell-labelled match, but scores of about 0.810 and 0.431.
+The instructor shows both pairs. The labels of the neighbours belong to the Enki
+images; they cannot supply missing labels for Cyprus.
 
 For a concrete observation, `CY754_background` and its nearest match,
 `907992cd68f2dfa0`, both show pale blocks and lines across brown ground. Individual
-forms are harder to resolve in the Cyprus tile. Accept other descriptions grounded
-in the displayed images; resemblance is not evidence of the same archaeological feature.
+forms are harder to resolve in the Cyprus image. Other descriptions grounded in the
+pictures are valid. Resemblance is not proof of the same archaeological feature,
+and it does not identify the cause of the classifier's score. Ask what local imagery,
+expert interpretation or other independent evidence would establish visible archaeology.
+
+Technical detail if requested: the original cached feature vectors have unit Euclidean
+norm (magnitude), so their dot product is cosine similarity. This does not mean their
+Python `len()` is one: each contains 384 numbers. Matches are sorted by descending
+similarity; labels are added afterwards. Query IDs and vectors are loaded together
+so the sorted Cyprus results table cannot misalign them.
 
 **Extra reference for catalogue questions:** this is not another required exercise.
 `workshop.summarise_sites(pd.read_csv(assets / "Cyprus_Settlements.csv"))` audits the

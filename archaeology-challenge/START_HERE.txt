@@ -53,11 +53,13 @@ KEEP THE INSTRUCTOR NOTEBOOK PRIVATE UNTIL THE DEBRIEF
 
 CORE PATH AND TIME
 
-Allow about 3¼ hours for the core path, including discussion, a short
+Allow about three to three-and-a-half hours for the core path, including discussion, a short
 break and routine setup support. The four-hour schedule adds one optional lab and
-room for further discussion or catch-up. This is an estimate for basic Python/pandas users;
+room for further discussion or catch-up. This is an estimate for basic Python users;
 slow downloads or unfamiliar software can add time. The calculation and checkpoints
-are in FACILITATOR_GUIDE.md.
+are in FACILITATOR_GUIDE.md. No machine-learning or pandas experience is assumed.
+Labels, features, training and checking new examples are explained before the model
+comparison. Edit the "Your notes" cells to keep answers for the final recommendation.
 
 Run sections 1–5 in order. Section 2 works through an invented label list, section
 3.4 prints the three counts needed for precision and recall, asks for two divisions
@@ -70,16 +72,18 @@ for the final recommendation.
 Keep brief notes for one five-sentence recommendation in section 6.
 
 The optional block is BEFORE section 6. Choose ONE lab, or skip it:
-  A. Complete three PCA expressions and compare 2D/3D feature projections (25–35 min).
-  B. Complete a training function; compare 20/50 training images and two seeds with
-     the full model, then inspect tells entering or leaving the shortlist (25–35 min).
-  C. Implement image similarity search; retrieve Enki neighbours of two real Cyprus
-     pairs and compare their appearance, labels and classifier scores (25–30 min).
+  A. Plot a compressed picture of the feature values and inspect the label groups (25–35 min).
+  B. Predict whether more training examples help; run three comparisons and record
+     tells found, plus named images entering or leaving the review list (25–35 min).
+  C. Inspect similar Enki images for two Cyprus pairs, distinguishing image similarity
+     from a classifier score and from evidence of archaeology (25–30 min).
 
-For A, complete and run the function before enabling RUN_PROJECTION.
-For B, complete the three feature/label selections, then enable RUN_LABEL_EXPERIMENT.
+All lab functions are supplied and complete. Run the chosen function as given,
+enable its flag in the settings cell, then run settings and the supplied plotting cell.
+For A, enable RUN_PROJECTION.
+For B, enable RUN_LABEL_EXPERIMENT.
 Run 20 images/seed 0, 50 images/seed 0, and 20 images/seed 1. Keep brief comparison notes.
-For C, complete the two similarity/ranking expressions, then enable RUN_CYPRUS_NEIGHBOURS.
+For C, enable RUN_CYPRUS_NEIGHBOURS.
 Start with C_PAIR_IDS = ["CY754"], then try ["CY479"]. Record an image match and its limits.
 The default participant copy skips all optional code. The instructor copy includes
 the image galleries and worked B/C results; participants are not
@@ -87,8 +91,9 @@ expected to finish all labs. No new model weights or imagery downloads are neede
 Lab C's neighbour labels belong to Enki images, not the Cyprus queries. Section 5.3
 supplies the actual catalogue-agreement measurement for the final recommendation.
 
-The main comparison uses fixed C=1, chooses using validation recall at 50 reviews
-(AP breaks a tie), and reuses that model for the mistake and Cyprus reviews.
+The main comparison uses fixed C=1, chooses the model finding more tells at 50 reviews,
+and reuses that model for the mistake and Cyprus reviews. Equal counts mean no winner;
+name order picks one only so the notebook can continue. AP is not part of this choice.
 Section 6 has three steps: use the evidence summary to write five sentences; export
 and share team_submission.zip AND your saved notebook; then enable REVEAL_TEST.
 The final table compares validation and test at the saved review budget. Add one
@@ -113,16 +118,16 @@ The retained sample has 300 tell images at 350 x 350; negatives include 249 at
 64 x 64 and 44 at 350 x 350. The original dimensions alone predict validation
 labels well. Common 64-pixel preprocessing reduces this detail shortcut; it does
 not match metres per pixel or eliminate all source/acquisition differences.
-Section 3 reports a training-derived size-only baseline and validation AP within
-each original size, alongside the positive fraction. Single-class strata have
-undefined AP. The evidence ZIP now also includes data_audit.json,
-validation_diagnostics.csv and transfer_diagnostics.csv.
+Section 3 explains the problem as a rule guessing labels from original image size.
+The technical checks are computed during export, not displayed in the core lesson.
+The README explains the size-only reference and within-size results. The evidence
+ZIP includes data_audit.json, validation_diagnostics.csv and transfer_diagnostics.csv.
 
 Cyprus chips are 1 km windows at 10 m/pixel from 5 August 2024. They support an
 interpretation and domain-shift exercise, not archaeological visibility ground
 truth. Nearby background locations are unlabelled, not confirmed absences. The
 notebooks explicitly avoid reporting detection accuracy for this sample.
-Section 5 compares both models' score ranges with Enki validation. A whole-sample
+The export preserves both models' score ranges for technical inspection. A whole-sample
 shift to low or high scores cannot establish local archaeological absence or
 presence. The necessary next step is representative local imagery, expert labels
 for visible target features, and separate geographic assessment locations.

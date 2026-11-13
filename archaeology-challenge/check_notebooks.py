@@ -313,15 +313,14 @@ class ScientificChecks(unittest.TestCase):
                 self.assertFalse(config["cyprus_scores_calibrated"])
                 self.assertNotIn("/local/", bundle.read("cyprus_review.csv").decode())
 
-    def test_small_training_exercise_fits_only_selected_rows_on_a_clone(self):
+    def test_supplied_small_training_fits_only_selected_rows_on_a_clone(self):
         participant = {c.id: c for c in builder.notebook(False, "").cells}
         instructor = {c.id: c for c in builder.notebook(True, "").cells}
         disabled = {"print": Mock()}
         exec(participant["label-experiment-settings"].source, disabled)
         exec(participant["label-experiment-run"].source, disabled)
-        unfilled = {}
-        exec(participant["label-experiment-function"].source, unfilled)
-        self.assertIsNone(unfilled["small_training_scores"]("dinov2", [1, 3]))
+        self.assertEqual(participant["label-experiment-function"].source,
+                         instructor["label-experiment-function"].source)
 
         X_train = np.arange(12).reshape(4, 3)
         X_validation = np.array([[100, 101, 102], [200, 201, 202]])
@@ -330,7 +329,7 @@ class ScientificChecks(unittest.TestCase):
         fresh.predict_proba.return_value = np.array([[.3, .7], [.9, .1]])
         ns = dict(models={"dinov2": original}, train=train,
                   feature_sets={"dinov2": {"train": X_train, "validation": X_validation}})
-        exec(instructor["label-experiment-function"].source, ns)
+        exec(participant["label-experiment-function"].source, ns)
         ns["clone"] = Mock(return_value=fresh)
         result = ns["small_training_scores"]("dinov2", [1, 2])
         ns["clone"].assert_called_once_with(original)
@@ -341,7 +340,7 @@ class ScientificChecks(unittest.TestCase):
         original.fit.assert_not_called()
         self.assertEqual(train.label.tolist(), [0, 1, 0, 1])
 
-    def test_neighbour_exercise_ranks_original_vectors_and_handles_ties(self):
+    def test_supplied_neighbour_search_ranks_original_vectors_and_handles_ties(self):
         participant = {c.id: c for c in builder.notebook(False, "").cells}
         instructor = {c.id: c for c in builder.notebook(True, "").cells}
         disabled = {"print": Mock()}
@@ -349,17 +348,69 @@ class ScientificChecks(unittest.TestCase):
         exec(participant["cyprus-neighbour-run"].source, disabled)
         query = np.array([0., 1.])
         vectors = np.array([[1., 0.], [0., 1.], [-1., 0.], [.6, .8], [.6, .8]])
-        unfilled = {"np": np}
-        exec(participant["cyprus-neighbour-function"].source, unfilled)
-        self.assertIsNone(unfilled["nearest_training_indices"](query, vectors))
+        self.assertEqual(participant["cyprus-neighbour-function"].source,
+                         instructor["cyprus-neighbour-function"].source)
         ns = {"np": np}
-        exec(instructor["cyprus-neighbour-function"].source, ns)
+        exec(participant["cyprus-neighbour-function"].source, ns)
         indices, similarities = ns["nearest_training_indices"](query, vectors, k=3)
         np.testing.assert_array_equal(indices, [1, 3, 4])
         np.testing.assert_allclose(similarities, [1., .8, .8])
         self.assertEqual(ns["nearest_training_indices"](-query, vectors, k=1)[0].tolist(), [0])
         np.testing.assert_array_equal(query, [0., 1.])
         np.testing.assert_array_equal(vectors[3], [.6, .8])
+
+    def test_model_choice_uses_review_hits_and_explains_an_exact_tie(self):
+        source = next(c.source for c in builder.notebook(False, "").cells if c.id == "compare-models")
+        for counts, expected in (((40, 47), "dinov2"), ((47, 40), "colour_texture"),
+                                 ((47, 47), "colour_texture")):
+            with self.subTest(counts=counts):
+                metrics = [{"hits": hits, "reviewed": 50, "precision_at_k": hits / 50,
+                            "recall_at_k": hits / 60, "AP": ap}
+                           for hits, ap in zip(counts, (.4, .9))]
+                ns = dict(pd=pd, validation=pd.DataFrame({"label": [1] * 60 + [0] * 59}),
+                          validation_scores={"colour_texture": [0], "dinov2": [1]},
+                          workshop=SimpleNamespace(ranking_metrics=Mock(side_effect=metrics)),
+                          print=Mock(), display=Mock())
+                exec(source, ns)
+                self.assertEqual(ns["selected"], expected)
+                self.assertEqual(ns["comparison_display"].columns.tolist(),
+                                 ["Model", "Tells found", "Images reviewed", "Precision", "Recall"])
+                self.assertIn("AP", ns["results"].columns)  # Technical export still retains it.
+                if counts[0] == counts[1]:
+                    self.assertTrue(any("neither finds more tells" in str(c.args)
+                                        for c in ns["print"].call_args_list))
+
+    def test_cyprus_counts_and_answer_check_work_for_both_rankings(self):
+        cells = {c.id: c for c in builder.notebook(False, "").cells}
+        for selected in ("colour_texture", "dinov2"):
+            with self.subTest(selected=selected):
+                frame = self.catalogue_fixture()
+                frame["dinov2_score"] = frame.score
+                frame["colour_texture_score"] = .5
+                frame["score"] = frame[f"{selected}_score"]
+                frame = frame.sort_values(["score", "tile_id"], ascending=[False, True]).reset_index(drop=True)
+                frame.insert(0, "rank", np.arange(1, len(frame) + 1))
+                ns = dict(pd=pd, np=np, workshop=runtime, cyprus=frame, selected=selected,
+                          models={"colour_texture": Mock(), "dinov2": Mock()},
+                          print=Mock(), display=Mock())
+                exec(cells["cyprus-counts"].source, ns)
+                self.assertEqual(ns["pair_count"], 6)
+                self.assertEqual(ns["cyprus_reviewed"], 4)
+                self.assertEqual(ns["catalogued_total"], 6)
+                exec(cells["cyprus-calculation"].source, ns)
+                exec(cells["cyprus-metrics-check"].source, ns)
+                self.assertIs(ns["pair_agreement"], Ellipsis)
+                ns.update(pair_agreement=(ns["pair_wins"] + .5 * ns["pair_ties"]) / 6,
+                          catalogue_fraction=ns["cyprus_hits"] / 4,
+                          catalogue_recovery=ns["cyprus_hits"] / 6)
+                exec(cells["cyprus-metrics-check"].source, ns)
+                ns["print"].assert_any_call("All three calculations match the reference.")
+                self.assertEqual(len(ns["cyprus_metrics"]), 2)
+                self.assertEqual(ns["cyprus_table"].columns.tolist(),
+                                 ["Measure", selected, "Random selection (average)"])
+                if selected == "colour_texture":
+                    self.assertTrue(any("equal scores straddle the fourth place" in str(c.args)
+                                        for c in ns["print"].call_args_list))
 
     def test_test_reveal_uses_exported_choice_and_budget(self):
         cells = {cell.id: cell for cell in builder.notebook(False, "").cells}
