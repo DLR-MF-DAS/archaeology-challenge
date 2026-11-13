@@ -172,7 +172,7 @@ def notebook(instructor, payload):
         cells += [md('''
     This copy supplies the completed expressions, optional lab plots, worked
     interpretations and final test results. Participants choose one optional lab; this
-    copy runs the plots and Lab C practice, with worked answers for all three labs.
+    copy runs the experiments and image searches, with worked answers for all three labs.
     Keep it for the debrief.
     ''', "instructor-introduction")]
 
@@ -829,8 +829,8 @@ def notebook(instructor, payload):
        is missing before either ordering can be called a detection error.
 
     Keep this to two or three sentences for section 6. You do not need to identify remains
-    from these images. Optional lab C later develops the missing-evidence question into
-    a study design.
+    from these images. Optional lab C retrieves similar Enki training images to
+    investigate what the Cyprus landscapes resemble in feature space.
     ''', "cyprus-question"), code('''
     pair_id = "CY5"  # Then change this to "CY479" and rerun.
     pair = cyprus.loc[cyprus["paired_site"].eq(pair_id)].sort_values("kind")
@@ -987,13 +987,12 @@ def notebook(instructor, payload):
     | Choice | Time | Deliverable |
     |---|---:|---|
     | A. Project the training features | 25–35 min | Complete three expressions; compare the 2D plots and optionally a 3D view. |
-    | B. Is it worth labelling more training images? | 25–35 min | Run one cell, fill a two-row comparison table, and choose between 50 and 200 training images. |
-    | C. What would a fair Cyprus test look like? | 25–30 min | Fill a five-answer plan, calculate two fractions for an invented example, and apply a supplied decision rule. |
+    | B. Which mistakes does more training data fix? | 25–35 min | Complete a training function, compare three runs and inspect tells entering or leaving the shortlist. |
+    | C. What does Cyprus resemble in the training set? | 25–30 min | Implement image retrieval, inspect matches for two real Cyprus pairs and compare them with classifier scores. |
 
     Optional code starts disabled so an uncompleted lab does not stop the main path.
-    For lab A, complete its function before enabling `RUN_PROJECTION`. For lab B, set
-    only `RUN_LEARNING_CURVES = True`. For lab C, complete the answer template and two
-    arithmetic blanks, then set `RUN_CYPRUS_PRACTICE = True` in its supplied cell.
+    Complete the chosen lab's function, then enable its supplied experiment:
+    `RUN_PROJECTION`, `RUN_LABEL_EXPERIMENT` or `RUN_CYPRUS_NEIGHBOURS`.
     Use training/validation evidence only. The original model comparison and the
     50-image review budget remain the report's reference result.
     ''', "optional-experiments"), md('''
@@ -1149,249 +1148,248 @@ def notebook(instructor, payload):
 
     After this lab, continue to section 6. Lab B and lab C are alternatives, not prerequisites.
     ''', "projection-discussion"), md('''
-    ### Lab B. Is it worth labelling more training images?
+    ### Lab B. Which mistakes does more training data fix?
 
-    **The question:** would giving the model more labelled examples help it find more
-    tell-labelled images in the shortlist? You will run one supplied cell, read its
-    table, and write a short answer. Allow 25–35 minutes. All labels already exist;
-    the code pretends we have fewer of them by using part of the training set.
+    **Build a small-data model, then inspect what changes when it gets more examples.**
+    Allow 25–35 minutes. You will fit on 20 training images and compare with the
+    existing 200-image model. Both rank the same validation images for **50 reviews**.
 
-    **Keep these two numbers separate:**
+    **1. Complete the three expressions below.** `rows` contains the positions of the
+    chosen training images. Use:
 
-    | Quantity | What happens in this experiment? |
-    |---|---|
-    | Images used to train a model | Changes: 20, 50, 100 or 200 in total. Half are tells and half are negatives. |
-    | Images opened for review after ranking | Stays at 50 from the same validation pool. We count how many have the source label “tell”. |
+    - `feature_sets[name]["train"]` indexed by `rows` for their features;
+    - `train.label.to_numpy()` indexed by the same `rows` for their labels;
+    - `feature_sets[name]["validation"]` for the images to score afterwards.
 
-    **Step 1 — predict.** Write down whether you expect 200 training images to find
-    more tells than 20. A prediction can be wrong; you will compare it with the result.
+    The supplied `clone` creates a fresh pipeline, so its scaler and classifier both
+    learn from the smaller set. Run your function cell, then enable the experiment.
+    Before seeing the result, predict: will the larger model keep every tell found
+    by the smaller one?
+    ''', "label-experiment-instructions"), code('''
+    from sklearn.base import clone
 
-    **Step 2 — run.** In the next cell, change only `RUN_LEARNING_CURVES = False` to
-    `True`, then run it. The code trains both model types at each size. It repeats
-    each size three times with different random choices of training images.
 
-    **Step 3 — read the table.** “Mean tells found” is the average count over those
-    three runs. “Fewest” and “Most” show the range. For example, counts of 40, 42 and
-    41 would give a mean of 41 and a range of 40–42. The plot shows these same counts:
-    training images along the bottom, tells found up the side. A higher point means
-    more tells in the same 50 reviews. Complete the answer template underneath it.
-    ''', "learning-curve-instructions"), code('''
-    RUN_LEARNING_CURVES = False  # Change to True for lab B; the rest is supplied.
+    def small_training_scores(name, rows):
+        X_small = ...       # Training features at rows.
+        y_small = ...       # Training labels at the same rows.
+        X_validation = ...  # Validation features, used only after fitting.
+        if any(value is Ellipsis for value in (X_small, y_small, X_validation)):
+            return None
 
-    if not RUN_LEARNING_CURVES:
-        print("Lab B skipped. Choose one optional lab, or continue to section 6.")
+        lab_model = clone(models[name])
+        lab_model.fit(X_small, y_small)
+        return lab_model.predict_proba(X_validation)[:, 1]
+    '''.replace("X_small = ...", 'X_small = feature_sets[name]["train"][rows]' if instructor else "X_small = ...")
+       .replace("y_small = ...", "y_small = train.label.to_numpy()[rows]" if instructor else "y_small = ...")
+       .replace("X_validation = ...", 'X_validation = feature_sets[name]["validation"]' if instructor else "X_validation = ..."),
+        "label-experiment-function"), code('''
+    RUN_LABEL_EXPERIMENT = False  # Enable after completing the function above.
+    B_MODEL = "dinov2"
+    B_TRAINING_IMAGES = 20  # Total: half tells, half negatives. Then try 50.
+    B_SEED = 0             # Then try 1 with 20 images to change which examples are used.
+
+    if not RUN_LABEL_EXPERIMENT:
+        print("Lab B skipped. Complete its function and enable RUN_LABEL_EXPERIMENT to try it.")
     else:
-        learning_rows = []
-        for name in ("colour_texture", "dinov2"):
-            part = workshop.learning_curve_rows(
-                models[name], feature_sets[name]["train"], train.label.to_numpy(),
-                feature_sets[name]["validation"], validation.label.to_numpy(),
-                workshop.ranking_metrics, REVIEW_BUDGET,
-            )
-            part["model"] = name
-            learning_rows.append(part)
-        learning_results = pd.concat(learning_rows, ignore_index=True)
-        learning_summary = learning_results.groupby(["model", "labels_per_class"]).agg(
-            mean_recall=("recall_at_k", "mean"),
-            min_recall=("recall_at_k", "min"),
-            max_recall=("recall_at_k", "max"),
-            mean_hits=("hits", "mean"), min_hits=("hits", "min"), max_hits=("hits", "max"),
-        ).reset_index()
-        learning_summary["training_images"] = 2 * learning_summary["labels_per_class"]
-        learning_table = learning_summary[["model", "training_images", "mean_hits", "min_hits", "max_hits"]].rename(
-            columns={"model": "Model", "training_images": "Training images (total)",
-                     "mean_hits": "Mean tells found", "min_hits": "Fewest", "max_hits": "Most"})
-        print(f"Every row uses the same {REVIEW_BUDGET} reviews from {len(validation)} validation images "
-              f"containing {int(validation.label.sum())} source-labelled tells.")
-        display(learning_table.round(1))
+        if B_MODEL not in models or B_TRAINING_IMAGES not in (20, 50, 100):
+            raise ValueError("Choose dinov2 or colour_texture, and 20, 50 or 100 training images.")
+        b_rng = np.random.default_rng(B_SEED)
+        b_labels = train.label.to_numpy()
+        b_rows = np.concatenate([
+            b_rng.permutation(np.flatnonzero(b_labels == label))[:B_TRAINING_IMAGES // 2]
+            for label in (0, 1)
+        ])
+        b_scores = small_training_scores(B_MODEL, b_rows)
+        if b_scores is None:
+            print("Complete all three expressions and rerun the function cell first.")
+        else:
+            b_full_scores = validation_scores[B_MODEL]
+            b_results = pd.DataFrame([
+                workshop.ranking_metrics(validation.label, scores, REVIEW_BUDGET)
+                for scores in (b_scores, b_full_scores)
+            ], index=[f"{B_TRAINING_IMAGES} training images", f"{len(train)} training images"])
+            b_table = b_results[["hits", "reviewed"]].rename(columns={
+                "hits": "Tells found", "reviewed": "Images reviewed"})
+            b_table["Precision"] = b_results.precision_at_k.map(lambda value: f"{value:.1%}")
+            b_table["Recall"] = b_results.recall_at_k.map(lambda value: f"{value:.1%}")
+            print(f"{B_MODEL}; seed {B_SEED}; {int(validation.label.sum())} available validation tells.")
+            display(b_table)
 
-        fig, ax = plt.subplots(figsize=(8, 4), layout="constrained")
-        for name, group in learning_summary.groupby("model"):
-            spread = np.vstack([group.mean_hits - group.min_hits,
-                                group.max_hits - group.mean_hits])
-            ax.errorbar(group.training_images, group.mean_hits, yerr=spread,
-                        marker="o", capsize=4, label=name)
-        ceiling = min(REVIEW_BUDGET, int(validation.label.sum()))
-        ax.set(xlabel="Images used for training (total)",
-               ylabel=f"Tells found in {REVIEW_BUDGET} validation reviews", ylim=(0, ceiling + 2))
-        ax.set_xticks([20, 50, 100, 200])
-        ax.set_title("Does more training data put more tells in the shortlist?")
-        ax.legend()
-        plt.show()
-    '''.replace("RUN_LEARNING_CURVES = False", f"RUN_LEARNING_CURVES = {instructor}"),
-        "learning-curve"), md('''
-    **Step 4 — fill in your answer below.** Double-click the next Markdown cell to edit it.
+            b_changes = validation[["tile_id", "path", "label"]].copy()
+            for column, scores in (("small_rank", b_scores), ("full_rank", b_full_scores)):
+                ranks = np.empty(len(scores), dtype=int)
+                ranks[workshop.ranking_indices(scores)] = np.arange(1, len(scores) + 1)
+                b_changes[column] = ranks
+            b_gained = b_changes.loc[b_changes.label.eq(1) &
+                b_changes.small_rank.gt(REVIEW_BUDGET) & b_changes.full_rank.le(REVIEW_BUDGET)]
+            b_lost = b_changes.loc[b_changes.label.eq(1) &
+                b_changes.small_rank.le(REVIEW_BUDGET) & b_changes.full_rank.gt(REVIEW_BUDGET)]
+            print(f"With {len(train)} training images: {len(b_gained)} previously missed tells enter, "
+                  f"{len(b_lost)} previously found tells leave; net change {len(b_gained) - len(b_lost):+d}.")
+            for title, changed in (("Newly found by the larger model", b_gained),
+                                   ("Now missed by the larger model", b_lost)):
+                print(f"{title}: {len(changed)} source-positive images; showing up to four.")
+                if changed.empty:
+                    continue
+                fig, axes = plt.subplots(1, 4, figsize=(12, 3.5), layout="constrained")
+                for ax in axes:
+                    ax.axis("off")
+                for ax, row in zip(axes, changed.sort_values("full_rank").head(4).itertuples(index=False)):
+                    ax.imshow(plt.imread(row.path))
+                    ax.set_title(f"{row.tile_id}\\nRank {row.small_rank} → {row.full_rank}", fontsize=9)
+                fig.suptitle(f"{title} · {B_TRAINING_IMAGES} → {len(train)} training images")
+                plt.show()
+    '''.replace("RUN_LABEL_EXPERIMENT = False", f"RUN_LABEL_EXPERIMENT = {instructor}"),
+        "label-experiment-run"), md('''
+    **2. Investigate the changed mistakes.** The galleries show tells entering and
+    leaving the first 50 when training grows to 200 images. Pick one tile, record its
+    ID and two ranks, and describe a visible feature. Does the larger model improve
+    every image, or only the total? Use the entering/leaving counts to explain.
 
-    1. For each model, copy “Mean tells found” at **20** and **200** training images.
-       Subtract the first number from the second to find the gain. For example, 38 minus
-       30 would mean eight additional tells found in the same 50 reviews.
-    2. Find the **DINOv2 / 50 training images** row. Copy its mean, fewest and most counts.
-       Compare its mean with the DINOv2 / 200 row.
-    3. Choose **50 or 200 training images** for the next small experiment and justify it
-       with those counts. Both choices can be argued; state what the extra 150 labels buy.
+    **3. Test whether the conclusion holds.** Rerun with 50 training images and seed 0;
+    then with 20 images and seed 1. The seed changes which training examples are used.
+    Keep the model and 50-review budget fixed. Note whether the total improves and
+    whether the same tells are found.
 
-    **Finished when:** your two-row table and three short sentences are complete.
-    Check whether your original prediction matched the result, then go to section 6.
-    The three repeats vary the training examples on one validation set. They do not
-    test three regions. At 200 images every repeat uses the same full training set,
-    so its range may be zero. This lab gives evidence about this sample; a new area
-    needs its own evaluation. The main selected model and test set are unchanged.
-    ''', "learning-curve-discussion"), md('''
-    **My Lab B answer — replace the blanks.**
+    **Your result:** keep your completed function, the three runs' hit counts, and a
+    short conclusion citing one changed tile. Explain whether more labels consistently
+    helped in your runs. The labels already exist here; a gain on this validation
+    sample cannot tell us the value of collecting labels in a new region.
 
-    | Model | Mean found with 20 training images | Mean found with 200 | Gain: 200 minus 20 |
-    |---|---:|---:|---:|
-    | `colour_texture` | ... | ... | ... |
-    | `dinov2` | ... | ... | ... |
-
-    With 50 training images, DINOv2 finds ... tells on average, ranging from ... to ...;
-    with 200 it finds ... on average.
-
-    I would start the next small experiment with ... training images because ... .
-
-    My prediction was ...; these results still need checking on ... .
-    ''' if not instructor else '''
-    **Worked Lab B answer:** the next cell calculates the comparison from this run.
-    Discuss whether the measured change justifies labelling another 150 images.
-    Accept either budget when its reason uses the actual counts and acknowledges that
-    one validation sample cannot settle the choice for a new area.
-    ''', "learning-curve-response")]
+    **Extension:** repeat with `B_MODEL = "colour_texture"`. Does the representation
+    change your conclusion? Continue to section 6 when finished.
+    ''', "label-experiment-discussion")]
     if instructor:
         cells += [code('''
-    if RUN_LEARNING_CURVES:
-        comparison = learning_summary.pivot(index="model", columns="training_images", values="mean_hits")
-        worked = pd.DataFrame({"Mean found with 20": comparison[20],
-                               "Mean found with 200": comparison[200],
-                               "Gain": comparison[200] - comparison[20]})
-        display(worked.round(1))
-        dino_rows = learning_summary.loc[learning_summary.model.eq("dinov2")].set_index("training_images")
-        small, full = dino_rows.loc[50], dino_rows.loc[200]
-        print(f"With 50 training images, DINOv2 finds {small.mean_hits:.1f} tells on average "
-              f"(range {int(small.min_hits)}–{int(small.max_hits)}); with 200 it finds "
-              f"{full.mean_hits:.1f}. The extra 150 labels change the mean by "
-              f"{full.mean_hits - small.mean_hits:.1f} tells in the same {REVIEW_BUDGET} reviews.")
-        if np.isclose(small.mean_hits, full.mean_hits):
-            print("One supported choice is 50 images for the next small experiment: the observed means tie. "
-                  "This is a starting point to test on another area, not a universal label requirement.")
-        else:
-            print("Use the measured gain above to argue whether another 150 labels are worthwhile. "
-                  "The current evidence cannot give the benefit or labelling cost in a new area.")
-    ''', "learning-curve-answer")]
+    if RUN_LABEL_EXPERIMENT and b_scores is not None:
+        b_worked_rows = []
+        b_full_set = set(workshop.ranking_indices(validation_scores[B_MODEL])[:REVIEW_BUDGET])
+        for size, seed in ((20, 0), (50, 0), (20, 1)):
+            rng = np.random.default_rng(seed)
+            rows = np.concatenate([rng.permutation(np.flatnonzero(train.label.to_numpy() == label))[:size // 2]
+                                   for label in (0, 1)])
+            scores = small_training_scores(B_MODEL, rows)
+            small_set = set(workshop.ranking_indices(scores)[:REVIEW_BUDGET])
+            gained = sum(int(validation.iloc[i].label) for i in b_full_set - small_set)
+            lost = sum(int(validation.iloc[i].label) for i in small_set - b_full_set)
+            b_worked_rows.append({"Training images": size, "Seed": seed,
+                "Small-model hits": workshop.ranking_metrics(validation.label, scores, REVIEW_BUDGET)["hits"],
+                "Full-model hits": int(b_results.iloc[1].hits), "Tells entering": gained, "Tells leaving": lost})
+        display(pd.DataFrame(b_worked_rows))
+        print("Compare net gains with the entering and leaving images. Equal hit counts need not mean "
+              "the same shortlist; more training data need not improve every image's rank.")
+    ''', "label-experiment-answer")]
 
     cells += [md('''
-    ### Lab C. What would a fair Cyprus test look like?
+    ### Lab C. What does Cyprus resemble in the training set?
 
-    **The question:** what would we need to measure whether the model finds visible
-    archaeology in Cyprus? You will complete a five-answer plan, then practise two
-    calculations on an invented result. Allow 25–30 minutes. This is a planning and
-    arithmetic exercise; all the information you need is below.
+    **Build an image search and inspect its matches.** Allow 25–30 minutes. For a Cyprus
+    image, retrieve the four Enki training images with the most similar DINOv2 features.
+    Then compare their labels with the classifier's score for that Cyprus image.
 
-    **Step 1 — read the imagined situation.** A team wants to find visible settlement
-    remains, such as wall or building-foundation patterns. Assume it can obtain new,
-    consistently detailed imagery suitable for judging those features. The existing
-    100 × 100 Cyprus chips and catalogue alone cannot supply that evidence.
+    **1. Complete two expressions below.** The cached vectors have length one, so their
+    dot product is **cosine similarity**: larger values mean closer directions in
+    feature space. This is a comparison of image features, not a probability.
 
-    The team has three separate areas: **A** for training, **B** for choosing model
-    settings, and **C** for the final check. It samples 100 non-overlapping images from
-    across area C, including locations outside the catalogue. Two archaeologists can
-    inspect them and label each image **visible**, **not visible**, or **uncertain**.
-    They do this before seeing model scores. Area C is kept out of model development.
+    - Multiply the training matrix by the query vector using `@`. This produces one
+      similarity per training image.
+    - Use `np.argsort` on the negative similarities to put the largest first, then take
+      the first `k` indices with `[:k]`.
 
-    **Step 2 — complete the next cell.** Write one sentence in each of its five rows.
-    The hints refer to the situation above; you are explaining a concrete plan, not
-    inventing a whole research project. “Not visible” means no visible target in that
-    image, not proof that archaeology is absent underground.
-    ''', "cyprus-study-design"), md('''
-    **My Lab C plan — replace each blank with one sentence.**
+    Use the original cached DINOv2 vectors. The search does not fit a scaler or use
+    labels to choose neighbours; labels are attached after retrieval. Run your function
+    cell, enable the next cell, and start with pair `CY754`.
+    ''', "cyprus-neighbour-instructions"), code('''
+    def nearest_training_indices(query_vector, training_vectors, k=4):
+        similarities = ...  # One dot product per training image.
+        if similarities is Ellipsis:
+            return None
+        indices = ...      # Indices of the k largest similarities.
+        if indices is Ellipsis:
+            return None
+        return indices, similarities[indices]
+    '''.replace("similarities = ...", "similarities = training_vectors @ query_vector" if instructor else "similarities = ...")
+       .replace("indices = ...", 'indices = np.argsort(-similarities, kind="stable")[:k]' if instructor else "indices = ..."),
+        "cyprus-neighbour-function"), code('''
+    RUN_CYPRUS_NEIGHBOURS = False  # Enable after completing the function above.
+    C_PAIR_IDS = ["CY754"]        # Then try ["CY479"].
+    C_NEIGHBOURS = 4
 
-    | Question | My answer |
-    |---|---|
-    | What visible feature would count as a positive? Name a feature, not just “a catalogue point”. | ... |
-    | Who labels the images, and should they see the model scores first? | ... |
-    | Should experts label all 100 area-C images or only the top 20? Explain how you would count missed positives. | ... |
-    | Which area is reserved for the final check, and when may the team inspect its results? | ... |
-    | What happens when the experts cannot tell whether the feature is visible? | ... |
-    ''' if not instructor else '''
-    **Worked Lab C plan — examples of acceptable answers.**
-
-    | Question | Example answer |
-    |---|---|
-    | Visible target | A positive is an image in which experts can identify wall or foundation patterns consistent with settlement remains. |
-    | Labelling | Two archaeologists judge the images before seeing scores, then discuss disagreements. |
-    | Images to label | Label all 100 sampled images, including low-ranked and uncatalogued locations, so positives outside the shortlist can be counted. |
-    | Final check | Keep area C separate while fitting on A and choosing settings on B; examine C after the choice is fixed. |
-    | Uncertainty | Keep unresolved cases marked uncertain, report their number and arrange further review; never automatically turn them into negatives. |
-    ''', "cyprus-study-response"), md('''
-    **Step 3 — practise the decision using invented numbers.** These are **not results
-    for our twelve Cyprus images**. For this example, assume every label was resolved:
-
-    | Item | Count |
-    |---|---:|
-    | Images in the final area-C check | 100 |
-    | Images experts labelled visible | 25 |
-    | Highest-ranked images opened for review | 20 |
-    | Visible positives among those 20 | 14 |
-
-    The team agrees on this **practice rule before testing**: continue to a larger
-    study only if **precision is at least 70% AND recall is at least 50%**. Otherwise,
-    revise the approach. These thresholds are supplied for this exercise.
-
-    Fill the two `...` expressions: precision divides the 14 hits by the **20 reviews**;
-    recall divides the same 14 hits by the **25 available positives**. Use the variable
-    names `practice_hits`, `practice_reviewed` and `practice_positives` so changing the
-    hit count also updates your answers. Then set `RUN_CYPRUS_PRACTICE = True` and run
-    the cell. The supplied code checks your arithmetic
-    and applies the rule. Decide whether it should say “continue” before running it.
-    ''', "cyprus-study-calculation-instructions"), code('''
-    RUN_CYPRUS_PRACTICE = False  # Complete both expressions, then change to True.
-
-    if not RUN_CYPRUS_PRACTICE:
-        print("Lab C practice skipped. Complete its plan and two expressions if you choose this lab.")
+    if not RUN_CYPRUS_NEIGHBOURS:
+        print("Lab C skipped. Complete its search function and enable RUN_CYPRUS_NEIGHBOURS to try it.")
     else:
-        print("Invented practice data — not measured Cyprus performance.")
-        practice_positives = 25
-        practice_reviewed = 20
-        practice_hits = 14  # After the first run, predict what happens with 10, then try it.
+        if not isinstance(C_NEIGHBOURS, int) or not 1 <= C_NEIGHBOURS <= 8:
+            raise ValueError("Choose between one and eight neighbours.")
+        # Load IDs and vectors together: the section 5 table has since been sorted by score.
+        c_images, c_vectors = workshop.load_cyprus(assets)
+        c_positions = np.flatnonzero(c_images.paired_site.isin(C_PAIR_IDS))
+        if not C_PAIR_IDS or len(c_positions) != 2 * len(C_PAIR_IDS):
+            raise ValueError(f"Choose a pair from {sorted(c_images.paired_site.unique())}.")
+        c_summary_rows = []
+        for position in c_positions:
+            query = c_images.iloc[position]
+            matches = nearest_training_indices(c_vectors[position], feature_sets["dinov2"]["train"], C_NEIGHBOURS)
+            if matches is None:
+                print("Complete both expressions and rerun the function cell first.")
+                break
+            indices, similarities = matches
+            neighbours = train.iloc[indices]
+            query_score = models["dinov2"].predict_proba(c_vectors[position:position + 1])[0, 1]
+            c_summary_rows.append({"Cyprus tile": query.tile_id, "DINOv2 classifier score": query_score,
+                "Closest similarity": float(similarities[0]),
+                "Tell-labelled neighbours": int(neighbours.label.sum()), "Neighbours": len(neighbours)})
+            fig, axes = plt.subplots(1, len(neighbours) + 1, figsize=(3 * (len(neighbours) + 1), 3.5),
+                                     layout="constrained")
+            axes[0].imshow(plt.imread(query.path))
+            axes[0].set_title(f"Cyprus: {query.tile_id}\\nClassifier score {query_score:.3f}", fontsize=9)
+            for ax, row, similarity in zip(axes[1:], neighbours.itertuples(index=False), similarities):
+                ax.imshow(plt.imread(row.path))
+                label = "tell" if row.label == 1 else "negative"
+                ax.set_title(f"{row.tile_id} · {label}\\nSimilarity {similarity:.3f}", fontsize=9)
+            for ax in axes:
+                ax.axis("off")
+            fig.suptitle("Cyprus query → nearest Enki training images (source labels shown)")
+            plt.show()
+        if c_summary_rows:
+            c_neighbour_summary = pd.DataFrame(c_summary_rows)
+            display(c_neighbour_summary.round(3))
+            print("Neighbour labels describe Enki images. They are not visibility labels for the Cyprus query.")
+    '''.replace("RUN_CYPRUS_NEIGHBOURS = False", f"RUN_CYPRUS_NEIGHBOURS = {instructor}")
+       .replace('C_PAIR_IDS = ["CY754"]        # Then try ["CY479"].',
+                'C_PAIR_IDS = ["CY754", "CY479"]  # Worked results for both pairs.' if instructor
+                else 'C_PAIR_IDS = ["CY754"]        # Then try ["CY479"].'),
+        "cyprus-neighbour-run"), md('''
+    **2. Inspect the matches.** Each row starts with a Cyprus image, followed by its
+    nearest Enki training images. Choose one match: record both IDs, one visible
+    resemblance and one difference. Uncertainty about a feature is a valid observation.
 
-        practice_precision = ...  # Hits divided by images reviewed.
-        practice_recall = ...     # Hits divided by all available positives.
+    For each Cyprus image, how many neighbours are tell-labelled? Does their majority
+    agree with a high or low classifier score? Explain any mismatch: the logistic
+    classifier learns weights on scaled features; this search compares vector directions.
+    It is not a nearest-neighbour vote or an explanation of which features caused a score.
 
-        if practice_precision is Ellipsis or practice_recall is Ellipsis:
-            print("Fill both expressions using the named counts, then rerun this cell.")
-        else:
-            expected_precision = practice_hits / practice_reviewed
-            expected_recall = practice_hits / practice_positives
-            if not np.allclose([practice_precision, practice_recall],
-                               [expected_precision, expected_recall], rtol=0, atol=1e-9):
-                print("Recheck the denominators: precision uses reviews; recall uses all positives.")
-            else:
-                print(f"Precision = {practice_hits}/{practice_reviewed} = {practice_precision:.0%}")
-                print(f"Recall = {practice_hits}/{practice_positives} = {practice_recall:.0%}")
-                passes = expected_precision >= 0.70 and expected_recall >= 0.50
-                print("Decision: continue to a larger study." if passes else "Decision: revise the approach.")
-    '''.replace("RUN_CYPRUS_PRACTICE = False", f"RUN_CYPRUS_PRACTICE = {instructor}")
-       .replace("practice_precision = ...", "practice_precision = practice_hits / practice_reviewed" if instructor else "practice_precision = ...")
-       .replace("practice_recall = ...", "practice_recall = practice_hits / practice_positives" if instructor else "practice_recall = ..."),
-        "cyprus-study-practice"), md('''
-    **Step 4 — change one number.** Predict what happens if the shortlist contains
-    only **10** positives. Change `practice_hits = 14` to `10`, rerun the cell and check.
+    **3. Try another landscape.** Change `C_PAIR_IDS` to `["CY479"]` and rerun. Does the
+    same resemblance recur? Use a named image to support your answer.
 
-    **My conclusion — replace the blanks:** with 14 hits, precision is ... and recall
-    is ..., so the practice rule says ... . With 10 hits, they become ... and ...,
-    so the rule says ... .
-
-    **Finished when:** the five plan answers and both decisions are written. Ask a
-    partner whether your plan would count missed positives as well as successful finds.
-    Use one next step from the plan in section 6. Keep these invented percentages in
-    the practice exercise; section 6's Cyprus measurement comes from section 5.3.
+    **Your result:** keep your search function and a short comparison of the two pairs,
+    including one image match. State what independent evidence would be needed to
+    decide whether archaeology is visible in a Cyprus tile. Similar-looking Enki images
+    do not supply those labels. Continue to section 6 when finished.
     ''' if not instructor else '''
-    **Worked conclusion:** 14 hits give precision `14/20 = 70%` and recall `14/25 = 56%`.
-    Both meet the supplied rule, so the decision is to continue to a larger study.
-    With 10 hits, precision is `10/20 = 50%` and recall is `10/25 = 40%`; the decision
-    becomes “revise”. Meeting the practice rule would support more investigation,
-    not deployment. These are invented counts, not measurements on the bundled Cyprus
-    images. Use the five-row plan to discuss how the real evidence would be collected.
-    ''', "cyprus-study-discussion")]
+    **Worked interpretation:** in the default `CY754` pair, the site-centred image has
+    a high classifier score but only one tell-labelled neighbour among four; the nearby
+    unlabelled image has a low score but four tell-labelled neighbours. Read the actual
+    values above. In `CY479`, both images have one tell-labelled neighbour among four
+    despite different classifier scores. The two methods use the features differently,
+    so a neighbour majority need not reproduce logistic regression.
+
+    Ask participants to name a query and a retrieved image, describe a visible resemblance
+    and difference, then test their observation on `CY479`. Do not infer a classifier
+    explanation or a detection error from the neighbour labels. Expert visibility labels
+    on suitable Cyprus imagery are still needed to judge either image. The search makes
+    the training examples available for inspection; it does not validate transfer.
+    ''', "cyprus-neighbour-discussion")]
+
 
     cells += [md('''
     ## 6. Recommend, save and check
@@ -1401,7 +1399,7 @@ def notebook(instructor, payload):
     ### 6.1. Write a five-sentence recommendation
 
     Run this cell to collect your evidence. It uses the original review budgets and
-    the real Cyprus catalogue results from section 5.3. Lab C's counts were invented.
+    the Cyprus catalogue results from section 5.3.
     ''', "report-introduction"), code('''
     report_validation = results.loc[results.model.eq(selected)].iloc[0]
     report_cyprus = cyprus_metrics.loc[cyprus_metrics.model.eq(selected)].iloc[0]
@@ -1543,15 +1541,15 @@ def notebook(instructor, payload):
       PCA axes differ between panels, and overlap can hide separation in omitted
       dimensions. Visual separation is not validation performance. The classifiers
       still use their full feature vectors; the projection is only for exploration.
-    - **Optional lab B:** distinguish training-image counts from the fixed 50 reviews.
-      Learners change one flag, copy counts into a two-row table, subtract the means
-      at 20 and 200 images, and use the DINOv2 50/200 comparison to choose a starting
-      budget. The instructor answer is calculated from the run. Bars show the range
-      from three choices of training examples, not three independent regions.
-    - **Optional lab C:** use the supplied A/B/C-area scenario and five-answer template.
-      Then calculate precision and recall from the invented 14/20/25 counts and apply
-      the supplied 70%/50% rule. Changing hits to 10 should reverse the decision.
-      Keep this practice result separate from the real catalogue metrics in section 5.3.
+    - **Optional lab B:** participants complete the small-training function, then compare
+      20/50 images and two choices of examples against the 200-image model. All use the
+      same validation pool and 50 reviews. Inspect both recovered and newly missed tells:
+      a net gain can hide regressions, and equal hit counts can hide different shortlists.
+      Clone the pipeline so the scaler also learns only from the selected training rows.
+    - **Optional lab C:** participants implement cosine retrieval on unit-length DINOv2
+      vectors and inspect Enki neighbours of two Cyprus pairs. Keep the query ID aligned
+      with its vector. Neighbour labels need not agree with logistic regression, which
+      weights scaled features. Resemblance neither explains the score nor labels Cyprus.
     - **Short exercise:** precision is `hits / reviewed`; recall is
       `hits / total_positives`. Have learners calculate these from the ranking before
       displaying the comparison table, then check against its colour/texture row.
@@ -1589,7 +1587,7 @@ def notebook(instructor, payload):
       limitation and next study. Accept a recommendation against deployment. Keep the
       original 50-image comparison distinct from the larger-budget experiment. The sample
       report uses five sentences and the evidence summary directly above the writing cell.
-      Lab C supplies a concrete plan that can contribute one next step to the report.
+      Lab C can supply an additional image comparison and a question for local experts.
     - **Export and debrief:** the ZIP records the current run; rerunning export replaces it.
       Share the recommendation before the reveal. The test cell scores the saved ranking
       against Enki source labels, not Cyprus labels. Discuss the comparison with validation
@@ -1597,7 +1595,7 @@ def notebook(instructor, payload):
       nor a weak test result resolves the missing geographic or Cyprus evidence.
 
     Choose only one optional lab at the block before section 6, or use that time for
-    catch-up. The instructor copy shows the plots and worked Lab C practice. Model
+    catch-up. The instructor copy shows the plots and worked image investigations. Model
     extraction and live imagery acquisition belong in preparation, outside class.
     ''', "instructor-notes")]
 

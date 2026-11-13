@@ -283,6 +283,50 @@ class ScientificChecks(unittest.TestCase):
                 self.assertFalse(config["cyprus_scores_calibrated"])
                 self.assertNotIn("/local/", bundle.read("cyprus_review.csv").decode())
 
+    def test_small_training_exercise_fits_only_selected_rows_on_a_clone(self):
+        participant = {c.id: c for c in builder.notebook(False, "").cells}
+        instructor = {c.id: c for c in builder.notebook(True, "").cells}
+        exec(participant["label-experiment-run"].source, {"print": Mock()})
+        unfilled = {}
+        exec(participant["label-experiment-function"].source, unfilled)
+        self.assertIsNone(unfilled["small_training_scores"]("dinov2", [1, 3]))
+
+        X_train = np.arange(12).reshape(4, 3)
+        X_validation = np.array([[100, 101, 102], [200, 201, 202]])
+        train = pd.DataFrame({"label": [0, 1, 0, 1]})
+        original, fresh = Mock(), Mock()
+        fresh.predict_proba.return_value = np.array([[.3, .7], [.9, .1]])
+        ns = dict(models={"dinov2": original}, train=train,
+                  feature_sets={"dinov2": {"train": X_train, "validation": X_validation}})
+        exec(instructor["label-experiment-function"].source, ns)
+        ns["clone"] = Mock(return_value=fresh)
+        result = ns["small_training_scores"]("dinov2", [1, 2])
+        ns["clone"].assert_called_once_with(original)
+        np.testing.assert_array_equal(fresh.fit.call_args.args[0], X_train[[1, 2]])
+        np.testing.assert_array_equal(fresh.fit.call_args.args[1], [1, 0])
+        np.testing.assert_array_equal(fresh.predict_proba.call_args.args[0], X_validation)
+        np.testing.assert_array_equal(result, [.7, .1])
+        original.fit.assert_not_called()
+        self.assertEqual(train.label.tolist(), [0, 1, 0, 1])
+
+    def test_neighbour_exercise_ranks_original_vectors_and_handles_ties(self):
+        participant = {c.id: c for c in builder.notebook(False, "").cells}
+        instructor = {c.id: c for c in builder.notebook(True, "").cells}
+        exec(participant["cyprus-neighbour-run"].source, {"print": Mock()})
+        query = np.array([0., 1.])
+        vectors = np.array([[1., 0.], [0., 1.], [-1., 0.], [.6, .8], [.6, .8]])
+        unfilled = {"np": np}
+        exec(participant["cyprus-neighbour-function"].source, unfilled)
+        self.assertIsNone(unfilled["nearest_training_indices"](query, vectors))
+        ns = {"np": np}
+        exec(instructor["cyprus-neighbour-function"].source, ns)
+        indices, similarities = ns["nearest_training_indices"](query, vectors, k=3)
+        np.testing.assert_array_equal(indices, [1, 3, 4])
+        np.testing.assert_allclose(similarities, [1., .8, .8])
+        self.assertEqual(ns["nearest_training_indices"](-query, vectors, k=1)[0].tolist(), [0])
+        np.testing.assert_array_equal(query, [0., 1.])
+        np.testing.assert_array_equal(vectors[3], [.6, .8])
+
     def test_test_reveal_uses_exported_choice_and_budget(self):
         source = next(cell.source for cell in builder.notebook(False, "").cells
                       if cell.id == "reveal")
@@ -338,15 +382,16 @@ class ScientificChecks(unittest.TestCase):
                 self.assertLess(order.index("cyprus-counts"), order.index("cyprus-calculation"))
                 self.assertLess(order.index("cyprus-calculation"), order.index("cyprus-metrics-check"))
                 self.assertLess(order.index("cyprus-metrics-check"), order.index("optional-experiments"))
-                for identifier in ("projection-exercise", "learning-curve", "cyprus-study-design"):
+                for identifier in ("projection-exercise", "label-experiment-function", "cyprus-neighbour-function"):
                     self.assertLess(order.index("optional-experiments"), order.index(identifier))
                     self.assertLess(order.index(identifier), order.index("report-introduction"))
                 self.assertIn("RUN_PROJECTION = False", by_id["projection-plot"].source)
-                self.assertIn("RUN_LEARNING_CURVES = False", by_id["learning-curve"].source)
-                self.assertIn("RUN_CYPRUS_PRACTICE = False", by_id["cyprus-study-practice"].source)
-                self.assertLess(order.index("learning-curve"), order.index("learning-curve-response"))
-                self.assertLess(order.index("cyprus-study-response"), order.index("cyprus-study-practice"))
-                self.assertLess(order.index("cyprus-study-practice"), order.index("report-introduction"))
+                self.assertIn("RUN_LABEL_EXPERIMENT = False", by_id["label-experiment-run"].source)
+                self.assertIn("RUN_CYPRUS_NEIGHBOURS = False", by_id["cyprus-neighbour-run"].source)
+                self.assertLess(order.index("label-experiment-function"), order.index("label-experiment-run"))
+                self.assertLess(order.index("label-experiment-run"), order.index("label-experiment-discussion"))
+                self.assertLess(order.index("cyprus-neighbour-function"), order.index("cyprus-neighbour-run"))
+                self.assertLess(order.index("cyprus-neighbour-run"), order.index("cyprus-neighbour-discussion"))
                 final_steps = ("report-evidence", "recommendation", "export", "reveal", "debrief-notes")
                 for earlier, later in zip(final_steps, final_steps[1:]):
                     self.assertLess(order.index(earlier), order.index(later))

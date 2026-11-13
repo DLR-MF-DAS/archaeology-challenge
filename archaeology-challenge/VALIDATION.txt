@@ -1,14 +1,14 @@
 Validation completed on real data, 13 November 2026.
 
-Instructor: all 27 code cells executed, including the optional plots, worked Lab B
-answer, Lab C practice and final test evaluation. Participant: all 26 code cells executed in an
+Instructor: all 29 code cells executed, including the optional PCA plot, Lab B
+experiments, Lab C image retrieval and final test evaluation. Participant: all 28 code cells executed in an
 isolated working directory; optional labs and test reveal remain disabled and the
 recommendation remains blank. Its draft export requests completion before sharing.
 The executed participant copy is .work/participant_validation.ipynb; the distributed
-participant notebook has no saved outputs. There are 67 participant cells and 70
+participant notebook has no saved outputs. There are 66 participant cells and 69
 instructor cells, retaining the six-section workshop and choice of optional lab.
 
-Sixteen automated checks passed: shared image preprocessing; rejection of stale,
+Eighteen automated checks passed: shared image preprocessing; rejection of stale,
 misaligned, nonfinite or pixel-mismatched caches (including edited Cyprus images);
 training-only size probe and single-class strata; transfer score summaries without
 target labels; metric denominators and ties; invalid inputs; submission alignment;
@@ -16,7 +16,9 @@ contradictory image families; catalogue conflicts; both model paths in Cyprus;
 complete exports; notebook schema, Python syntax and agreement with the builder;
 Cyprus catalogue counts/random references; pair/cutoff ties and invalid pairs;
 runnable participant arithmetic blanks and correct instructor solutions; disabled
-test reveal and use of the exported model/budget despite later setting changes.
+test reveal and use of the exported model/budget despite later setting changes;
+Lab B fitting on selected training rows with a fresh pipeline; Lab C cosine retrieval,
+descending rank and ties. Both labs' disabled and unfilled-function paths also pass.
 
 The source-size audit found 300 retained tells at 350 x 350, 249 negatives at
 64 x 64 and 44 negatives at 350 x 350. Both feature branches and both regions now
@@ -66,7 +68,7 @@ orderings; this uncertainty is explicitly reported. These numbers measure catalo
 agreement, not detection accuracy. Both complete notebooks ran successfully with
 the existing corrected caches; no new model extraction was needed for this exercise.
 
-Saved Cyprus, pair-comparison, mistake and learning-curve figures were visually
+Saved Cyprus, pair-comparison, mistake, training-change and neighbour galleries were visually
 inspected. Both exports contain submission.csv, configuration.json,
 validation_results.csv, cyprus_review.csv, recommendation.md, data_audit.json,
 validation_diagnostics.csv, transfer_diagnostics.csv, cyprus_catalogue_metrics.csv
@@ -74,26 +76,30 @@ and cyprus_pairs.csv. Configuration records common input size, preprocessing,
 the separate Cyprus review budget and the absence of Cyprus calibration/labels.
 The instructor's recommendation uses current metrics and a displayed Cyprus image;
 stale score/rank examples have been removed from the generated text and guide.
-Labs B and C now have numbered actions, answer templates and explicit completion
-criteria. Lab B separates training-image counts from the fixed 50 reviews, displays
-mean/fewest/most tells found, and asks learners to compare 20/200 training images
-and justify a 50/200 choice. Its instructor answer is calculated from the current
-run: colour/texture gains 9.7 mean hits (30.3 to 40.0); DINOv2 gains 5.7 (41.3 to
-47.0). At 50 training images, DINOv2 finds 47.0 on average, with range 46 to 48;
-at 200 it also finds 47.0. The updated count-based plot was visually inspected.
+Lab B now asks participants to implement a small-training function and inspect
+changed mistakes. It clones the pipeline, fits the scaler/classifier on selected
+training rows and scores the fixed validation pool at 50 reviews. DINOv2 with 20
+training images and seed 0 finds 45 tells versus 47 for the full 200-image model:
+nine tells enter the shortlist and seven leave. With 50 images/seed 0, both models
+find 47 but five tells enter and five leave. With 20 images/seed 1, the smaller
+model finds 45, with six entering and four leaving. The instructor computes all
+three comparisons and shows recovered/newly missed image galleries. The experiment
+uses balanced subsets of seeded class permutations; subsets at a fixed seed are nested.
 
-Lab C supplies a concrete A/B/C-area scenario, five one-sentence plan answers and
-two fraction expressions. Its counts are explicitly invented and remain separate
-from the real Cyprus catalogue metrics. The supplied practice rule requires
-precision >=70% and recall >=50%. With 14 hits in 20 reviews and 25 positives,
-70%/56% passes; changing hits to 10 gives 50%/40% and fails. Disabled, unfilled,
-correct, changed-hit and wrong-denominator paths were checked directly. Optional
-code stays disabled in the participant copy, and the instructor supplies worked
-answers. No model, imagery, feature cache or main-path evaluation changed in this
-lab rewrite. The facilitator guide and starting instructions match the new tasks.
+Lab C replaces the invented study and arithmetic with cosine image retrieval.
+Participants implement a dot product and descending sort, then inspect nearest
+Enki training images for real Cyprus pairs. IDs and vectors are loaded together,
+avoiding section 5's reordered table. CY754_site scores 0.829 with one tell-labelled
+neighbour among four; CY754_background scores 0.060 with four. The CY479 queries
+both have one tell-labelled neighbour, with scores 0.810 and 0.431. The instructor
+shows all four query galleries. Neighbour labels do not establish Cyprus visibility,
+and their majority need not agree with a weighted logistic classifier. The gallery
+captions separate cosine similarity from classifier score. The source images,
+feature caches, selected main-path model and final metrics are unchanged. Optional
+code remains disabled in the participant copy. Supporting instructions match the labs.
 
 Section 6 now has three steps: recommend, save/share, and check. Its participant
-prose falls from 577 to 322 words. A live evidence summary supplies the selected
+prose falls from 577 to 316 words. A live evidence summary supplies the selected
 model's Enki counts, precision and recall plus actual Cyprus catalogue recovery,
 including a warning for an ambiguous tied shortlist. Five prompts lead to a
 five-sentence recommendation; the instructor example uses current results.

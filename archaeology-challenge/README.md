@@ -92,11 +92,13 @@ the sample. It saves outputs in the instructor notebook and writes
 `.work/participant_validation.ipynb` separately.
 
 Optional labs appear before section 6. Choose one before the final test reveal.
-Lab A covers PCA. Lab B asks learners to run one cell, compare counts of tells found
-at four training-set sizes, and complete a table and short budget choice. Lab C
-provides a five-answer evaluation plan and two arithmetic blanks using clearly
-invented counts, followed by a supplied decision rule. Both have worked instructor
-answers and explicit completion criteria. Timing and teaching notes are in the guide.
+Lab A covers PCA. In lab B, learners complete a training function, compare smaller
+training sets with the full model, and inspect actual tells entering and leaving the
+50-image shortlist. They vary the sample size and seed to check whether their conclusion
+holds. In lab C, learners implement cosine similarity search and retrieve Enki training
+images for two real Cyprus pairs. They compare visual matches, source labels and
+classifier scores without treating resemblance as detection accuracy. Both labs have
+worked instructor results. Timing and teaching notes are in the guide.
 Preparing new DINOv2 features requires `uv run --extra model ...`; the
 `runtime.make_cyprus_bundle` acquisition utility requires `uv run --extra refresh ...`.
 These are preparation tasks with additional network/model downloads, outside the main lesson.

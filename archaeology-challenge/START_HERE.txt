@@ -68,20 +68,21 @@ Keep brief notes for one five-sentence recommendation in section 6.
 
 The optional block is BEFORE section 6. Choose ONE lab, or skip it:
   A. Complete three PCA expressions and compare 2D/3D feature projections (25–35 min).
-  B. Run one cell; compare tells found with 20/50/100/200 training images, fill a
-     two-row table and choose 50 or 200 images for another experiment (25–35 min).
-  C. Fill five answers about a supplied Cyprus-test scenario; calculate precision
-     and recall for invented counts, then apply a supplied decision rule (25–30 min).
+  B. Complete a training function; compare 20/50 training images and two seeds with
+     the full model, then inspect tells entering or leaving the shortlist (25–35 min).
+  C. Implement image similarity search; retrieve Enki neighbours of two real Cyprus
+     pairs and compare their appearance, labels and classifier scores (25–30 min).
 
 For A, complete and run the function before enabling RUN_PROJECTION.
-For B, set RUN_LEARNING_CURVES = True and complete the Markdown answer template.
-For C, complete the plan and two arithmetic expressions, then enable
-RUN_CYPRUS_PRACTICE. Try 14 hits first, then predict and test 10 hits.
+For B, complete the three feature/label selections, then enable RUN_LABEL_EXPERIMENT.
+Run 20 images/seed 0, 50 images/seed 0, and 20 images/seed 1. Keep brief comparison notes.
+For C, complete the two similarity/ranking expressions, then enable RUN_CYPRUS_NEIGHBOURS.
+Start with C_PAIR_IDS = ["CY754"], then try ["CY479"]. Record an image match and its limits.
 The default participant copy skips all optional code. The instructor copy includes
-the plots and worked B/C answers; participants are not
+the image galleries and worked B/C results; participants are not
 expected to finish all labs. No new model weights or imagery downloads are needed.
-Lab C's invented percentages are practice only; the actual Cyprus measurement for
-the final recommendation is the catalogue agreement from section 5.3.
+Lab C's neighbour labels belong to Enki images, not the Cyprus queries. Section 5.3
+supplies the actual catalogue-agreement measurement for the final recommendation.
 
 The main comparison uses fixed C=1, chooses using validation recall at 50 reviews
 (AP breaks a tie), and reuses that model for the mistake and Cyprus reviews.
