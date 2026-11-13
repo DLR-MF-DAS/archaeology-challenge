@@ -16,7 +16,7 @@ By the end, participants should be able to:
 
 The audience has basic Python and pandas; previous scikit-learn experience helps
 but is not required. The core path has two short coding exercises (two Enki and three Cyprus expressions),
-short parameter-change experiments, image discussion and one 4–6 sentence report.
+short parameter-change experiments, image discussion and one five-sentence report.
 The optional block between sections 5 and 6 offers three alternatives. Choose one,
 or use that time for support; completing every lab is not the four-hour task.
 
@@ -30,24 +30,24 @@ or use that time for support; completing every lab is not the four-hour task.
 ## Completion-time estimate
 
 This is a planning estimate, not a timed learner study. Count the participant copy,
-excluding optional labs, credits and the folded setup source. It has about **4,632
+excluding optional labs, credits and the folded setup source. It has about **4,376
 words of core explanation**. At an assumed 150 technical words per minute, reading
-takes about **31 minutes**. The active-work allowance below covers running and
+takes about **29 minutes**. The active-work allowance below covers running and
 understanding code, completing tasks and discussion; it excludes that reading allowance.
 
 | Core block | Prose words | Reading minutes | Active-work minutes |
 |---|---:|---:|---:|
-| Orientation and setup | 454 | 3.0 | 18 |
+| Orientation and setup | 453 | 3.0 | 18 |
 | 1. Images and split | 451 | 3.0 | 16 |
 | 2. Shortlist metrics | 329 | 2.2 | 14 |
 | 3. Model comparison | 1481 | 9.9 | 40 |
 | 4. Mistake inspection | 292 | 1.9 | 17 |
 | 5. Cyprus comparison and calculations | 1048 | 7.0 | 17 |
-| 6. Report, export and debrief | 577 | 3.8 | 35 |
-| Total | 4632 | 30.9 | 157 |
+| 6. Recommend, save and check | 322 | 2.1 | 35 |
+| Total | 4376 | 29.2 | 157 |
 
-Calculation: **30.9 + 157 + 10-minute break + 15 minutes for support
-= 213 minutes**, approximately **3½ hours** for the core path.
+Calculation: **29.2 + 157 + 10-minute break + 15 minutes for support
+≈ 211 minutes**, approximately **3½ hours** for the core path.
 One optional lab adds 25–35 minutes, giving roughly **4 hours**.
 All three labs add 75–100 minutes and belong in a longer session or follow-up.
 
@@ -332,41 +332,33 @@ supply those labels automatically.
 The main section measures catalogue agreement and identifies missing evidence.
 Lab C makes the next step concrete with a five-answer plan and an invented test result.
 
-### 6. Recommendation, export and final assessment
+### 6. Recommend, save and check
 
-**Writing exercise (about ten minutes):** use the five prompts in section 6.1: a
-decision, a validation measurement with its denominators, an identified image
-observation, a Cyprus limitation, and a concrete next study. Ask for 4–6 sentences;
-the instructor example uses six and includes the computed Cyprus catalogue recovery.
-A recommendation against deployment is valid when
-supported by the evidence. Participants write prose between the triple quotes rather
-than recalculate results. The headline measurement remains the original 50-image
-comparison; identify the 60-image experiment separately if it is discussed.
+**Write (about ten minutes):** run the evidence cell, then ask for one paragraph of
+five sentences: a decision, Enki counts and precision/recall, an identified image
+observation, Cyprus catalogue recovery with its limitation, and the next evidence
+needed. The summary supplies the selected model's actual results at the original
+budgets. The instructor example follows the same five prompts. A recommendation
+against deployment is valid when supported by the evidence.
 
-**Peer feedback:** can another learner identify the proposed use, supporting evidence
-and a claim that still needs testing? Ask for one revision if the recommendation
-equates a source-positive tile with a newly found site, treats Cyprus scores as calibrated
-probabilities, or asserts a visual explanation without testing it. There is no single
-required decision, provided its scope matches the available evidence.
+**Peer feedback:** does the evidence support the proposed use? Revise any claim that
+counts newly discovered sites, equates catalogue recovery with detection accuracy,
+or presents a visual observation as an explanation of the model. Reuse lab C's plan
+if completed, but keep its invented percentages out of the report.
 
-If learners chose lab C, use its proposed next study in the recommendation;
-otherwise one concrete next step is sufficient. Do not require a second study plan.
+**Save and share:** export the completed paragraph and evidence as `team_submission.zip`,
+then save the notebook to retain notes and figures. Share both before revealing test
+labels. A blank recommendation creates a draft; complete it and rerun export before
+sharing. Later edits also require another export. The [README](README.md#submission-files)
+lists the ZIP contents; the export records the run without serializing the fitted estimator.
 
-**Export:** the cell predicts test scores without using test labels and packages the
-ranked CSV, settings, validation results, Cyprus scores, recommendation, size/duplicate
-audit, within-size validation diagnostics, transfer score distributions, Cyprus catalogue
-metrics and per-pair outcomes for both models. It records
-the current run; it does not prevent later edits or serialize the fitted estimator.
-Rerunning replaces the ZIP. An empty recommendation produces a draft message, so have
-learners finish their prose, rerun export, download the ZIP and save their notebook.
-The notebook preserves the image-pair notes that are not separate files in the ZIP.
-
-**Reveal after sharing:** the participant copy keeps `REVEAL_TEST = False` until the
-debrief; the instructor copy includes the worked final result. The reveal matches
-the saved submission's IDs to the Enki test labels, then reports the same budgeted
-metrics and a random-order reference. Compare test and validation counts, but do not
-select a different model using test performance. Neither result establishes geographic
-independence, Cyprus accuracy or a count of newly discovered sites.
+**Check and reflect:** participants enable `REVEAL_TEST` after sharing; the instructor
+copy already displays the result. The table compares validation with the saved test
+ranking at the exported budget, using counts and percentages, followed by a random
+reference. Keep the original recommendation and add one debrief sentence: does the
+test support or weaken it, why, and what still needs testing? Save the notebook again.
+Stop model selection here. This Enki check establishes neither geographic independence
+nor Cyprus detection accuracy.
 
 For an optional later follow-up, revisit the shortlist and transfer prompts with a
 different example and ask learners to reconstruct their reasoning before comparing

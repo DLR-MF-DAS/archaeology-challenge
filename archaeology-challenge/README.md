@@ -42,9 +42,34 @@ automatic answer check, random references, tie diagnostics and worked instructor
 answers. These measure catalogue agreement, not accuracy for visible archaeology.
 The exports include `cyprus_catalogue_metrics.csv` and `cyprus_pairs.csv`.
 
+Section 6 brings the selected model's Enki and Cyprus evidence together beside a
+five-sentence recommendation prompt. Participants save and share the evidence ZIP
+and their notebook, then compare validation with the reserved Enki test results at
+the saved review budget. A one-sentence debrief records what the test supports and
+what remains untested, preserving the original recommendation.
+
 After updating an older notebook, restart its kernel and run from setup. Both DINO
 caches were regenerated; stale preprocessing versions or changed image pixels are
 rejected. Local `*-Copy*.ipynb` files are personal snapshots and are not regenerated.
+
+## Submission files
+
+Section 6 exports `team_submission.zip`. Rerunning export replaces it with the
+current results and recommendation. Save the notebook separately to retain exercise
+notes, figures and the final debrief; these are not all included in the ZIP.
+
+| File in the ZIP | Contents |
+|---|---|
+| `submission.csv` | Test image IDs, scores and ranks, without labels. |
+| `configuration.json` | Selected model, settings, review budgets and provenance. |
+| `validation_results.csv` | Both models' validation results used for selection. |
+| `cyprus_review.csv` | Cyprus scores and location metadata. |
+| `data_audit.json` | Duplicate audit, original image sizes and common preprocessing. |
+| `validation_diagnostics.csv` | Size-only reference and validation AP within original dimensions. |
+| `transfer_diagnostics.csv` | Both models' score distributions on Enki validation and Cyprus. |
+| `cyprus_catalogue_metrics.csv` | Catalogue agreement, shortlist recovery and random references. |
+| `cyprus_pairs.csv` | Scores, margins and outcomes for each pair and model. |
+| `recommendation.md` | The written recommendation made before the test reveal. |
 
 ## Development
 

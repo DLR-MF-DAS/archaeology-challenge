@@ -64,7 +64,7 @@ asks for three calculations: paired agreement, shortlist catalogue fraction and
 catalogue recovery. Section 5.3 supplies counts, three blanks, a check and random
 references. The instructor copy supplies worked answers. Keep one Cyprus calculation
 for the final recommendation.
-Keep brief notes for one 4–6 sentence recommendation in section 6.
+Keep brief notes for one five-sentence recommendation in section 6.
 
 The optional block is BEFORE section 6. Choose ONE lab, or skip it:
   A. Complete three PCA expressions and compare 2D/3D feature projections (25–35 min).
@@ -85,10 +85,12 @@ the final recommendation is the catalogue agreement from section 5.3.
 
 The main comparison uses fixed C=1, chooses using validation recall at 50 reviews
 (AP breaks a tie), and reuses that model for the mistake and Cyprus reviews.
-Finish experiments, write the recommendation, export and share before enabling
-REVEAL_TEST for the final debrief. Do not use test performance to select another model.
-Download team_submission.zip AND save the notebook to retain your notes and figures.
-An empty recommendation produces a draft; finish it and rerun export before sharing.
+Section 6 has three steps: use the evidence summary to write five sentences; export
+and share team_submission.zip AND your saved notebook; then enable REVEAL_TEST.
+The final table compares validation and test at the saved review budget. Add one
+debrief sentence and save the notebook again, keeping your original recommendation.
+Do not use test performance to select another model. A blank recommendation produces
+a draft; finish it and rerun export before sharing.
 
 The instructor notebook contains worked results from the real sample. They describe
 this curated split, not promised performance on other archaeological landscapes.

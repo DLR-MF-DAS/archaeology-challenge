@@ -283,6 +283,31 @@ class ScientificChecks(unittest.TestCase):
                 self.assertFalse(config["cyprus_scores_calibrated"])
                 self.assertNotIn("/local/", bundle.read("cyprus_review.csv").decode())
 
+    def test_test_reveal_uses_exported_choice_and_budget(self):
+        source = next(cell.source for cell in builder.notebook(False, "").cells
+                      if cell.id == "reveal")
+        # The disabled participant cell must run without any test data in scope.
+        exec(source, {"print": Mock()})
+        truth = pd.DataFrame({"tile_id": list("abcdef"), "label": [1, 1, 0, 1, 0, 0]})
+        submission = pd.DataFrame({"tile_id": list("abcdef"), "score": [.8, .6, .7, .9, .4, .1]})
+        saved_validation = {"hits": 1, "reviewed": 2, "positives": 3,
+                            "precision_at_k": .5, "recall_at_k": 1 / 3, "AP": .5}
+        helper = SimpleNamespace(score_submission=Mock(wraps=runtime.score_submission),
+                                 ranking_metrics=runtime.ranking_metrics)
+        ns = dict(pd=pd, workshop=helper, test=truth, submission=submission,
+                  submitted_model="dinov2", submitted_budget=2,
+                  submitted_validation=saved_validation.copy(),
+                  selected="colour_texture", REVIEW_BUDGET=5,
+                  display=Mock(), print=Mock())
+        exec(source.replace("REVEAL_TEST = False", "REVEAL_TEST = True"), ns)
+        self.assertEqual(helper.score_submission.call_args.args[-1], 2)
+        self.assertEqual(ns["comparison"].loc["Test", "reviewed"], 2)
+        self.assertEqual(ns["comparison"].loc["Test", "hits"], 2)
+        self.assertEqual(ns["comparison"].loc["Test", "recall_at_k"], 2 / 3)
+        self.assertEqual(ns["comparison"].loc["Validation", "hits"], 1)
+        self.assertEqual(ns["submitted_validation"], saved_validation)
+        ns["print"].assert_any_call("Exported model: dinov2; review budget: 2")
+
     def test_generated_notebooks_match_source_and_bundle(self):
         payload = builder.embedded_assets()
         with zipfile.ZipFile(io.BytesIO(base64.b64decode(payload))) as bundle:
@@ -322,6 +347,9 @@ class ScientificChecks(unittest.TestCase):
                 self.assertLess(order.index("learning-curve"), order.index("learning-curve-response"))
                 self.assertLess(order.index("cyprus-study-response"), order.index("cyprus-study-practice"))
                 self.assertLess(order.index("cyprus-study-practice"), order.index("report-introduction"))
+                final_steps = ("report-evidence", "recommendation", "export", "reveal", "debrief-notes")
+                for earlier, later in zip(final_steps, final_steps[1:]):
+                    self.assertLess(order.index(earlier), order.index(later))
 
 
 def execute_notebook(filename, participant=False):

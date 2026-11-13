@@ -1,21 +1,22 @@
 Validation completed on real data, 13 November 2026.
 
-Instructor: all 26 code cells executed, including the optional plots, worked Lab B
-answer, Lab C practice and final test evaluation. Participant: all 25 code cells executed in an
+Instructor: all 27 code cells executed, including the optional plots, worked Lab B
+answer, Lab C practice and final test evaluation. Participant: all 26 code cells executed in an
 isolated working directory; optional labs and test reveal remain disabled and the
 recommendation remains blank. Its draft export requests completion before sharing.
 The executed participant copy is .work/participant_validation.ipynb; the distributed
-participant notebook has no saved outputs. There are 64 participant cells and 67
+participant notebook has no saved outputs. There are 67 participant cells and 70
 instructor cells, retaining the six-section workshop and choice of optional lab.
 
-Fifteen automated checks passed: shared image preprocessing; rejection of stale,
+Sixteen automated checks passed: shared image preprocessing; rejection of stale,
 misaligned, nonfinite or pixel-mismatched caches (including edited Cyprus images);
 training-only size probe and single-class strata; transfer score summaries without
 target labels; metric denominators and ties; invalid inputs; submission alignment;
 contradictory image families; catalogue conflicts; both model paths in Cyprus;
 complete exports; notebook schema, Python syntax and agreement with the builder;
 Cyprus catalogue counts/random references; pair/cutoff ties and invalid pairs;
-runnable participant arithmetic blanks and correct instructor solutions.
+runnable participant arithmetic blanks and correct instructor solutions; disabled
+test reveal and use of the exported model/budget despite later setting changes.
 
 The source-size audit found 300 retained tells at 350 x 350, 249 negatives at
 64 x 64 and 44 negatives at 350 x 350. Both feature branches and both regions now
@@ -90,6 +91,19 @@ correct, changed-hit and wrong-denominator paths were checked directly. Optional
 code stays disabled in the participant copy, and the instructor supplies worked
 answers. No model, imagery, feature cache or main-path evaluation changed in this
 lab rewrite. The facilitator guide and starting instructions match the new tasks.
+
+Section 6 now has three steps: recommend, save/share, and check. Its participant
+prose falls from 577 to 322 words. A live evidence summary supplies the selected
+model's Enki counts, precision and recall plus actual Cyprus catalogue recovery,
+including a warning for an ambiguous tied shortlist. Five prompts lead to a
+five-sentence recommendation; the instructor example uses current results.
+The detailed ZIP inventory has moved to README.md. Exports still contain ten files.
+The reveal compares validation and test in one table with counts and percentages,
+using the choice and budget captured at export. Default results remain 47 versus
+48 hits in 50 reviews. A one-sentence debrief preserves the original recommendation
+and identifies remaining uncertainty. Both notebooks executed without errors;
+the participant copy keeps its blank report and disabled reveal. Model results,
+imagery and cached features are unchanged by this section 6 revision.
 
 Execution used Python 3.13.18, the locked dependencies and Jupyter kernels. Feature
 re-extraction used torch 2.15.0 and transformers 4.57.6 on MPS; notebook execution

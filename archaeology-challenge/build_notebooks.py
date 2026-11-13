@@ -109,7 +109,7 @@ def notebook(instructor, payload):
     Finish any experiments before exporting and revealing the test result.
 
     Submit **`team_submission.zip` and your saved notebook**. The ZIP contains the ranked
-    Enki test CSV, settings, results and a 4–6 sentence recommendation. The notebook keeps
+    Enki test CSV, settings, results and a five-sentence recommendation. The notebook keeps
     your exercise notes and figures. Leave `REVEAL_TEST = False` until the final debrief.
 
     Use Jupyter or [Google Colab](https://colab.research.google.com/). Setup installs missing
@@ -159,7 +159,7 @@ def notebook(instructor, payload):
     Finish any experiments before exporting and revealing the test result.
 
     Submit **`team_submission.zip` and your saved notebook**. The ZIP contains the ranked
-    Enki test CSV, settings, results and a 4–6 sentence recommendation. The notebook keeps
+    Enki test CSV, settings, results and a five-sentence recommendation. The notebook keeps
     your exercise notes and figures. Leave `REVEAL_TEST = False` until the final debrief.
 
     Use Jupyter or [Google Colab](https://colab.research.google.com/). Setup installs missing
@@ -1394,81 +1394,70 @@ def notebook(instructor, payload):
     ''', "cyprus-study-discussion")]
 
     cells += [md('''
-    ## 6. Make a recommendation and export
+    ## 6. Recommend, save and check
 
-    Bring together the measurement from section 3, an image observation from section 4
-    or 5, and the limits of transfer. Finish any optional lab first. A recommendation
-    against deployment is valid if the evidence supports it.
+    Finish any optional lab, then complete these three steps.
 
-    ### 6.1. Exercise: write a 4–6 sentence recommendation
+    ### 6.1. Write a five-sentence recommendation
 
-    Write between the triple quotes in the next cell. Use these five prompts:
-
-    1. **Decision:** name the selected model and the use you recommend, with its scope.
-    2. **Measurement:** cite hits, reviews and available positives, then precision and recall
-       from section 3.4. Keep the original 50-image comparison; identify the larger-budget
-       experiment separately if you mention it.
-    3. **Observation:** cite one tile ID and a visible feature, separating observation
-       from a possible explanation of its score.
-    4. **Cyprus measurement and limit:** cite one catalogue-agreement calculation from
-       section 5.3, then explain why it does not establish detection accuracy.
-    5. **Next evidence:** propose suitable local imagery, expert labels and locations
-       reserved for independent assessment. Use lab C's plan if you completed it.
-
-    Run the cell to display your text. Exchange it with a partner, or reread it yourself:
-    can the reader identify the proposed use, its evidence and a claim that still needs
-    testing? Make one revision if needed, then export. This is the only report to submit;
-    reuse your earlier notes.
+    Run this cell to collect your evidence. It uses the original review budgets and
+    the real Cyprus catalogue results from section 5.3. Lab C's counts were invented.
     ''', "report-introduction"), code('''
-    # Write your 4–6 sentence recommendation between the triple quotes.
+    report_validation = results.loc[results.model.eq(selected)].iloc[0]
+    report_cyprus = cyprus_metrics.loc[cyprus_metrics.model.eq(selected)].iloc[0]
+    print(f"Selected model: {selected}")
+    print(f"Enki validation: {int(report_validation.hits)} of {int(validation.label.sum())} "
+          f"source positives in {int(report_validation.reviewed)} reviews; "
+          f"precision {report_validation.precision_at_k:.1%}, recall {report_validation.recall_at_k:.1%}.")
+    print(f"Cyprus: {int(report_cyprus.catalogued_at_k)} of {int(report_cyprus.catalogued_total)} "
+          f"catalogue locations in {int(report_cyprus.reviewed)} reviews; "
+          f"catalogue recovery {report_cyprus.catalogue_recovery_at_k:.1%}. "
+          "Detection accuracy remains unknown.")
+    if report_cyprus.cutoff_tie:
+        print(f"Cyprus tie warning: recovery can range from "
+              f"{report_cyprus.min_catalogued_at_k / report_cyprus.catalogued_total:.1%} to "
+              f"{report_cyprus.max_catalogued_at_k / report_cyprus.catalogued_total:.1%} "
+              "depending on how tied scores are ordered.")
+    ''', "report-evidence"), md('''
+    Write **one paragraph of five sentences** between the triple quotes below:
+
+    1. **Decide:** “I recommend [model] for [a specific use]…” Further evaluation or no deployment are valid choices.
+    2. **Support:** report the Enki hit count, reviews, available positives, precision and recall shown above.
+    3. **Observe:** name one tile from section 4 or 5 and describe a visible feature without claiming it caused the score.
+    4. **Qualify:** report Cyprus catalogue recovery and explain why it does not measure detection accuracy.
+    5. **Act:** name the next evidence to collect—suitable local imagery, expert visibility labels and separate assessment locations.
+
+    Reuse your notes. Read the paragraph to a partner, or reread it yourself: does the
+    evidence support the proposed use? Revise once if needed, then save it.
+    ''', "report-prompts"), code('''
+    # Write five sentences using the evidence and prompts above.
     recommendation = """
 
     """.strip()
     print(recommendation or "Draft: write your recommendation above, then rerun this cell.")
     ''' if not instructor else '''
-    winner = results.loc[results["model"].eq(selected)].iloc[0]
     recommendation = (
         f"Evaluate {selected} further as an aid to expert review of imagery similar to Enki. "
-        f"On this validation sample it finds {int(winner.hits)} of {int(validation.label.sum())} "
-        f"source positives in {int(winner.reviewed)} reviews "
-        f"(recall {winner.recall_at_k:.3f}, precision {winner.precision_at_k:.3f}). "
-        "Cyprus tile CY5_site shows bright angular patches in the displayed image; "
-        "that observation does not establish which cues the classifier used. "
-        f"In Cyprus, {int(cyprus_reference.catalogued_at_k)}/{int(cyprus_reference.catalogued_total)} "
-        f"catalogue locations are recovered in {int(cyprus_reference.reviewed)} reviews "
-        f"({cyprus_reference.catalogue_recovery_at_k:.1%}), but detection accuracy remains unknown "
-        "because catalogue membership is not an image-visibility label. "
-        "Common 64-pixel preprocessing reduces the source-size shortcut, but acquisition "
-        "differences and geographic independence remain unresolved. "
-        "Before field deployment, evaluate representative local imagery with expert visibility "
-        "labels and a geographic holdout, using imagery appropriate to the size of the features sought."
+        f"It retrieves {int(report_validation.hits)} of {int(validation.label.sum())} validation "
+        f"source positives in {int(report_validation.reviewed)} reviews "
+        f"(precision {report_validation.precision_at_k:.1%}, recall {report_validation.recall_at_k:.1%}). "
+        "CY5_site shows bright angular patches, although this does not explain the model's score. "
+        f"Cyprus catalogue recovery is {int(report_cyprus.catalogued_at_k)}/{int(report_cyprus.catalogued_total)} "
+        f"({report_cyprus.catalogue_recovery_at_k:.1%}) in {int(report_cyprus.reviewed)} reviews; "
+        "detection accuracy remains unknown because visibility labels are missing. "
+        "Before using this approach in Cyprus, evaluate suitable local imagery with expert "
+        "visibility labels from locations kept separate from model development."
     )
     print(recommendation)
     ''', "recommendation"), md('''
-    ### 6.2. Save the choice and its evidence
+    ### 6.2. Save and share two files
 
-    Run the next cell after finishing your recommendation and validation experiments.
-    It uses the selected model to score the **Enki test images without using their labels**,
-    then saves the ranking and your current evidence in `team_submission.zip`.
+    Run the export cell. It saves your paragraph, rankings, settings and audit tables;
+    test labels are still unused. Then **download `team_submission.zip` and save your
+    notebook (`.ipynb`)**. Share both before the reveal.
 
-    | File in the ZIP | Purpose |
-    |---|---|
-    | `submission.csv` | Every test tile's ID, score and rank; no test labels. |
-    | `configuration.json` | The selected model, settings, sample information and review budget. |
-    | `validation_results.csv` | The two models' validation results used for selection. |
-    | `cyprus_review.csv` | Cyprus scores and location metadata, not measured detection outcomes. |
-    | `data_audit.json` | Duplicate audit, original size/label counts and common preprocessing. |
-    | `validation_diagnostics.csv` | Size-only reference and validation AP within original dimensions. |
-    | `transfer_diagnostics.csv` | Both models' score distributions on Enki validation and Cyprus. |
-    | `cyprus_catalogue_metrics.csv` | Both models' catalogue agreement, shortlist recovery and random references. |
-    | `cyprus_pairs.csv` | Scores, margins and outcomes for each pair and model. |
-    | `recommendation.md` | Your written recommendation. |
-
-    This records the current run; it does not lock the notebook or save a fitted model
-    object. Rerunning export replaces the ZIP with the current results and text.
-    An empty recommendation produces a draft: finish it and export again before sharing.
-    Download the ZIP using the link or Colab's Files panel, and save the notebook so your
-    exercise notes and image observations are preserved too.
+    A blank paragraph produces a draft. Finish it and rerun export before sharing;
+    rerun export after any further edits too.
     ''', "export-introduction"), code('''
     test_scores = models[selected].predict_proba(feature_sets[selected]["test"])[:, 1]
     submission = workshop.write_submission(test, test_scores, ROOT / "submission.csv")
@@ -1482,58 +1471,55 @@ def notebook(instructor, payload):
         "sample_manifest_sha256": workshop.file_digest(assets / "sample_manifest.json"),
     }, data_audit=audit, validation_audit=validation_audit, transfer_audit=transfer_audit,
        cyprus_metrics=cyprus_metrics, cyprus_pairs=cyprus_pair_results)
-    display(submission.head())
+    # Keep the comparison tied to the choice and budget used for this export.
+    submitted_model = selected
+    submitted_budget = REVIEW_BUDGET
+    submitted_validation = results.loc[results.model.eq(selected)].iloc[0].to_dict()
+    submitted_validation["positives"] = int(validation.label.sum())
     display(FileLink(str(bundle)))
-    print("Saved:", bundle, "— in Colab, download it from the Files panel.")
+    print("Download the ZIP using this link or Colab's Files panel; also save your notebook.")
     ''', "export"), md('''
-    ### 6.3. Final reveal — after sharing your recommendation
+    ### 6.3. Check the saved choice on Enki test images
 
-    Validation helped choose the model. The reserved **Enki test set** now assesses that
-    saved choice; using its result to choose another model would turn it into development
-    data. The Cyprus images are not part of this test.
-
-    Keep `REVEAL_TEST = False` until the debrief. Then set it to `True` and run the next
-    cell for the exported submission. It matches saved scores to the test source labels
-    and uses the original review budget.
-
-    Compare the test counts and recall with validation and random ordering. Which limitation
-    from your recommendation still applies? A strong result does not establish geographic
-    independence or Cyprus performance. Stop model experiments after this reveal.
+    After sharing, set `REVEAL_TEST = True` and run the cell. Compare validation and
+    test results at the same review budget, then complete the one-sentence debrief.
+    Keep your original recommendation. This check uses the same Enki source; it does
+    not test a new region. Stop model selection after this reveal.
     ''' if not instructor else '''
-    ### 6.3. Final reveal — after sharing your recommendation
+    ### 6.3. Check the saved choice on Enki test images
 
-    Validation helped choose the model. The reserved **Enki test set** now assesses that
-    saved choice; using its result to choose another model would turn it into development
-    data. The Cyprus images are not part of this test.
-
-    The participant copy leaves `REVEAL_TEST = False` until the debrief. This instructor
-    copy sets it to `True` to display the worked result. The cell matches saved scores to
-    the test source labels and uses the original review budget.
-
-    Compare the test counts and recall with validation and random ordering. Which limitation
-    from the recommendation still applies? A strong result does not establish geographic
-    independence or Cyprus performance. Stop model experiments after this reveal.
+    Reveal after participants share their files. This copy enables the test cell;
+    the participant copy starts with `REVEAL_TEST = False`. Compare validation and
+    test at the saved budget, then discuss the debrief. Keep the original recommendation
+    and finish model selection; Cyprus detection accuracy remains unmeasured.
     ''', "reveal-introduction"), code('''
-    REVEAL_TEST = False
+    REVEAL_TEST = False  # Enable after sharing the ZIP and notebook.
     if REVEAL_TEST:
-        final_result = workshop.score_submission(submission, test, workshop.ranking_metrics, REVIEW_BUDGET)
-        display(pd.Series(final_result, name="final_test").round(3).to_frame())
-        print(f"Found {int(final_result['hits'])} of {int(test.label.sum())} source positives "
-              f"in {int(final_result['reviewed'])} test-image reviews.")
-        print(f"Random ordering: expected recall {min(REVIEW_BUDGET, len(test)) / len(test):.3f}.")
+        final_result = workshop.score_submission(submission, test, workshop.ranking_metrics, submitted_budget)
+        final_result["positives"] = int(test.label.sum())
+        comparison = pd.DataFrame([submitted_validation, final_result], index=["Validation", "Test"])
+        print(f"Exported model: {submitted_model}; review budget: {submitted_budget}")
+        comparison_table = comparison[["hits", "reviewed", "positives"]].rename(columns={
+            "hits": "Tells found", "reviewed": "Images reviewed", "positives": "Available tells"})
+        comparison_table["Precision"] = comparison.precision_at_k.map(lambda value: f"{value:.1%}")
+        comparison_table["Recall"] = comparison.recall_at_k.map(lambda value: f"{value:.1%}")
+        display(comparison_table)
+        print(f"Random selection on test: expected recall {min(submitted_budget, len(test)) / len(test):.1%}.")
     else:
         print("Test labels remain unused. Finish and share your recommendation before the reveal.")
+    '''.replace("REVEAL_TEST = False", f"REVEAL_TEST = {instructor}"), "reveal"), md('''
+    **Debrief — complete one sentence here:** the test [supports / weakens] my
+    recommendation because ..., while ... still needs to be tested.
+
+    Save the notebook again to keep this reflection alongside your original report.
     ''' if not instructor else '''
-    REVEAL_TEST = True
-    if REVEAL_TEST:
-        final_result = workshop.score_submission(submission, test, workshop.ranking_metrics, REVIEW_BUDGET)
-        display(pd.Series(final_result, name="final_test").round(3).to_frame())
-        print(f"Found {int(final_result['hits'])} of {int(test.label.sum())} source positives "
-              f"in {int(final_result['reviewed'])} test-image reviews.")
-        print(f"Random ordering: expected recall {min(REVIEW_BUDGET, len(test)) / len(test):.3f}.")
-    else:
-        print("Test labels remain unused. Finish and share your recommendation before the reveal.")
-    ''', "reveal")]
+    **Worked debrief for the default run:** the test supports further evaluation for
+    expert review of Enki-like imagery because precision and recall remain close to
+    validation, while performance at independent Cyprus locations remains untested.
+
+    Ask participants to support their sentence with the comparison above, and save
+    their reflection in the notebook alongside the original recommendation.
+    ''', "debrief-notes")]
 
     if instructor:
         cells += [md('''
@@ -1602,7 +1588,7 @@ def notebook(instructor, payload):
     - **Recommendation:** use five prompts: decision, measured evidence, image observation,
       limitation and next study. Accept a recommendation against deployment. Keep the
       original 50-image comparison distinct from the larger-budget experiment. The sample
-      report uses six sentences and the currently selected model's validation row.
+      report uses five sentences and the evidence summary directly above the writing cell.
       Lab C supplies a concrete plan that can contribute one next step to the report.
     - **Export and debrief:** the ZIP records the current run; rerunning export replaces it.
       Share the recommendation before the reveal. The test cell scores the saved ranking
