@@ -317,48 +317,62 @@ def notebook(instructor, payload):
         fig.suptitle(f"{name}: highest-scoring validation images")
         plt.show()
 
-    # Section 3.4's short exercise still uses the colour/texture ranking.
-    ranking_example = validation_rankings["colour_texture"]
     ''', "score-validation"), md('''
-    ### 3.4. Calculate precision and recall, then choose
+    ### 3.4. How many tells does the colour/texture model find in 50 reviews?
 
-    Use the first 50 images in each ranking. The result columns are:
+    The `colour_texture` model has ordered the validation images by score, highest first.
+    Suppose you can review **50 images**. Take the first 50 and use their source labels
+    to count how many are tells. Run the cell to display the counts.
+    ''', "comparison-explanation"), code('''
+    shortlist = validation_rankings["colour_texture"].head(50)
+    hits = int(shortlist["label"].sum())
+    reviewed = len(shortlist)
+    total_positives = int(validation.label.sum())
+
+    print(f"{reviewed} images in the review list (reviewed)")
+    print(f"{hits} of them have the source label 'tell' (hits)")
+    print(f"{total_positives} tell-labelled images in the complete validation set (total_positives)")
+    ''', "shortlist-counts"), md('''
+    **Calculate precision and recall for this review list:**
+
+    - **Precision:** of the images you would review, what fraction are tells?
+      Divide `hits` by `reviewed`.
+    - **Recall:** of all the tells available, what fraction did this review list find?
+      Divide `hits` by `total_positives`.
+
+    In the next code cell, replace `...` on the `precision = ...` and `recall = ...`
+    lines with those divisions. Use the variable names and Python's `/` operator.
+    Run the cell to see your percentages and check whether both calculations are correct.
+    ''', "shortlist-exercise-instructions"), code('''
+    precision = ...  # Tells found / images reviewed.
+    recall = ...     # Tells found / all tells available.
+
+    # Supplied feedback for your two answers.
+    if precision is Ellipsis or recall is Ellipsis:
+        print("Replace ... on both calculation lines, then rerun this cell.")
+    else:
+        print(f"Precision: {precision:.1%}")
+        print(f"Recall: {recall:.1%}")
+        if np.allclose([precision, recall], [hits / reviewed, hits / total_positives], rtol=0, atol=1e-9):
+            print("Both calculations are correct.")
+        else:
+            print("Check the denominators: precision uses images reviewed; recall uses all tells available.")
+    '''.replace("precision = ...", "precision = hits / reviewed" if instructor else "precision = ...")
+       .replace("recall = ...", "recall = hits / total_positives" if instructor else "recall = ..."),
+        "shortlist-metrics-exercise"), md('''
+    **Now compare both models.** Run the next cell. Which model finds more tells in
+    the same 50 reviews?
 
     | Column | Meaning |
     |---|---|
-    | `hits` | Tell-labelled images retrieved. |
-    | `reviewed` | Images in the shortlist. |
-    | `precision_at_k` | Hits divided by reviews. |
-    | `recall_at_k` | Hits divided by all validation positives. |
+    | `hits` | Tell-labelled images found. |
+    | `reviewed` | Images in the review list. |
+    | `precision_at_k` | Percentage of reviewed images that are tells. |
+    | `recall_at_k` | Percentage of available tells found. |
     | `AP` | Average precision: performance across the full ranking. |
 
-    Choose the model with higher recall at 50 reviews; higher AP breaks a tie.
-    ''', "comparison-explanation"), md('''
-    **Complete the two expressions** using the supplied counts for the colour/texture
-    ranking. Run your cell, then compare your answers with its row in the results below.
-    ''', "shortlist-exercise-instructions"), code('''
-    shortlist = ranking_example.head(50)
-    hits = int(shortlist["label"].sum())
-    reviewed = len(shortlist)
-    total_positives = int(validation.label.sum())
-
-    precision = ...  # Fraction of the shortlist that is positive
-    recall = ...     # Fraction of all validation positives included
-
-    print("Precision:", precision)
-    print("Recall:", recall)
-    ''' if not instructor else '''
-    shortlist = ranking_example.head(50)
-    hits = int(shortlist["label"].sum())
-    reviewed = len(shortlist)
-    total_positives = int(validation.label.sum())
-
-    precision = hits / reviewed  # Fraction of the shortlist that is positive
-    recall = hits / total_positives     # Fraction of all validation positives included
-
-    print("Precision:", precision)
-    print("Recall:", recall)
-    ''', "shortlist-metrics-exercise"), code('''
+    The code selects higher recall at 50 reviews; higher AP breaks a tie.
+    ''', "model-comparison-instructions"), code('''
     REVIEW_BUDGET = 50
     validation_size = len(validation)
     validation_positives = int(validation.label.sum())
@@ -377,7 +391,10 @@ def notebook(instructor, payload):
         ["recall_at_k", "AP", "model"], ascending=[False, False, True],
     ).reset_index(drop=True)
     selected = results.iloc[0]["model"]
-    display(results.round(3))
+    comparison_display = results.copy()
+    for column in ("precision_at_k", "recall_at_k"):
+        comparison_display[column] = results[column].map(lambda value: f"{value:.1%}")
+    display(comparison_display.round(3))
 
     winner, runner_up = results.iloc[0], results.iloc[1]
     extra_hits = int(winner["hits"] - runner_up["hits"])
@@ -597,14 +614,17 @@ def notebook(instructor, payload):
     print(f"Shortlist: {cyprus_hits} catalogued locations in {cyprus_reviewed} reviews; "
           f"{catalogued_total} catalogued locations in the full sample.")
     ''', "cyprus-counts"), md('''
-    **Complete three expressions** using the named counts above:
+    **Calculate how well the model ranks the catalogued Cyprus locations.** Replace
+    `...` on each of the three lines below, using these counts:
 
-    1. Pair agreement: `(wins + half the ties) / number of pairs`.
-    2. Catalogue fraction: `catalogued locations retrieved / images reviewed`.
-    3. Catalogue recovery: `catalogued locations retrieved / all catalogued locations`.
+    1. `pair_agreement`: how often does the catalogued image score higher than its neighbour?
+       Add `pair_wins` and half of `pair_ties`, then divide by `pair_count`.
+    2. `catalogue_fraction`: what fraction of the reviewed images are catalogued locations?
+       Divide `cyprus_hits` by `cyprus_reviewed`.
+    3. `catalogue_recovery`: what fraction of all catalogue locations did the review list find?
+       Divide `cyprus_hits` by `catalogued_total`.
 
-    The last two use the same denominators as precision and recall, with catalogue membership
-    as the target. Run your calculation, then the supplied check.
+    Run your calculation cell, then **Supplied · check your Cyprus calculations**.
     ''', "cyprus-calculation-instructions"), code('''
     pair_agreement = ...  # Include half credit for ties.
     catalogue_fraction = ...  # Fraction of reviewed images that are catalogued.

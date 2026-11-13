@@ -1,14 +1,14 @@
 Validation completed on real data, 13 November 2026.
 
-Instructor: all 33 code cells executed, including the optional PCA plot, Lab B
-experiments, Lab C image retrieval and final test evaluation. Participant: all 32 code cells executed in an
+Instructor: all 34 code cells executed, including the optional PCA plot, Lab B
+experiments, Lab C image retrieval and final test evaluation. Participant: all 33 code cells executed in an
 isolated working directory; optional labs and test reveal remain disabled and the
 recommendation remains blank. Its draft export requests completion before sharing.
 The executed participant copy is .work/participant_validation.ipynb; the distributed
-participant notebook has no saved outputs. There are 70 participant cells and 72
+participant notebook has no saved outputs. There are 72 participant cells and 74
 instructor cells, retaining the six-section workshop and choice of optional lab.
 
-Eighteen automated checks passed: shared image preprocessing; rejection of stale,
+Nineteen automated checks passed: shared image preprocessing; rejection of stale,
 misaligned, nonfinite or pixel-mismatched caches (including edited Cyprus images);
 training-only size probe and single-class strata; transfer score summaries without
 target labels; metric denominators and ties; invalid inputs; submission alignment;
@@ -21,6 +21,8 @@ Lab B fitting on selected training rows with a fresh pipeline; Lab C cosine retr
 descending rank and ties. Both labs' disabled and unfilled-function paths also pass.
 The lab and reveal checks execute their separate settings cells first and verify
 that settings stay visible while supplied runners are marked for folding.
+A new check covers printed colour/texture counts, runnable arithmetic blanks,
+correct answers, swapped denominators and recalculation with different counts.
 
 The source-size audit found 300 retained tells at 350 x 350, 249 negatives at
 64 x 64 and 44 negatives at 350 x 350. Both feature branches and both regions now
@@ -114,21 +116,30 @@ the participant copy keeps its blank report and disabled reveal. Model results,
 imagery and cached features are unchanged by this section 6 revision.
 
 The notebooks have been edited to remove repeated explanations and output. Participant
-core prose falls from 4,376 to 1,666 words; total Markdown, including labs and credits,
-falls from 5,745 to 2,322. Instructor Markdown falls from 6,740 to 2,342 words. Detailed
+core prose falls from 4,376 to 1,802 words; total Markdown, including labs and credits,
+falls from 5,745 to 2,458. Instructor Markdown falls from 6,740 to 2,478 words. Detailed
 teaching notes remain in FACILITATOR_GUIDE.md; provenance, parameters and setup help
 are in README.md, linked from the standalone notebooks. Source attribution is retained.
 
 Short visible settings cells now precede the supplied lab runners and final reveal.
 The participant copy marks 11 code cells for folding (including setup), and the
-instructor copy marks 12. Visible participant code drops from 526 to 241 lines in
+instructor copy marks 12. Visible participant code drops from 526 to 252 lines in
 frontends honouring that metadata. Exercise functions, arithmetic and settings stay
 visible. Duplicate preview/pair tables and repeated result narration are removed;
 validation captions retain the source labels. Cyprus results use one percentage
 table with win/tie/loss counts and the existing cutoff-tie warning. All calculations,
-18 checks, both full executions and ten-file exports pass. The two updated validation
+19 checks, both full executions and ten-file exports pass. The two updated validation
 preview figures were inspected. Embedded assets and helper source are byte-for-byte
 unchanged, and the main Enki/Cyprus metrics and lab results are unchanged.
+
+Section 3.4 now displays the counts before asking participants to calculate anything:
+50 reviewed images, 40 tell-labelled images among them, and 60 available tells. The
+prompt names the two questions, variables and division operator. Its answer cell
+prints percentages and checks both denominators; the instructor obtains 80.0%
+precision and 66.7% recall. The model comparison follows the exercise and also displays
+percentages, while stored results retain numeric fractions. Cyprus instructions
+likewise name each question and the exact count variables to use. Default participant
+blanks produce a completion message; no answer or test reveal is enabled automatically.
 
 Execution used Python 3.13.18, the locked dependencies and Jupyter kernels. Feature
 re-extraction used torch 2.15.0 and transformers 4.57.6 on MPS; notebook execution

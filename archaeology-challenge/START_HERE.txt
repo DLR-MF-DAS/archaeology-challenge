@@ -60,7 +60,8 @@ slow downloads or unfamiliar software can add time. The calculation and checkpoi
 are in FACILITATOR_GUIDE.md.
 
 Run sections 1–5 in order. Section 2 works through an invented label list, section
-3.4 asks for two precision/recall expressions before the comparison table, section 4
+3.4 prints the three counts needed for precision and recall, asks for two divisions
+and checks the answers before comparing both models. Section 4
 changes the review budget, and section 5 compares two pairs of Cyprus images then
 asks for three calculations: paired agreement, shortlist catalogue fraction and
 catalogue recovery. Section 5.3 supplies counts, three blanks, a check and random

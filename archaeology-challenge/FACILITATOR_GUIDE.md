@@ -33,9 +33,9 @@ or use that time for support; completing every lab is not the four-hour task.
 ## Completion-time estimate
 
 This is a planning estimate, not a timed learner study. Count the participant copy,
-excluding optional labs, credits and supplied code. It has about **1,666
+excluding optional labs, credits and supplied code. It has about **1,802
 words of core explanation**. At an assumed 150 technical words per minute, reading
-takes about **11 minutes**. The active-work allowance below covers running and
+takes about **12 minutes**. The active-work allowance below covers running and
 understanding code, completing tasks and discussion; it excludes that reading allowance.
 
 | Core block | Prose words | Reading minutes | Active-work minutes |
@@ -43,14 +43,14 @@ understanding code, completing tasks and discussion; it excludes that reading al
 | Orientation and setup | 124 | 0.8 | 18 |
 | 1. Images and split | 168 | 1.1 | 16 |
 | 2. Shortlist metrics | 135 | 0.9 | 14 |
-| 3. Model comparison | 458 | 3.1 | 40 |
+| 3. Model comparison | 569 | 3.8 | 40 |
 | 4. Mistake inspection | 124 | 0.8 | 17 |
-| 5. Cyprus comparison and calculations | 389 | 2.6 | 17 |
+| 5. Cyprus comparison and calculations | 414 | 2.8 | 17 |
 | 6. Recommend, save and check | 268 | 1.8 | 35 |
-| Total | 1666 | 11.1 | 157 |
+| Total | 1802 | 12.0 | 157 |
 
-Calculation: **11.1 + 157 + 10-minute break + 15 minutes for support
-≈ 193 minutes**, approximately **3¼ hours** for the core path.
+Calculation: **12.0 + 157 + 10-minute break + 15 minutes for support
+≈ 194 minutes**, approximately **3¼ hours** for the core path.
 One optional lab adds 25–35 minutes; the four-hour schedule leaves further room for discussion and support.
 All three labs add 75–100 minutes and belong in a longer session or follow-up.
 
@@ -180,11 +180,15 @@ PCA is no longer part of the fitting sequence. Move directly from the pipeline
 explanation to fitting, scoring and comparing; lab A offers the separate visualisation.
 
 **Section 3.4 short exercise (2–3 minutes):** pause before displaying the comparison
-table. The supplied code takes the first 50 rows of the full colour/texture ranking
-from section 3.3 and counts their positives. Learners fill in
-`precision = hits / reviewed` and `recall = hits / total_positives`, then run the
-comparison cell to check their answers. Explain that each earlier four-image display
-was only a preview of its model's full ranking. The instructor copy includes both expressions.
+table. Run the counts cell first: it takes the first 50 images chosen by the
+colour/texture model and prints the number reviewed, tells found and total available
+tells. The default counts are 50, 40 and 60. Ask two concrete questions: of the images
+reviewed, what fraction are tells; of all available tells, what fraction were found?
+Learners replace the two placeholders with `hits / reviewed` and
+`hits / total_positives`. The answer cell shows 80.0% precision and 66.7% recall and
+checks the denominators. Then run the two-model comparison, which also displays
+percentages. The earlier four-image galleries were previews, not the 50-image review
+list. The instructor copy supplies the divisions; the counts are computed from the run.
 
 **Ask:** “What was learned in this session, and what was already fixed? Which data were
 used to learn, which to choose, and which are reserved for the final assessment?”

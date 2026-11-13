@@ -41,6 +41,11 @@ resolution or remove all acquisition differences. Cyprus has no image-visibility
 its scores remain an uncalibrated transfer exercise. Both models' score distributions
 and the data audit are included in the exported evidence.
 
+Section 3.4 prints how many images the colour/texture model would have reviewed,
+how many are tells, and how many tells exist in the full validation set. Participants
+use those counts to calculate precision and recall, with an immediate answer check.
+The subsequent model comparison displays both measures as percentages.
+
 Section 5.3 now asks participants to calculate three Cyprus catalogue measures:
 paired ranking agreement (with half credit for ties), the catalogue fraction in a
 four-image shortlist, and recovery of the six catalogue locations. It includes an

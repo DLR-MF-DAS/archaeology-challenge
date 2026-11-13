@@ -81,6 +81,36 @@ class ScientificChecks(unittest.TestCase):
             with self.subTest(rows=len(invalid)), self.assertRaises(ValueError):
                 runtime.catalogue_agreement(invalid)
 
+    def test_shortlist_exercise_shows_counts_and_checks_denominators(self):
+        participant = {c.id: c for c in builder.notebook(False, "").cells}
+        instructor = {c.id: c for c in builder.notebook(True, "").cells}
+        colour_ranking = pd.DataFrame({"label": [1] * 40 + [0] * 10 + [1] * 20 + [0] * 49})
+        ns = dict(np=np, validation=colour_ranking.sample(frac=1, random_state=3),
+                  validation_rankings={"colour_texture": colour_ranking,
+                                       "dinov2": colour_ranking.sort_values("label", ascending=False)},
+                  selected="dinov2", print=Mock())
+        exec(participant["shortlist-counts"].source, ns)
+        self.assertEqual((ns["hits"], ns["reviewed"], ns["total_positives"]), (40, 50, 60))
+        shown = "\n".join(call.args[0] for call in ns["print"].call_args_list)
+        for count, name in ((40, "hits"), (50, "reviewed"), (60, "total_positives")):
+            self.assertTrue(any(str(count) in line and name in line for line in shown.splitlines()))
+        exercise = participant["shortlist-metrics-exercise"].source
+        exec(exercise, ns)
+        self.assertIs(ns["precision"], Ellipsis)
+        self.assertIs(ns["recall"], Ellipsis)
+        exec(instructor["shortlist-metrics-exercise"].source, ns)
+        self.assertEqual((ns["precision"], ns["recall"]), (.8, 2 / 3))
+        ns["print"].assert_any_call("Both calculations are correct.")
+        ns["print"].reset_mock()
+        swapped = exercise.replace("precision = ...", "precision = hits / total_positives").replace(
+            "recall = ...", "recall = hits / reviewed")
+        exec(swapped, ns)
+        self.assertNotIn(unittest.mock.call("Both calculations are correct."), ns["print"].call_args_list)
+        self.assertTrue(any("denominators" in call.args[0] for call in ns["print"].call_args_list))
+        ns.update(hits=3, reviewed=4, total_positives=6)
+        exec(instructor["shortlist-metrics-exercise"].source, ns)
+        self.assertEqual((ns["precision"], ns["recall"]), (.75, .5))
+
     def test_cyprus_calculation_has_runnable_blanks_and_worked_solution(self):
         counts = dict(pair_wins=4, pair_ties=0, pair_count=6,
                       cyprus_hits=3, cyprus_reviewed=4, catalogued_total=6)
@@ -385,6 +415,10 @@ class ScientificChecks(unittest.TestCase):
                 by_id = {cell.id: cell for cell in nb.cells}
                 order = [cell.id for cell in nb.cells]
                 self.assertLess(order.index("train-models"), order.index("score-validation"))
+                shortlist_steps = ("score-validation", "shortlist-counts", "shortlist-exercise-instructions",
+                                   "shortlist-metrics-exercise", "model-comparison-instructions", "compare-models")
+                for earlier, later in zip(shortlist_steps, shortlist_steps[1:]):
+                    self.assertLess(order.index(earlier), order.index(later))
                 self.assertLess(order.index("cyprus-pair"), order.index("optional-experiments"))
                 self.assertLess(order.index("cyprus-counts"), order.index("cyprus-calculation"))
                 self.assertLess(order.index("cyprus-calculation"), order.index("cyprus-metrics-check"))
