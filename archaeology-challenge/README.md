@@ -35,6 +35,13 @@ resolution or remove all acquisition differences. Cyprus has no image-visibility
 its scores remain an uncalibrated transfer exercise. Both models' score distributions
 and the data audit are included in the exported evidence.
 
+Section 5.3 now asks participants to calculate three Cyprus catalogue measures:
+paired ranking agreement (with half credit for ties), the catalogue fraction in a
+four-image shortlist, and recovery of the six catalogue locations. It includes an
+automatic answer check, random references, tie diagnostics and worked instructor
+answers. These measure catalogue agreement, not accuracy for visible archaeology.
+The exports include `cyprus_catalogue_metrics.csv` and `cyprus_pairs.csv`.
+
 After updating an older notebook, restart its kernel and run from setup. Both DINO
 caches were regenerated; stale preprocessing versions or changed image pixels are
 rejected. Local `*-Copy*.ipynb` files are personal snapshots and are not regenerated.

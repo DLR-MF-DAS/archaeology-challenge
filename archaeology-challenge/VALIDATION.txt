@@ -1,19 +1,21 @@
 Validation completed on real data, 13 November 2026.
 
-Instructor: all 21 code cells executed, including both optional computational labs
-and the final test evaluation. Participant: all 21 code cells executed in an
+Instructor: all 24 code cells executed, including both optional computational labs
+and the final test evaluation. Participant: all 24 code cells executed in an
 isolated working directory; optional labs and test reveal remain disabled and the
 recommendation remains blank. Its draft export requests completion before sharing.
 The executed participant copy is .work/participant_validation.ipynb; the distributed
-participant notebook has no saved outputs. There are 52 participant cells and 54
+participant notebook has no saved outputs. There are 59 participant cells and 61
 instructor cells, retaining the six-section workshop and choice of optional lab.
 
-Twelve automated checks passed: shared image preprocessing; rejection of stale,
+Fifteen automated checks passed: shared image preprocessing; rejection of stale,
 misaligned, nonfinite or pixel-mismatched caches (including edited Cyprus images);
 training-only size probe and single-class strata; transfer score summaries without
 target labels; metric denominators and ties; invalid inputs; submission alignment;
 contradictory image families; catalogue conflicts; both model paths in Cyprus;
-complete exports; notebook schema, Python syntax and agreement with the builder.
+complete exports; notebook schema, Python syntax and agreement with the builder;
+Cyprus catalogue counts/random references; pair/cutoff ties and invalid pairs;
+runnable participant arithmetic blanks and correct instructor solutions.
 
 The source-size audit found 300 retained tells at 350 x 350, 249 negatives at
 64 x 64 and 44 negatives at 350 x 350. Both feature branches and both regions now
@@ -51,13 +53,27 @@ image-visibility labels and nearby unlabelled locations are not verified absence
 Both models' score distributions are shown against Enki validation, and the notes
 explain the remaining target, scale, rendering and annotation differences.
 
+Section 5.3 now contains a quantitative Cyprus exercise with three arithmetic
+blanks, a supplied answer check and worked instructor expressions. DINOv2 wins
+four of six pairs (66.7% agreement), includes three catalogue locations in four
+reviews (75% catalogue fraction), and recovers three of six catalogue locations
+(50% catalogue recovery). Random reference expectations are 50%, 50% and 33.3%.
+Colour/texture has two wins and four exact ties (also 66.7% with half credit),
+and two catalogue locations in its four-image shortlist under image-ID tie order.
+Its cutoff tie permits zero to four catalogue locations under different tie
+orderings; this uncertainty is explicitly reported. These numbers measure catalogue
+agreement, not detection accuracy. Both complete notebooks ran successfully with
+the existing corrected caches; no new model extraction was needed for this exercise.
+
 Saved Cyprus, pair-comparison, mistake and learning-curve figures were visually
 inspected. Both exports contain submission.csv, configuration.json,
 validation_results.csv, cyprus_review.csv, recommendation.md, data_audit.json,
-validation_diagnostics.csv and transfer_diagnostics.csv. Configuration records
-common input size, preprocessing and the absence of Cyprus calibration/labels.
+validation_diagnostics.csv, transfer_diagnostics.csv, cyprus_catalogue_metrics.csv
+and cyprus_pairs.csv. Configuration records common input size, preprocessing,
+the separate Cyprus review budget and the absence of Cyprus calibration/labels.
 The instructor's recommendation uses current metrics and a displayed Cyprus image;
 stale score/rank examples have been removed from the generated text and guide.
+The optional learning-curve worked numbers were corrected to match the current run.
 
 Execution used Python 3.13.18, the locked dependencies and Jupyter kernels. Feature
 re-extraction used torch 2.15.0 and transformers 4.57.6 on MPS; notebook execution

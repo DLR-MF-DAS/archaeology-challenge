@@ -418,6 +418,64 @@ def transfer_summary(validation_labels, validation_scores, target_scores):
     return pd.DataFrame(rows)
 
 
+def catalogue_agreement(frame, score_column="score", k=4):
+    """Measure catalogue recovery and paired ordering, not archaeological accuracy.
+
+    Each pair must contain exactly one catalogued and one unlabelled location.
+    Exact score ties earn half credit in paired agreement. Shortlist ties use
+    tile-ID order; report the possible hit range when the cutoff crosses a tie.
+    No unlabelled location is asserted to be an archaeological negative.
+    """
+    required = {"tile_id", "paired_site", "kind", score_column}
+    if not required.issubset(frame.columns) or frame.empty:
+        raise ValueError("Supply nonempty scored catalogue pairs with image IDs.")
+    if not isinstance(k, (int, np.integer)) or isinstance(k, bool) or k < 1:
+        raise ValueError("The Cyprus review budget must be a positive integer.")
+    if frame[list(required)].isna().any().any() or not frame.tile_id.is_unique:
+        raise ValueError("Catalogue pair IDs, kinds and scores must be present; image IDs must be unique.")
+    kinds = {"catalogued_location", "unlabelled_background"}
+    if set(frame.kind) != kinds or frame.duplicated(["paired_site", "kind"]).any():
+        raise ValueError("Each catalogue pair needs exactly one image of each kind.")
+    counts = frame.groupby("paired_site").size()
+    if not counts.eq(2).all():
+        raise ValueError("Each catalogue pair needs exactly one image of each kind.")
+    ordered = frame.sort_values("tile_id", kind="stable").reset_index(drop=True)
+    scores = ordered[score_column].to_numpy(dtype=float)
+    order = ranking_indices(scores)
+    pairs = ordered.pivot(index="paired_site", columns="kind", values=score_column).rename(
+        columns={"catalogued_location": "catalogued_score", "unlabelled_background": "unlabelled_score"},
+    ).reset_index()
+    pairs.columns.name = None
+    pairs["margin"] = pairs.catalogued_score - pairs.unlabelled_score
+    pairs["outcome"] = np.select(
+        [pairs.margin.gt(0), pairs.margin.lt(0)],
+        ["catalogued higher", "unlabelled higher"], default="tie",
+    )
+    wins, ties, losses = (int((pairs.margin > 0).sum()), int((pairs.margin == 0).sum()),
+                          int((pairs.margin < 0).sum()))
+    known = ordered.kind.eq("catalogued_location").to_numpy()
+    reviewed = min(k, len(ordered))
+    hits = int(known[order[:reviewed]].sum())
+    cutoff = scores[order[reviewed - 1]]
+    above, tied = scores > cutoff, scores == cutoff
+    remaining_slots = reviewed - int(above.sum())
+    known_above, known_tied = int(known[above].sum()), int(known[tied].sum())
+    min_hits = known_above + max(0, remaining_slots - (int(tied.sum()) - known_tied))
+    max_hits = known_above + min(remaining_slots, known_tied)
+    return pairs, {
+        "pairs": len(pairs), "wins": wins, "ties": ties, "losses": losses,
+        "pair_agreement": (wins + .5 * ties) / len(pairs),
+        "reviewed": reviewed, "catalogued_at_k": hits, "catalogued_total": int(known.sum()),
+        "catalogue_fraction_at_k": hits / reviewed,
+        "catalogue_recovery_at_k": hits / int(known.sum()),
+        "random_pair_agreement": .5,
+        "random_catalogue_fraction": float(known.mean()),
+        "random_catalogue_recovery": reviewed / len(ordered),
+        "cutoff_tie": bool(reviewed < len(ordered) and scores[order[reviewed]] == cutoff),
+        "min_catalogued_at_k": min_hits, "max_catalogued_at_k": max_hits,
+    }
+
+
 def partition_features(frame, features, splits):
     positions = {key: i for i, key in enumerate(frame.tile_id)}
     return {name: features[[positions[k] for k in subset.tile_id]]
@@ -484,7 +542,8 @@ def load_cyprus(assets):
 
 
 def export_results(root, validation_results, cyprus, recommendation, configuration,
-                   data_audit=None, validation_audit=None, transfer_audit=None):
+                   data_audit=None, validation_audit=None, transfer_audit=None,
+                   cyprus_metrics=None, cyprus_pairs=None):
     """Package the ranked submission, evidence and one plain-text recommendation."""
     root = Path(root)
     configuration = {
@@ -511,7 +570,9 @@ def export_results(root, validation_results, cyprus, recommendation, configurati
         (root / "data_audit.json").write_text(json.dumps(data_audit, indent=2), encoding="utf-8")
         names.append("data_audit.json")
     for name, frame in (("validation_diagnostics.csv", validation_audit),
-                        ("transfer_diagnostics.csv", transfer_audit)):
+                        ("transfer_diagnostics.csv", transfer_audit),
+                        ("cyprus_catalogue_metrics.csv", cyprus_metrics),
+                        ("cyprus_pairs.csv", cyprus_pairs)):
         if frame is not None:
             frame.to_csv(root / name, index=False)
             names.append(name)

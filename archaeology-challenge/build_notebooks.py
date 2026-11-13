@@ -99,8 +99,8 @@ def notebook(instructor, payload):
     internet or unfamiliar software can add time.
 
     Run cells in order and pause at each exercise before running the result below it.
-    The main coding task is two arithmetic expressions in section 3.4; other main
-    exercises ask you to change one value and interpret the output. Keep brief notes for
+    Complete two arithmetic expressions for Enki in section 3.4 and three for Cyprus
+    in section 5.3. Other exercises change one value or interpret output. Keep brief notes for
     the final recommendation rather than writing a separate report for each question.
     If working alone, write a short answer in place of pair discussion.
 
@@ -149,8 +149,8 @@ def notebook(instructor, payload):
     internet or unfamiliar software can add time.
 
     Run cells in order and pause at each exercise before running the result below it.
-    The main coding task is two arithmetic expressions in section 3.4; other main
-    exercises ask you to change one value and interpret the output. Keep brief notes for
+    Complete two arithmetic expressions for Enki in section 3.4 and three for Cyprus
+    in section 5.3. Other exercises change one value or interpret output. Keep brief notes for
     the final recommendation rather than writing a separate report for each question.
     If working alone, write a short answer in place of pair discussion.
 
@@ -776,8 +776,9 @@ def notebook(instructor, payload):
 
     Enki supplied image-class labels for counting hits and misses. These Cyprus records
     supply **locations and occupation periods**, not equivalent image labels. Several
-    occupation rows can refer to one settlement. We therefore cannot calculate Cyprus
-    precision or recall by treating catalogue membership as `1` and its absence as `0`.
+    occupation rows can refer to one settlement. We can measure how well the ranking
+    recovers catalogue locations. Section 5.3 calculates that agreement explicitly;
+    it does not establish precision, recall or accuracy for visible archaeology.
 
     Run the next cell. It scores all 12 images with both models, compares their score
     ranges with Enki validation, then ranks by the selected model and shows the first
@@ -817,7 +818,8 @@ def notebook(instructor, payload):
     ### 5.2. Exercise: compare two nearby landscapes
 
     The next cell places the **catalogued location on the left** and its **nearby unlabelled
-    location on the right**. Allow about 8–10 minutes for both pairs and your notes.
+    location on the right**. Allow about five minutes for both pairs and your notes,
+    then six to eight minutes for the calculation in section 5.3.
 
     1. Run `pair_id = "CY5"`. Compare scores and ranks, then describe one visible difference.
     2. Change only `pair_id` to `"CY479"` and rerun. Does the same kind of location rank first?
@@ -856,7 +858,123 @@ def notebook(instructor, payload):
 
     Compare the two models' distributions above. Scores close to either `0` or `1`
     are responses of a source-trained classifier, not validated local probabilities.
-    ''', "cyprus-pair-notes")]
+    ''', "cyprus-pair-notes"), md('''
+    ### 5.3. Calculate agreement with the Cyprus catalogue
+
+    **Does the model rank catalogued locations ahead of nearby unlabelled locations?**
+    Answer with counts and fractions, using all six pairs. This is a small catalogue
+    agreement exercise; the missing visibility labels still prevent detection accuracy.
+
+    We use a **four-image Cyprus review budget**, separate from Enki's 50 reviews.
+    Run the next cell to see the six pair comparisons and the four-image shortlist.
+    A pair is a **win** when the catalogued image scores higher, a **loss** when the
+    unlabelled image scores higher, and a **tie** when their unrounded scores are equal.
+    A tie gets half credit: a model assigning every image the same score achieves 50%.
+    ''', "cyprus-metrics-introduction"), code('''
+    CYPRUS_BUDGET = 4
+    cyprus_pairs, cyprus_counts = workshop.catalogue_agreement(cyprus, k=CYPRUS_BUDGET)
+    display(cyprus_pairs.round(6))
+    print(f"First {CYPRUS_BUDGET} images in the selected model's ranking:")
+    display(cyprus.head(CYPRUS_BUDGET)[["rank", "tile_id", "kind", "score"]].round(6))
+
+    pair_wins = cyprus_counts["wins"]
+    pair_ties = cyprus_counts["ties"]
+    pair_count = cyprus_counts["pairs"]
+    cyprus_hits = cyprus_counts["catalogued_at_k"]
+    cyprus_reviewed = cyprus_counts["reviewed"]
+    catalogued_total = cyprus_counts["catalogued_total"]
+    print(f"Pairs: {pair_wins} wins, {pair_ties} ties, {cyprus_counts['losses']} losses; "
+          f"{pair_count} pairs in total.")
+    print(f"Shortlist: {cyprus_hits} catalogued locations in {cyprus_reviewed} reviews; "
+          f"{catalogued_total} catalogued locations in the full sample.")
+    ''', "cyprus-counts"), md('''
+    **Your calculation:** replace the three `...` expressions below.
+
+    1. **Pair agreement:** `(wins + half the ties) / number of pairs`.
+    2. **Catalogue fraction in the shortlist:** `catalogued locations retrieved / images reviewed`.
+       This uses the same denominator as precision, but the target is catalogue membership.
+    3. **Catalogue recovery:** `catalogued locations retrieved / all catalogued locations`.
+       This uses the same denominator as recall.
+
+    Use the named counts from the previous cell. Convert your fractions to percentages
+    and predict whether they beat random selection before running the supplied check.
+    ''', "cyprus-calculation-instructions"), code('''
+    pair_agreement = ...  # Include half credit for ties.
+    catalogue_fraction = ...  # Fraction of reviewed images that are catalogued.
+    catalogue_recovery = ...  # Fraction of all catalogued locations recovered.
+
+    print("Pair agreement:", pair_agreement)
+    print("Catalogue fraction in shortlist:", catalogue_fraction)
+    print("Catalogue recovery:", catalogue_recovery)
+    ''' if not instructor else '''
+    pair_agreement = (pair_wins + 0.5 * pair_ties) / pair_count
+    catalogue_fraction = cyprus_hits / cyprus_reviewed
+    catalogue_recovery = cyprus_hits / catalogued_total
+
+    print("Pair agreement:", pair_agreement)
+    print("Catalogue fraction in shortlist:", catalogue_fraction)
+    print("Catalogue recovery:", catalogue_recovery)
+    ''', "cyprus-calculation"), md('''
+    **Check and interpret:** the next cell checks your arithmetic and compares both models.
+    Random ordering averages **50% pair agreement**, **50% catalogue fraction** and
+    **4/12 = 33.3% catalogue recovery** at four reviews. These are reference expectations,
+    not guarantees for one draw. The code recalculates them if the budget changes.
+
+    Exact ties use image-ID order for the shortlist. If a tie crosses its cutoff, the
+    output also reports the range of possible catalogue counts from other tie orderings.
+    Do not interpret an arbitrary tie order as evidence of better ranking.
+    ''', "cyprus-check-explanation"), code('''
+    cyprus_metric_rows, cyprus_pair_rows = [], []
+    for name in models:
+        pairs_for_model, metrics = workshop.catalogue_agreement(
+            cyprus, score_column=f"{name}_score", k=CYPRUS_BUDGET)
+        cyprus_metric_rows.append({"model": name, **metrics})
+        cyprus_pair_rows.append(pairs_for_model.assign(model=name))
+    cyprus_metrics = pd.DataFrame(cyprus_metric_rows)
+    cyprus_pair_results = pd.concat(cyprus_pair_rows, ignore_index=True)
+    display(cyprus_metrics[["model", "wins", "ties", "losses", "pair_agreement"]].round(3))
+    display(cyprus_metrics[["model", "catalogued_at_k", "reviewed", "catalogued_total",
+        "catalogue_fraction_at_k", "catalogue_recovery_at_k", "cutoff_tie"]].round(3))
+
+    cyprus_reference = cyprus_metrics.set_index("model").loc[selected]
+    print(f"{selected}: pair agreement = ({pair_wins} + 0.5 × {pair_ties})/{pair_count} "
+          f"= {cyprus_reference.pair_agreement:.1%}.")
+    print(f"Catalogue fraction = {cyprus_hits}/{cyprus_reviewed} "
+          f"= {cyprus_reference.catalogue_fraction_at_k:.1%}; "
+          f"catalogue recovery = {cyprus_hits}/{catalogued_total} "
+          f"= {cyprus_reference.catalogue_recovery_at_k:.1%}.")
+    print(f"Random references: pair agreement {cyprus_reference.random_pair_agreement:.1%}; "
+          f"catalogue fraction {cyprus_reference.random_catalogue_fraction:.1%}; "
+          f"catalogue recovery {cyprus_reference.random_catalogue_recovery:.1%}.")
+    for row in cyprus_metrics.itertuples(index=False):
+        if row.cutoff_tie:
+            print(f"{row.model}: a score tie crosses the shortlist cutoff; "
+                  f"{row.min_catalogued_at_k}–{row.max_catalogued_at_k} catalogue locations "
+                  f"could occupy its {row.reviewed} slots under different tie orderings.")
+    answers = (pair_agreement, catalogue_fraction, catalogue_recovery)
+    expected = cyprus_reference[["pair_agreement", "catalogue_fraction_at_k", "catalogue_recovery_at_k"]]
+    if any(answer is Ellipsis for answer in answers):
+        print("Complete the three expressions, then rerun your calculation and this check.")
+    elif np.allclose(answers, expected.to_numpy(dtype=float), rtol=0, atol=1e-9):
+        print("All three calculations match the reference.")
+    else:
+        print("Recheck the counts, denominators and half credit for ties against the reference above.")
+    print("Cyprus detection accuracy: unknown; independent image-visibility labels are missing.")
+    ''', "cyprus-metrics-check"), md('''
+    **Record your conclusion:** state the three percentages with their counts and compare
+    them with the random references. Does this support prioritising catalogue locations
+    in this sample? Explain why it does not establish accuracy for visible archaeology.
+    Six selected pairs are few, and nearby chips can overlap; they are not an independent
+    geographic benchmark. Keep one Cyprus calculation for your final recommendation.
+    ''' if not instructor else '''
+    **Worked interpretation:** use the selected model's printed fractions above. Compare
+    pair wins and ties as well as the total: identical agreement percentages can conceal
+    very different numbers of ties. A better-than-random catalogue result supports a
+    limited statement about these sampled locations. It does not validate visible-site
+    detection, because unlabelled neighbours are not verified negatives and catalogue
+    membership does not establish image visibility. Six pairs, with possible overlap
+    between nearby chips, are insufficient for a geographic performance claim.
+    ''', "cyprus-metrics-discussion")]
 
     cells += [md('''
     ## Optional lab — choose one before section 6
@@ -1144,9 +1262,9 @@ def notebook(instructor, payload):
     evaluation; the curve does not answer the Cyprus transfer question.
 
     **One worked answer for the default data:** from 20 to 200 training images, DINOv2's
-    mean recall increases from 0.772 to 0.833, while colour/texture increases from 0.506
+    mean recall increases from 0.689 to 0.783, while colour/texture increases from 0.506
     to 0.667. A pilot could start by investigating 50 DINOv2 training labels: mean recall
-    is 0.817, with a range of 0.800–0.833 across these subsamples. That saves labelling effort
+    is 0.783, with a range of 0.767–0.800 across these subsamples. That saves labelling effort
     in this example, but a new geographic assessment is needed before treating it as a
     sufficient budget for another survey.
     ''', "learning-curve-discussion"), md('''
@@ -1217,7 +1335,8 @@ def notebook(instructor, payload):
        experiment separately if you mention it.
     3. **Observation:** cite one tile ID and a visible feature, separating observation
        from a possible explanation of its score.
-    4. **Limitation:** explain why the Cyprus examples do not establish detection accuracy.
+    4. **Cyprus measurement and limit:** cite one catalogue-agreement calculation from
+       section 5.3, then explain why it does not establish detection accuracy.
     5. **Next evidence:** propose suitable local imagery, expert labels and locations
        reserved for independent assessment. Use lab C's proposal if you completed it.
 
@@ -1240,8 +1359,10 @@ def notebook(instructor, payload):
         f"(recall {winner.recall_at_k:.3f}, precision {winner.precision_at_k:.3f}). "
         "Cyprus tile CY5_site shows bright angular patches in the displayed image; "
         "that observation does not establish which cues the classifier used. "
-        "Cyprus accuracy remains unknown because catalogue membership is not an image-visibility "
-        "label and the other locations are unlabelled. "
+        f"In Cyprus, {int(cyprus_reference.catalogued_at_k)}/{int(cyprus_reference.catalogued_total)} "
+        f"catalogue locations are recovered in {int(cyprus_reference.reviewed)} reviews "
+        f"({cyprus_reference.catalogue_recovery_at_k:.1%}), but detection accuracy remains unknown "
+        "because catalogue membership is not an image-visibility label. "
         "Common 64-pixel preprocessing reduces the source-size shortcut, but acquisition "
         "differences and geographic independence remain unresolved. "
         "Before field deployment, evaluate representative local imagery with expert visibility "
@@ -1264,6 +1385,8 @@ def notebook(instructor, payload):
     | `data_audit.json` | Duplicate audit, original size/label counts and common preprocessing. |
     | `validation_diagnostics.csv` | Size-only reference and validation AP within original dimensions. |
     | `transfer_diagnostics.csv` | Both models' score distributions on Enki validation and Cyprus. |
+    | `cyprus_catalogue_metrics.csv` | Both models' catalogue agreement, shortlist recovery and random references. |
+    | `cyprus_pairs.csv` | Scores, margins and outcomes for each pair and model. |
     | `recommendation.md` | Your written recommendation. |
 
     This records the current run; it does not lock the notebook or save a fitted model
@@ -1276,11 +1399,14 @@ def notebook(instructor, payload):
     submission = workshop.write_submission(test, test_scores, ROOT / "submission.csv")
     bundle = workshop.export_results(ROOT, results, cyprus, recommendation, configuration={
         "selected_model": selected, "review_budget": REVIEW_BUDGET,
+        "cyprus_review_budget": CYPRUS_BUDGET,
+        "cyprus_metrics_target": "catalogue agreement; not image-visibility accuracy",
         "C": models[selected].named_steps["logisticregression"].C,
         "class_weight": "balanced", "scaler": "StandardScaler",
         "training_tiles": len(train), "test_tiles": len(test),
         "sample_manifest_sha256": workshop.file_digest(assets / "sample_manifest.json"),
-    }, data_audit=audit, validation_audit=validation_audit, transfer_audit=transfer_audit)
+    }, data_audit=audit, validation_audit=validation_audit, transfer_audit=transfer_audit,
+       cyprus_metrics=cyprus_metrics, cyprus_pairs=cyprus_pair_results)
     display(submission.head())
     display(FileLink(str(bundle)))
     print("Saved:", bundle, "— in Colab, download it from the Files panel.")
@@ -1383,6 +1509,12 @@ def notebook(instructor, payload):
       Compare both models' score distributions; extremes do not establish archaeological presence.
       For the extension, sample across scores and regions, retain uncertain judgements,
       and reserve separate locations for assessment. Catalogue absence is not a negative label.
+    - **Cyprus calculation:** section 5.3 has three arithmetic blanks: pair agreement
+      with half credit for ties, catalogue fraction in a four-image shortlist, and
+      catalogue recovery. The instructor code supplies all three expressions; the next
+      cell checks them and displays both models' results and random references. A tie
+      at the shortlist cutoff is flagged with the range of possible catalogue counts.
+      Interpret these as catalogue agreement, keeping detection accuracy unknown.
     - **Recommendation:** use five prompts: decision, measured evidence, image observation,
       limitation and next study. Accept a recommendation against deployment. Keep the
       original 50-image comparison distinct from the larger-budget experiment. The sample

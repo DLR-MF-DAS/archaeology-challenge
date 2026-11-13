@@ -29,6 +29,75 @@ import build_notebooks as builder
 
 
 class ScientificChecks(unittest.TestCase):
+    @staticmethod
+    def catalogue_fixture():
+        rows = []
+        for i, (site, background) in enumerate(((.8, .2), (.7, .1), (.9, .6),
+                                               (.5, .4), (.3, .65), (.1, .2))):
+            for kind, score in (("catalogued_location", site), ("unlabelled_background", background)):
+                rows.append({"tile_id": f"pair{i}_{kind}", "paired_site": f"pair{i}",
+                             "kind": kind, "score": score})
+        return pd.DataFrame(rows)
+
+    def test_catalogue_metrics_count_pairs_and_recovery_with_random_references(self):
+        frame = self.catalogue_fixture()
+        pairs, result = runtime.catalogue_agreement(frame, k=4)
+        self.assertEqual((result["wins"], result["ties"], result["losses"]), (4, 0, 2))
+        self.assertEqual(result["pair_agreement"], 4 / 6)
+        self.assertEqual(result["catalogued_at_k"], 3)
+        self.assertEqual(result["catalogue_fraction_at_k"], 3 / 4)
+        self.assertEqual(result["catalogue_recovery_at_k"], 3 / 6)
+        self.assertEqual(result["random_pair_agreement"], .5)
+        self.assertEqual(result["random_catalogue_fraction"], .5)
+        self.assertEqual(result["random_catalogue_recovery"], 4 / 12)
+        self.assertFalse(result["cutoff_tie"])
+        self.assertEqual((result["min_catalogued_at_k"], result["max_catalogued_at_k"]), (3, 3))
+        self.assertNotIn("accuracy", result)
+        shuffled_pairs, shuffled_result = runtime.catalogue_agreement(frame.sample(frac=1, random_state=8))
+        pd.testing.assert_frame_equal(pairs, shuffled_pairs)
+        self.assertEqual(result, shuffled_result)
+
+    def test_catalogue_ties_and_invalid_pairs(self):
+        frame = self.catalogue_fixture().assign(score=.5)
+        _, result = runtime.catalogue_agreement(frame)
+        self.assertEqual((result["wins"], result["ties"], result["losses"]), (0, 6, 0))
+        self.assertEqual(result["pair_agreement"], .5)
+        self.assertTrue(result["cutoff_tie"])
+        self.assertEqual((result["min_catalogued_at_k"], result["max_catalogued_at_k"]), (0, 4))
+        _, full = runtime.catalogue_agreement(frame, k=20)
+        self.assertEqual(full["reviewed"], 12)
+        self.assertEqual(full["catalogue_recovery_at_k"], 1)
+        self.assertFalse(full["cutoff_tie"])
+        # Equal displayed decimals must not turn a small genuine margin into a tie.
+        frame.loc[0, "score"] = .50000001
+        _, small_margin = runtime.catalogue_agreement(frame)
+        self.assertEqual((small_margin["wins"], small_margin["ties"]), (1, 5))
+        for budget in (0, -1, True, 1.5):
+            with self.subTest(budget=budget), self.assertRaises(ValueError):
+                runtime.catalogue_agreement(frame, k=budget)
+        for invalid in (frame.iloc[1:], pd.concat([frame, frame.iloc[:1]]),
+                        frame.assign(kind="unknown"), frame.assign(score=np.nan),
+                        frame.assign(score=np.inf), frame.assign(paired_site=None), frame.iloc[:0]):
+            with self.subTest(rows=len(invalid)), self.assertRaises(ValueError):
+                runtime.catalogue_agreement(invalid)
+
+    def test_cyprus_calculation_has_runnable_blanks_and_worked_solution(self):
+        counts = dict(pair_wins=4, pair_ties=0, pair_count=6,
+                      cyprus_hits=3, cyprus_reviewed=4, catalogued_total=6)
+        for instructor in (False, True):
+            source = next(c.source for c in builder.notebook(instructor, "").cells
+                          if c.id == "cyprus-calculation")
+            ns = dict(counts, print=lambda *args: None)
+            exec(source, ns)
+            if instructor:
+                self.assertEqual(ns["pair_agreement"], 4 / 6)
+                self.assertEqual(ns["catalogue_fraction"], 3 / 4)
+                self.assertEqual(ns["catalogue_recovery"], 3 / 6)
+            else:
+                self.assertIs(ns["pair_agreement"], Ellipsis)
+                self.assertIs(ns["catalogue_fraction"], Ellipsis)
+                self.assertIs(ns["catalogue_recovery"], Ellipsis)
+
     def test_feature_branches_use_the_same_common_grid(self):
         with tempfile.TemporaryDirectory() as folder:
             root = Path(folder)
@@ -199,11 +268,13 @@ class ScientificChecks(unittest.TestCase):
             path = runtime.export_results(root, result, cyprus, "Inspect before deployment.",
                                           {"selected_model": "colour_texture", "review_budget": 50},
                                           data_audit={"native_size_counts": []},
-                                          validation_audit=result, transfer_audit=result)
+                                          validation_audit=result, transfer_audit=result,
+                                          cyprus_metrics=result, cyprus_pairs=result)
             with zipfile.ZipFile(path) as bundle:
                 self.assertEqual(set(bundle.namelist()), {"submission.csv", "configuration.json",
                                  "validation_results.csv", "cyprus_review.csv", "recommendation.md",
-                                 "data_audit.json", "validation_diagnostics.csv", "transfer_diagnostics.csv"})
+                                 "data_audit.json", "validation_diagnostics.csv", "transfer_diagnostics.csv",
+                                 "cyprus_catalogue_metrics.csv", "cyprus_pairs.csv"})
                 self.assertEqual(bundle.read("recommendation.md").decode(), "Inspect before deployment.\n")
                 config = json.loads(bundle.read("configuration.json"))
                 self.assertIsNone(config["encoder"])
@@ -239,6 +310,9 @@ class ScientificChecks(unittest.TestCase):
                 order = [cell.id for cell in nb.cells]
                 self.assertLess(order.index("train-models"), order.index("score-validation"))
                 self.assertLess(order.index("cyprus-pair"), order.index("optional-experiments"))
+                self.assertLess(order.index("cyprus-counts"), order.index("cyprus-calculation"))
+                self.assertLess(order.index("cyprus-calculation"), order.index("cyprus-metrics-check"))
+                self.assertLess(order.index("cyprus-metrics-check"), order.index("optional-experiments"))
                 for identifier in ("projection-exercise", "learning-curve", "cyprus-study-design"):
                     self.assertLess(order.index("optional-experiments"), order.index(identifier))
                     self.assertLess(order.index(identifier), order.index("report-introduction"))

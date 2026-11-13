@@ -59,7 +59,11 @@ are in FACILITATOR_GUIDE.md.
 
 Run sections 1–5 in order. Section 2 works through an invented label list, section
 3.4 asks for two precision/recall expressions before the comparison table, section 4
-changes the review budget, and section 5 compares two pairs of Cyprus images.
+changes the review budget, and section 5 compares two pairs of Cyprus images then
+asks for three calculations: paired agreement, shortlist catalogue fraction and
+catalogue recovery. Section 5.3 supplies counts, three blanks, a check and random
+references. The instructor copy supplies worked answers. Keep one Cyprus calculation
+for the final recommendation.
 Keep brief notes for one 4–6 sentence recommendation in section 6.
 
 The optional block is BEFORE section 6. Choose ONE lab, or skip it:
@@ -109,6 +113,9 @@ Section 5 compares both models' score ranges with Enki validation. A whole-sampl
 shift to low or high scores cannot establish local archaeological absence or
 presence. The necessary next step is representative local imagery, expert labels
 for visible target features, and separate geographic assessment locations.
+The Cyprus calculations measure catalogue agreement, not detection accuracy.
+Exact pair ties receive half credit, and ties at the shortlist cutoff are flagged.
+cyprus_catalogue_metrics.csv and cyprus_pairs.csv preserve the numerical evidence.
 
 EDITING AND VALIDATION
 

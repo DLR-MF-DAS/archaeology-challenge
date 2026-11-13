@@ -11,11 +11,11 @@ By the end, participants should be able to:
 1. Explain what the source labels and the balanced teaching sample represent—and what they do not.
 2. Interpret precision and recall at a fixed review budget, and compare image representations using validation data.
 3. Explain why model selection and final evaluation use separate data, and why removing similar images does not establish geographic independence.
-4. Describe at least two ways the Cyprus imagery and labels differ from the source task, and propose evidence needed for a defensible transfer study.
+4. Calculate Cyprus catalogue agreement, distinguish it from detection accuracy, and propose evidence needed for a defensible transfer study.
 5. Make a proportionate recommendation supported by the workshop results and their limitations.
 
 The audience has basic Python and pandas; previous scikit-learn experience helps
-but is not required. The core path has one short coding exercise (two expressions),
+but is not required. The core path has two short coding exercises (two Enki and three Cyprus expressions),
 short parameter-change experiments, image discussion and one 4–6 sentence report.
 The optional block between sections 5 and 6 offers three alternatives. Choose one,
 or use that time for support; completing every lab is not the four-hour task.
@@ -30,9 +30,9 @@ or use that time for support; completing every lab is not the four-hour task.
 ## Completion-time estimate
 
 This is a planning estimate, not a timed learner study. Count the participant copy,
-excluding optional labs, credits and the folded setup source. It has about **4,230
+excluding optional labs, credits and the folded setup source. It has about **4,632
 words of core explanation**. At an assumed 150 technical words per minute, reading
-takes about **28 minutes**. The active-work allowance below covers running and
+takes about **31 minutes**. The active-work allowance below covers running and
 understanding code, completing tasks and discussion; it excludes that reading allowance.
 
 | Core block | Prose words | Reading minutes | Active-work minutes |
@@ -42,12 +42,12 @@ understanding code, completing tasks and discussion; it excludes that reading al
 | 2. Shortlist metrics | 329 | 2.2 | 14 |
 | 3. Model comparison | 1481 | 9.9 | 40 |
 | 4. Mistake inspection | 292 | 1.9 | 17 |
-| 5. Cyprus comparison | 681 | 4.5 | 17 |
-| 6. Report, export and debrief | 542 | 3.6 | 35 |
-| Total | 4230 | 28.2 | 157 |
+| 5. Cyprus comparison and calculations | 1048 | 7.0 | 17 |
+| 6. Report, export and debrief | 577 | 3.8 | 35 |
+| Total | 4632 | 30.9 | 157 |
 
-Calculation: **28.2 + 157 + 10-minute break + 15 minutes for support
-= 210 minutes**, approximately **3½ hours** for the core path.
+Calculation: **30.9 + 157 + 10-minute break + 15 minutes for support
+= 213 minutes**, approximately **3½ hours** for the core path.
 One optional lab adds 25–35 minutes, giving roughly **4 hours**.
 All three labs add 75–100 minutes and belong in a longer session or follow-up.
 
@@ -71,14 +71,14 @@ within the slots and the optional/catch-up block, rather than added again.
 | 01:00–01:50 | 3. Compare models | Fit, score, complete two expressions and interpret the selection. PCA comes later. |
 | 01:50–02:00 | Break | Check who needs setup or coding support. |
 | 02:00–02:20 | 4. Inspect mistakes | Keep one observation and try ten extra review slots. |
-| 02:20–02:40 | 5. Compare Cyprus pairs | Compare the two pairs and record the missing evidence. |
+| 02:20–02:40 | 5. Measure Cyprus catalogue agreement | Inspect two pairs, complete three calculations and interpret their limits. |
 | 02:40–03:10 | Optional lab or catch-up | Choose A, B or C; skip extensions if the core work needs support. |
 | 03:10–03:40 | 6. Recommendation and export | Reuse the earlier notes, exchange drafts and save the evidence. |
 | 03:40–04:00 | Final reveal and debrief | Assess the saved choice once; discuss which limitations remain. |
 
 **Pacing decisions:** by 01:50 aim to have chosen a model; by 02:40 aim to have the
-Cyprus notes. If behind, skip the optional lab and the five-minute all-positives
-challenge in section 4. Preserve the two-expression metrics exercise, the distinction
+Cyprus calculations and notes. If behind, skip the optional lab and the five-minute all-positives
+challenge in section 4. Preserve both calculation exercises, the distinction
 between Cyprus records and labels, and time to write and share the recommendation.
 If ahead, choose one lab; do not repeat every earlier discussion or start new downloads.
 
@@ -276,11 +276,39 @@ one settlement. Do not calculate detection precision or recall using these categ
 as image labels. Differences in resolution, land cover, rendering, target form and
 location uncertainty can matter; a score alone cannot identify which caused its value.
 
-**Pair exercise (8–10 minutes):** run `pair_id = "CY5"`, then change the ID to
+**Pair exercise (about five minutes):** run `pair_id = "CY5"`, then change the ID to
 `"CY479"`. The catalogued image is on the left, its nearby unlabelled image on the
 right, with ranks and scores for reference. Ask learners for a two- or three-sentence
 comparison that names the images, records an observation and explains the missing
 evidence needed to judge a detection error. They can edit the supplied Markdown notes cell.
+
+**Section 5.3 calculation (six to eight minutes):** the supplied table shows all six
+pairs and the four-image Cyprus shortlist. Participants complete three expressions:
+
+```python
+pair_agreement = (pair_wins + 0.5 * pair_ties) / pair_count
+catalogue_fraction = cyprus_hits / cyprus_reviewed
+catalogue_recovery = cyprus_hits / catalogued_total
+```
+
+For the current DINOv2 run, these are 4/6 = 66.7%, 3/4 = 75%, and 3/6 = 50%.
+Random ordering averages 50% pair agreement, 50% catalogue fraction and 4/12 = 33.3%
+catalogue recovery. Have learners explain why the last two calculations have different
+denominators, connecting them to Enki precision and recall. The next cell checks their
+answers and computes both models' references; unfilled blanks produce a completion
+prompt so that a fresh notebook still runs. The instructor supplies the expressions.
+
+Ties use unrounded scores. Pair ties receive half credit. The colour/texture model
+has two wins and four ties, also giving 66.7% agreement; that is different evidence
+from DINOv2's four wins and two losses. Its tied shortlist yields two catalogue
+locations under image-ID ordering, but zero to four could be selected with another
+tie ordering. The output flags this ambiguity. Do not use this tiny sample to choose
+a new model or threshold. Ask for one Cyprus calculation in the final recommendation.
+
+These are measurements of catalogue recovery and paired ranking, not detection
+precision, recall or accuracy. The six pairs are selected, small in number, and
+some nearby image footprints overlap. Independent visibility labels and geographic
+sampling remain necessary for a performance claim about archaeological detection.
 
 Read both models' current score distributions against Enki validation before the pair
 exercise. An overall shift towards zero or one, or disagreement between the models,
@@ -309,7 +337,8 @@ evaluation design and decision-rule prompts, avoiding two separate proposals.
 **Writing exercise (about ten minutes):** use the five prompts in section 6.1: a
 decision, a validation measurement with its denominators, an identified image
 observation, a Cyprus limitation, and a concrete next study. Ask for 4–6 sentences;
-the instructor example uses six. A recommendation against deployment is valid when
+the instructor example uses six and includes the computed Cyprus catalogue recovery.
+A recommendation against deployment is valid when
 supported by the evidence. Participants write prose between the triple quotes rather
 than recalculate results. The headline measurement remains the original 50-image
 comparison; identify the 60-image experiment separately if it is discussed.
@@ -325,7 +354,8 @@ otherwise one concrete next step is sufficient. Do not require a second study pl
 
 **Export:** the cell predicts test scores without using test labels and packages the
 ranked CSV, settings, validation results, Cyprus scores, recommendation, size/duplicate
-audit, within-size validation diagnostics and transfer score distributions. It records
+audit, within-size validation diagnostics, transfer score distributions, Cyprus catalogue
+metrics and per-pair outcomes for both models. It records
 the current run; it does not prevent later edits or serialize the fitted estimator.
 Rerunning replaces the ZIP. An empty recommendation produces a draft message, so have
 learners finish their prose, rerun export, download the ZIP and save their notebook.
