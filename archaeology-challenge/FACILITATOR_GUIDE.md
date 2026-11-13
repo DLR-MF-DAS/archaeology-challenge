@@ -329,8 +329,8 @@ source-data audit. Local detection work needs a defined visible target, suitable
 imagery, expert annotations and a geographic holdout; catalogue membership cannot
 supply those labels automatically.
 
-The main task stops at identifying the missing evidence. Lab C combines the local
-evaluation design and decision-rule prompts, avoiding two separate proposals.
+The main section measures catalogue agreement and identifies missing evidence.
+Lab C makes the next step concrete with a five-answer plan and an invented test result.
 
 ### 6. Recommendation, export and final assessment
 
@@ -375,8 +375,8 @@ with feedback. A single workshop does not itself establish long-term retention.
 ## Optional lab facilitation
 
 These activities appear **between sections 5 and 6**, before export and the final
-reveal. Choose one for the 30-minute slot. The instructor notebook runs both plots
-for reference; this does not imply that participants should do both labs.
+reveal. Choose one for the 30-minute slot. The instructor notebook shows both plots
+and the Lab C practice for reference; participants still choose just one lab.
 
 **Lab A: PCA (25–35 minutes, including interpretation):** ask learners to project the same
 200 training images for both feature representations. The participant function has
@@ -415,26 +415,59 @@ a better classifier. If someone used `.fit(...)` in a blank, explain that it ret
 the fitted estimator; `.fit_transform(...)` returns the transformed numeric rows needed
 by the next operation. Rerun the function-definition cell after editing it.
 
-**Lab B: label efficiency (25–35 minutes):** ask for a prediction, then enable
-`RUN_LEARNING_CURVES`. The supplied helper clones each fitted pipeline and fits on
-10, 25, 50 and 100 training examples per class with three seeds. That is 24 fits
-across the two representations. It never fits on validation labels and never uses
-the test set. The source comparison remains unchanged.
+**Lab B: is it worth labelling more training images? (25–35 minutes)**
 
-The table and plot show mean, minimum and maximum validation recall. These are
-training-subsample ranges, not confidence intervals or independent geographic samples.
-At the largest budget, all 200 training images are reused. A strong answer compares
-the observed gains for both representations, cites an intermediate-budget range and
-connects the gain to the cost of labelling. Do not assume monotonic improvement or
-recommend a fixed budget without reading the current results. Repeated use of one
-validation set still leaves local and geographic transfer unmeasured.
+Start by pointing to the two quantities: training uses 20, 50, 100 or 200 images;
+review always opens the first 50 images in the same validation ranking. Learners
+already have the labels. They are simulating a smaller labelled training collection,
+not being asked to label new imagery or change the review budget.
 
-**Lab C: Cyprus study design (25–30 minutes):** ask for one half-page proposal, not
-another model run. Look for a defined visible target, appropriate imagery, expert
-labels that retain uncertainty, sampling across scores and areas, and a geographic
-assessment set. The proposed decision rule should name a budget, metric and justified
-threshold before future test results are seen. Ask what would make the team change
-its decision. Accept different plans whose assumptions are explicit.
+Allow roughly three minutes to predict, five to run/read the output, ten to complete
+the answer template, and seven to discuss the choice. Participants change only
+`RUN_LEARNING_CURVES` to `True`. The supplied code fits each model three times per
+training size. The table and plot show the mean, fewest and most tells found in
+50 reviews. Explain a fractional mean with the supplied 40/42/41 example.
+
+The deliverable is the two-row table plus three short sentences in the provided
+Markdown cell. Learners copy means at 20 and 200 training images and subtract them;
+then compare DINOv2 at 50 and 200, including its 50-image range. They choose 50 or
+200 for the next small experiment and state what the extra 150 labels buy. Accept
+either choice if its reason uses the observed counts.
+
+The instructor notebook computes its worked answer from the current run. With the
+default data, colour/texture goes from 30.3 to 40.0 mean hits (gain 9.7), and DINOv2
+from 41.3 to 47.0 (gain 5.7). DINOv2 at 50 training images finds 47.0 on average,
+ranging from 46 to 48; at 200 it also finds 47.0. A 50-image starting experiment is
+therefore a defensible choice for these data, not a universal requirement. At 200,
+all repeats use the same full training set. Their zero range is not proof of
+certainty on new regions. The helper clones the models and does not use test labels.
+
+**Lab C: what would a fair Cyprus test look like? (25–30 minutes)**
+
+Use the supplied imagined situation: detailed imagery in three areas, A for training,
+B for choosing settings and C for the final check. Two experts label all 100 sampled
+C images before seeing scores. The output is five one-sentence answers and two
+calculated decisions. Learners do not need to invent a research proposal or collect data.
+
+Allow about five minutes to read the situation, eight to complete the five-row plan,
+seven for the arithmetic and changed-count experiment, and five for discussion.
+The plan asks for a visible target, who labels it, why all 100 images need labels,
+which area is reserved, and how uncertain cases are recorded. The instructor copy
+provides specific example answers. Check that learners explain how positives outside
+the top 20 would be counted and do not turn uncertainty into a negative label.
+
+The calculation uses explicitly invented counts: 25 visible positives among 100 images,
+20 reviewed, and 14 hits. Participants complete `practice_hits / practice_reviewed`
+and `practice_hits / practice_positives`, then enable `RUN_CYPRUS_PRACTICE`. The
+supplied rule requires precision at least 70% and recall at least 50%. The first
+result, 70%/56%, passes. Ask learners to predict the result for 10 hits before
+changing that one value: 50%/40% fails. These thresholds are teaching assumptions,
+not an operational recommendation, and the counts assume all labels were resolved.
+
+The invented exercise must not appear as measured Cyprus performance in the final
+recommendation. Use a next step from the plan there; section 5.3 supplies the real
+catalogue-agreement measurement. A successful hypothetical test would support a
+larger study, while deployment would need evidence suited to the actual use.
 
 **Extra reference for catalogue questions:** this is not another required exercise.
 `workshop.summarise_sites(pd.read_csv(assets / "Cyprus_Settlements.csv"))` audits the

@@ -318,6 +318,10 @@ class ScientificChecks(unittest.TestCase):
                     self.assertLess(order.index(identifier), order.index("report-introduction"))
                 self.assertIn("RUN_PROJECTION = False", by_id["projection-plot"].source)
                 self.assertIn("RUN_LEARNING_CURVES = False", by_id["learning-curve"].source)
+                self.assertIn("RUN_CYPRUS_PRACTICE = False", by_id["cyprus-study-practice"].source)
+                self.assertLess(order.index("learning-curve"), order.index("learning-curve-response"))
+                self.assertLess(order.index("cyprus-study-response"), order.index("cyprus-study-practice"))
+                self.assertLess(order.index("cyprus-study-practice"), order.index("report-introduction"))
 
 
 def execute_notebook(filename, participant=False):

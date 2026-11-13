@@ -1,11 +1,11 @@
 Validation completed on real data, 13 November 2026.
 
-Instructor: all 24 code cells executed, including both optional computational labs
-and the final test evaluation. Participant: all 24 code cells executed in an
+Instructor: all 26 code cells executed, including the optional plots, worked Lab B
+answer, Lab C practice and final test evaluation. Participant: all 25 code cells executed in an
 isolated working directory; optional labs and test reveal remain disabled and the
 recommendation remains blank. Its draft export requests completion before sharing.
 The executed participant copy is .work/participant_validation.ipynb; the distributed
-participant notebook has no saved outputs. There are 59 participant cells and 61
+participant notebook has no saved outputs. There are 64 participant cells and 67
 instructor cells, retaining the six-section workshop and choice of optional lab.
 
 Fifteen automated checks passed: shared image preprocessing; rejection of stale,
@@ -73,7 +73,23 @@ and cyprus_pairs.csv. Configuration records common input size, preprocessing,
 the separate Cyprus review budget and the absence of Cyprus calibration/labels.
 The instructor's recommendation uses current metrics and a displayed Cyprus image;
 stale score/rank examples have been removed from the generated text and guide.
-The optional learning-curve worked numbers were corrected to match the current run.
+Labs B and C now have numbered actions, answer templates and explicit completion
+criteria. Lab B separates training-image counts from the fixed 50 reviews, displays
+mean/fewest/most tells found, and asks learners to compare 20/200 training images
+and justify a 50/200 choice. Its instructor answer is calculated from the current
+run: colour/texture gains 9.7 mean hits (30.3 to 40.0); DINOv2 gains 5.7 (41.3 to
+47.0). At 50 training images, DINOv2 finds 47.0 on average, with range 46 to 48;
+at 200 it also finds 47.0. The updated count-based plot was visually inspected.
+
+Lab C supplies a concrete A/B/C-area scenario, five one-sentence plan answers and
+two fraction expressions. Its counts are explicitly invented and remain separate
+from the real Cyprus catalogue metrics. The supplied practice rule requires
+precision >=70% and recall >=50%. With 14 hits in 20 reviews and 25 positives,
+70%/56% passes; changing hits to 10 gives 50%/40% and fails. Disabled, unfilled,
+correct, changed-hit and wrong-denominator paths were checked directly. Optional
+code stays disabled in the participant copy, and the instructor supplies worked
+answers. No model, imagery, feature cache or main-path evaluation changed in this
+lab rewrite. The facilitator guide and starting instructions match the new tasks.
 
 Execution used Python 3.13.18, the locked dependencies and Jupyter kernels. Feature
 re-extraction used torch 2.15.0 and transformers 4.57.6 on MPS; notebook execution

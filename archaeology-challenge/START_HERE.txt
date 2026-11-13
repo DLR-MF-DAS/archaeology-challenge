@@ -68,13 +68,20 @@ Keep brief notes for one 4–6 sentence recommendation in section 6.
 
 The optional block is BEFORE section 6. Choose ONE lab, or skip it:
   A. Complete three PCA expressions and compare 2D/3D feature projections (25–35 min).
-  B. Run learning curves for both models and assess a labelling budget (25–35 min).
-  C. Design a Cyprus evaluation with labels, sampling and a decision rule (25–30 min).
+  B. Run one cell; compare tells found with 20/50/100/200 training images, fill a
+     two-row table and choose 50 or 200 images for another experiment (25–35 min).
+  C. Fill five answers about a supplied Cyprus-test scenario; calculate precision
+     and recall for invented counts, then apply a supplied decision rule (25–30 min).
 
 For A, complete and run the function before enabling RUN_PROJECTION.
-For B, set RUN_LEARNING_CURVES = True. The default participant copy skips both plots.
-The instructor copy completes A and runs A and B for reference; participants are not
+For B, set RUN_LEARNING_CURVES = True and complete the Markdown answer template.
+For C, complete the plan and two arithmetic expressions, then enable
+RUN_CYPRUS_PRACTICE. Try 14 hits first, then predict and test 10 hits.
+The default participant copy skips all optional code. The instructor copy includes
+the plots and worked B/C answers; participants are not
 expected to finish all labs. No new model weights or imagery downloads are needed.
+Lab C's invented percentages are practice only; the actual Cyprus measurement for
+the final recommendation is the catalogue agreement from section 5.3.
 
 The main comparison uses fixed C=1, chooses using validation recall at 50 reviews
 (AP breaks a tie), and reuses that model for the mistake and Cyprus reviews.

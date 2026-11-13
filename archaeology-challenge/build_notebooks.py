@@ -172,7 +172,8 @@ def notebook(instructor, payload):
         cells += [md('''
     This copy supplies the completed expressions, optional lab plots, worked
     interpretations and final test results. Participants choose one optional lab; this
-    copy runs both computational labs for reference. Keep it for the debrief.
+    copy runs the plots and Lab C practice, with worked answers for all three labs.
+    Keep it for the debrief.
     ''', "instructor-introduction")]
 
     cells += [md('''
@@ -986,12 +987,13 @@ def notebook(instructor, payload):
     | Choice | Time | Deliverable |
     |---|---:|---|
     | A. Project the training features | 25–35 min | Complete three expressions; compare the 2D plots and optionally a 3D view. |
-    | B. Investigate how many labels help | 25–35 min | Run learning curves for both representations; justify a labelling-budget recommendation. |
-    | C. Design a Cyprus evaluation | 25–30 min | A short study plan with a label definition, sampling plan and decision rule. |
+    | B. Is it worth labelling more training images? | 25–35 min | Run one cell, fill a two-row comparison table, and choose between 50 and 200 training images. |
+    | C. What would a fair Cyprus test look like? | 25–30 min | Fill a five-answer plan, calculate two fractions for an invented example, and apply a supplied decision rule. |
 
     Optional code starts disabled so an uncompleted lab does not stop the main path.
     For lab A, complete its function before enabling `RUN_PROJECTION`. For lab B, set
-    only `RUN_LEARNING_CURVES = True`. For lab C, write notes; no additional code is needed.
+    only `RUN_LEARNING_CURVES = True`. For lab C, complete the answer template and two
+    arithmetic blanks, then set `RUN_CYPRUS_PRACTICE = True` in its supplied cell.
     Use training/validation evidence only. The original model comparison and the
     50-image review budget remain the report's reference result.
     ''', "optional-experiments"), md('''
@@ -1147,30 +1149,34 @@ def notebook(instructor, payload):
 
     After this lab, continue to section 6. Lab B and lab C are alternatives, not prerequisites.
     ''', "projection-discussion"), md('''
-    ### Lab B. How much does more labelled training data help?
+    ### Lab B. Is it worth labelling more training images?
 
-    Suppose an expert can label 20 images now or 200 with more effort. Would the extra
-    labels improve the shortlist equally for both representations? **Predict a pattern
-    before running**, then allow 25–35 minutes to investigate it.
+    **The question:** would giving the model more labelled examples help it find more
+    tell-labelled images in the shortlist? You will run one supplied cell, read its
+    table, and write a short answer. Allow 25–35 minutes. All labels already exist;
+    the code pretends we have fewer of them by using part of the training set.
 
-    The supplied helper fits fresh copies of each pipeline with **10, 25, 50 and 100
-    images per class**: 20, 50, 100 and 200 labelled training images in total. Each size
-    uses three random subsamples. Every fit uses the same validation pool and 50-image
-    review budget, so the resulting *learning curve* compares performance as training
-    data increases. The encoder remains frozen; each scaler and classifier are fitted
-    on that subsample. The original `models` and `selected` are left intact.
+    **Keep these two numbers separate:**
 
-    Set `RUN_LEARNING_CURVES = True` and run the next cell. Each point is mean validation
-    recall across three fits; bars span the lowest to highest recall. They show sensitivity
-    to training subsamples, **not confidence intervals or variation across regions**.
-    At 100 per class, every fit uses all the available training images.
+    | Quantity | What happens in this experiment? |
+    |---|---|
+    | Images used to train a model | Changes: 20, 50, 100 or 200 in total. Half are tells and half are negatives. |
+    | Images opened for review after ranking | Stays at 50 from the same validation pool. We count how many have the source label “tell”. |
 
-    **Your task:** recommend a training-label budget for a follow-up experiment. Cite
-    the gain from the smallest to largest budget and the variation at one intermediate
-    budget for each representation. Explain what uncertainty this experiment cannot
-    measure. Do not assume the curves must improve at every step.
+    **Step 1 — predict.** Write down whether you expect 200 training images to find
+    more tells than 20. A prediction can be wrong; you will compare it with the result.
+
+    **Step 2 — run.** In the next cell, change only `RUN_LEARNING_CURVES = False` to
+    `True`, then run it. The code trains both model types at each size. It repeats
+    each size three times with different random choices of training images.
+
+    **Step 3 — read the table.** “Mean tells found” is the average count over those
+    three runs. “Fewest” and “Most” show the range. For example, counts of 40, 42 and
+    41 would give a mean of 41 and a range of 40–42. The plot shows these same counts:
+    training images along the bottom, tells found up the side. A higher point means
+    more tells in the same 50 reviews. Complete the answer template underneath it.
     ''', "learning-curve-instructions"), code('''
-    RUN_LEARNING_CURVES = False  # Enable only if you choose lab B.
+    RUN_LEARNING_CURVES = False  # Change to True for lab B; the rest is supplied.
 
     if not RUN_LEARNING_CURVES:
         print("Lab B skipped. Choose one optional lab, or continue to section 6.")
@@ -1189,134 +1195,203 @@ def notebook(instructor, payload):
             mean_recall=("recall_at_k", "mean"),
             min_recall=("recall_at_k", "min"),
             max_recall=("recall_at_k", "max"),
+            mean_hits=("hits", "mean"), min_hits=("hits", "min"), max_hits=("hits", "max"),
         ).reset_index()
         learning_summary["training_images"] = 2 * learning_summary["labels_per_class"]
-        display(learning_summary.round(3))
+        learning_table = learning_summary[["model", "training_images", "mean_hits", "min_hits", "max_hits"]].rename(
+            columns={"model": "Model", "training_images": "Training images (total)",
+                     "mean_hits": "Mean tells found", "min_hits": "Fewest", "max_hits": "Most"})
+        print(f"Every row uses the same {REVIEW_BUDGET} reviews from {len(validation)} validation images "
+              f"containing {int(validation.label.sum())} source-labelled tells.")
+        display(learning_table.round(1))
 
         fig, ax = plt.subplots(figsize=(8, 4), layout="constrained")
         for name, group in learning_summary.groupby("model"):
-            spread = np.vstack([group.mean_recall - group.min_recall,
-                                group.max_recall - group.mean_recall])
-            ax.errorbar(group.training_images, group.mean_recall, yerr=spread,
+            spread = np.vstack([group.mean_hits - group.min_hits,
+                                group.max_hits - group.mean_hits])
+            ax.errorbar(group.training_images, group.mean_hits, yerr=spread,
                         marker="o", capsize=4, label=name)
-        ax.set(xlabel="Labelled training images (both classes)",
-               ylabel=f"Validation recall at {REVIEW_BUDGET} reviews", ylim=(0, 1))
+        ceiling = min(REVIEW_BUDGET, int(validation.label.sum()))
+        ax.set(xlabel="Images used for training (total)",
+               ylabel=f"Tells found in {REVIEW_BUDGET} validation reviews", ylim=(0, ceiling + 2))
         ax.set_xticks([20, 50, 100, 200])
-        ax.set_title("Mean and range across three training subsamples")
+        ax.set_title("Does more training data put more tells in the shortlist?")
         ax.legend()
         plt.show()
-    ''' if not instructor else '''
-    RUN_LEARNING_CURVES = True  # Enable only if you choose lab B.
+    '''.replace("RUN_LEARNING_CURVES = False", f"RUN_LEARNING_CURVES = {instructor}"),
+        "learning-curve"), md('''
+    **Step 4 — fill in your answer below.** Double-click the next Markdown cell to edit it.
 
-    if not RUN_LEARNING_CURVES:
-        print("Lab B skipped. Choose one optional lab, or continue to section 6.")
-    else:
-        learning_rows = []
-        for name in ("colour_texture", "dinov2"):
-            part = workshop.learning_curve_rows(
-                models[name], feature_sets[name]["train"], train.label.to_numpy(),
-                feature_sets[name]["validation"], validation.label.to_numpy(),
-                workshop.ranking_metrics, REVIEW_BUDGET,
-            )
-            part["model"] = name
-            learning_rows.append(part)
-        learning_results = pd.concat(learning_rows, ignore_index=True)
-        learning_summary = learning_results.groupby(["model", "labels_per_class"]).agg(
-            mean_recall=("recall_at_k", "mean"),
-            min_recall=("recall_at_k", "min"),
-            max_recall=("recall_at_k", "max"),
-        ).reset_index()
-        learning_summary["training_images"] = 2 * learning_summary["labels_per_class"]
-        display(learning_summary.round(3))
+    1. For each model, copy “Mean tells found” at **20** and **200** training images.
+       Subtract the first number from the second to find the gain. For example, 38 minus
+       30 would mean eight additional tells found in the same 50 reviews.
+    2. Find the **DINOv2 / 50 training images** row. Copy its mean, fewest and most counts.
+       Compare its mean with the DINOv2 / 200 row.
+    3. Choose **50 or 200 training images** for the next small experiment and justify it
+       with those counts. Both choices can be argued; state what the extra 150 labels buy.
 
-        fig, ax = plt.subplots(figsize=(8, 4), layout="constrained")
-        for name, group in learning_summary.groupby("model"):
-            spread = np.vstack([group.mean_recall - group.min_recall,
-                                group.max_recall - group.mean_recall])
-            ax.errorbar(group.training_images, group.mean_recall, yerr=spread,
-                        marker="o", capsize=4, label=name)
-        ax.set(xlabel="Labelled training images (both classes)",
-               ylabel=f"Validation recall at {REVIEW_BUDGET} reviews", ylim=(0, 1))
-        ax.set_xticks([20, 50, 100, 200])
-        ax.set_title("Mean and range across three training subsamples")
-        ax.legend()
-        plt.show()
-    ''', "learning-curve"), md('''
-    Record your budget recommendation and its evidence in your notes, then go to
-    section 6. Repeated fits share the same validation set and sometimes overlapping
-    training images; they are not independent regional evaluations. A flat curve could
-    reflect this task or the review-budget ceiling, not prove that additional labels
-    would never help.
-    ''' if not instructor else '''
-    Record your budget recommendation and its evidence in your notes, then go to
-    section 6. Repeated fits share the same validation set and sometimes overlapping
-    training images; they are not independent regional evaluations. A flat curve could
-    reflect this task or the review-budget ceiling, not prove that additional labels
-    would never help.
-
-    **Instructor discussion:** compare the actual means and ranges rather than select a
-    budget from the smoothness of the lines. A useful answer states the observed recall
-    gain, identifies a budget whose subsamples vary, and weighs that gain against labelling
-    effort. Small variation at the full budget is expected because all 200 images are
-    reused. A recommendation for local data collection still needs a new geographic
-    evaluation; the curve does not answer the Cyprus transfer question.
-
-    **One worked answer for the default data:** from 20 to 200 training images, DINOv2's
-    mean recall increases from 0.689 to 0.783, while colour/texture increases from 0.506
-    to 0.667. A pilot could start by investigating 50 DINOv2 training labels: mean recall
-    is 0.783, with a range of 0.767–0.800 across these subsamples. That saves labelling effort
-    in this example, but a new geographic assessment is needed before treating it as a
-    sufficient budget for another survey.
+    **Finished when:** your two-row table and three short sentences are complete.
+    Check whether your original prediction matched the result, then go to section 6.
+    The three repeats vary the training examples on one validation set. They do not
+    test three regions. At 200 images every repeat uses the same full training set,
+    so its range may be zero. This lab gives evidence about this sample; a new area
+    needs its own evaluation. The main selected model and test set are unchanged.
     ''', "learning-curve-discussion"), md('''
-    ### Lab C. Design a Cyprus evaluation that could change your decision
+    **My Lab B answer — replace the blanks.**
 
-    Allow 25–30 minutes. Write a **half-page study plan**, without downloading new data
-    or training a model. Combine the missing labels from section 5 with a decision rule:
+    | Model | Mean found with 20 training images | Mean found with 200 | Gain: 200 minus 20 |
+    |---|---:|---:|---:|
+    | `colour_texture` | ... | ... | ... |
+    | `dinov2` | ... | ... | ... |
 
-    1. Define the target visible feature and suitable imagery. Give an example for each
-       label: visible, not visible in the image, and uncertain. Separate image visibility
-       from archaeological presence at a location.
-    2. Propose how to select new images across areas and the score range. Explain how you
-       would detect missed positives; reviewing only high-scoring images is insufficient.
-    3. Identify who supplies the labels, how disagreements are handled and which locations
-       remain separate from model development.
-    4. Choose a review budget, evaluation metric and minimum acceptable result. Explain
-       the trade-off behind your threshold and check that the budget can support it.
-       The workshop provides no universal deployment threshold.
-    5. State a result that would make you revise or abandon the proposed use.
+    With 50 training images, DINOv2 finds ... tells on average, ranging from ... to ...;
+    with 200 it finds ... on average.
 
-    Agree on the rule before seeing the future study's test results. Ask a partner to
-    find one ambiguity in the plan, then revise it. Reuse the key next step in section 6;
-    the detailed plan stays in your notebook notes.
+    I would start the next small experiment with ... training images because ... .
+
+    My prediction was ...; these results still need checking on ... .
     ''' if not instructor else '''
-    ### Lab C. Design a Cyprus evaluation that could change your decision
+    **Worked Lab B answer:** the next cell calculates the comparison from this run.
+    Discuss whether the measured change justifies labelling another 150 images.
+    Accept either budget when its reason uses the actual counts and acknowledges that
+    one validation sample cannot settle the choice for a new area.
+    ''', "learning-curve-response")]
+    if instructor:
+        cells += [code('''
+    if RUN_LEARNING_CURVES:
+        comparison = learning_summary.pivot(index="model", columns="training_images", values="mean_hits")
+        worked = pd.DataFrame({"Mean found with 20": comparison[20],
+                               "Mean found with 200": comparison[200],
+                               "Gain": comparison[200] - comparison[20]})
+        display(worked.round(1))
+        dino_rows = learning_summary.loc[learning_summary.model.eq("dinov2")].set_index("training_images")
+        small, full = dino_rows.loc[50], dino_rows.loc[200]
+        print(f"With 50 training images, DINOv2 finds {small.mean_hits:.1f} tells on average "
+              f"(range {int(small.min_hits)}–{int(small.max_hits)}); with 200 it finds "
+              f"{full.mean_hits:.1f}. The extra 150 labels change the mean by "
+              f"{full.mean_hits - small.mean_hits:.1f} tells in the same {REVIEW_BUDGET} reviews.")
+        if np.isclose(small.mean_hits, full.mean_hits):
+            print("One supported choice is 50 images for the next small experiment: the observed means tie. "
+                  "This is a starting point to test on another area, not a universal label requirement.")
+        else:
+            print("Use the measured gain above to argue whether another 150 labels are worthwhile. "
+                  "The current evidence cannot give the benefit or labelling cost in a new area.")
+    ''', "learning-curve-answer")]
 
-    Allow 25–30 minutes. Write a **half-page study plan**, without downloading new data
-    or training a model. Combine the missing labels from section 5 with a decision rule:
+    cells += [md('''
+    ### Lab C. What would a fair Cyprus test look like?
 
-    1. Define the target visible feature and suitable imagery. Give an example for each
-       label: visible, not visible in the image, and uncertain. Separate image visibility
-       from archaeological presence at a location.
-    2. Propose how to select new images across areas and the score range. Explain how you
-       would detect missed positives; reviewing only high-scoring images is insufficient.
-    3. Identify who supplies the labels, how disagreements are handled and which locations
-       remain separate from model development.
-    4. Choose a review budget, evaluation metric and minimum acceptable result. Explain
-       the trade-off behind your threshold and check that the budget can support it.
-       The workshop provides no universal deployment threshold.
-    5. State a result that would make you revise or abandon the proposed use.
+    **The question:** what would we need to measure whether the model finds visible
+    archaeology in Cyprus? You will complete a five-answer plan, then practise two
+    calculations on an invented result. Allow 25–30 minutes. This is a planning and
+    arithmetic exercise; all the information you need is below.
 
-    Agree on the rule before seeing the future study's test results. Ask a partner to
-    find one ambiguity in the plan, then revise it. Reuse the key next step in section 6;
-    the detailed plan stays in your notebook notes.
+    **Step 1 — read the imagined situation.** A team wants to find visible settlement
+    remains, such as wall or building-foundation patterns. Assume it can obtain new,
+    consistently detailed imagery suitable for judging those features. The existing
+    100 × 100 Cyprus chips and catalogue alone cannot supply that evidence.
 
-    **Instructor example of an approach:** define a visible target at a stated image
-    resolution, obtain independent expert judgements with uncertainty retained, and
-    sample across scores in several areas. Reserve whole areas for assessment. Report
-    budgeted precision and recall for that defined target, with unclear cases documented.
-    The threshold must follow the team's review capacity and consequences of misses;
-    accept different justified thresholds. “Not visible” is not proof of absence.
-    ''', "cyprus-study-design")]
+    The team has three separate areas: **A** for training, **B** for choosing model
+    settings, and **C** for the final check. It samples 100 non-overlapping images from
+    across area C, including locations outside the catalogue. Two archaeologists can
+    inspect them and label each image **visible**, **not visible**, or **uncertain**.
+    They do this before seeing model scores. Area C is kept out of model development.
+
+    **Step 2 — complete the next cell.** Write one sentence in each of its five rows.
+    The hints refer to the situation above; you are explaining a concrete plan, not
+    inventing a whole research project. “Not visible” means no visible target in that
+    image, not proof that archaeology is absent underground.
+    ''', "cyprus-study-design"), md('''
+    **My Lab C plan — replace each blank with one sentence.**
+
+    | Question | My answer |
+    |---|---|
+    | What visible feature would count as a positive? Name a feature, not just “a catalogue point”. | ... |
+    | Who labels the images, and should they see the model scores first? | ... |
+    | Should experts label all 100 area-C images or only the top 20? Explain how you would count missed positives. | ... |
+    | Which area is reserved for the final check, and when may the team inspect its results? | ... |
+    | What happens when the experts cannot tell whether the feature is visible? | ... |
+    ''' if not instructor else '''
+    **Worked Lab C plan — examples of acceptable answers.**
+
+    | Question | Example answer |
+    |---|---|
+    | Visible target | A positive is an image in which experts can identify wall or foundation patterns consistent with settlement remains. |
+    | Labelling | Two archaeologists judge the images before seeing scores, then discuss disagreements. |
+    | Images to label | Label all 100 sampled images, including low-ranked and uncatalogued locations, so positives outside the shortlist can be counted. |
+    | Final check | Keep area C separate while fitting on A and choosing settings on B; examine C after the choice is fixed. |
+    | Uncertainty | Keep unresolved cases marked uncertain, report their number and arrange further review; never automatically turn them into negatives. |
+    ''', "cyprus-study-response"), md('''
+    **Step 3 — practise the decision using invented numbers.** These are **not results
+    for our twelve Cyprus images**. For this example, assume every label was resolved:
+
+    | Item | Count |
+    |---|---:|
+    | Images in the final area-C check | 100 |
+    | Images experts labelled visible | 25 |
+    | Highest-ranked images opened for review | 20 |
+    | Visible positives among those 20 | 14 |
+
+    The team agrees on this **practice rule before testing**: continue to a larger
+    study only if **precision is at least 70% AND recall is at least 50%**. Otherwise,
+    revise the approach. These thresholds are supplied for this exercise.
+
+    Fill the two `...` expressions: precision divides the 14 hits by the **20 reviews**;
+    recall divides the same 14 hits by the **25 available positives**. Use the variable
+    names `practice_hits`, `practice_reviewed` and `practice_positives` so changing the
+    hit count also updates your answers. Then set `RUN_CYPRUS_PRACTICE = True` and run
+    the cell. The supplied code checks your arithmetic
+    and applies the rule. Decide whether it should say “continue” before running it.
+    ''', "cyprus-study-calculation-instructions"), code('''
+    RUN_CYPRUS_PRACTICE = False  # Complete both expressions, then change to True.
+
+    if not RUN_CYPRUS_PRACTICE:
+        print("Lab C practice skipped. Complete its plan and two expressions if you choose this lab.")
+    else:
+        print("Invented practice data — not measured Cyprus performance.")
+        practice_positives = 25
+        practice_reviewed = 20
+        practice_hits = 14  # After the first run, predict what happens with 10, then try it.
+
+        practice_precision = ...  # Hits divided by images reviewed.
+        practice_recall = ...     # Hits divided by all available positives.
+
+        if practice_precision is Ellipsis or practice_recall is Ellipsis:
+            print("Fill both expressions using the named counts, then rerun this cell.")
+        else:
+            expected_precision = practice_hits / practice_reviewed
+            expected_recall = practice_hits / practice_positives
+            if not np.allclose([practice_precision, practice_recall],
+                               [expected_precision, expected_recall], rtol=0, atol=1e-9):
+                print("Recheck the denominators: precision uses reviews; recall uses all positives.")
+            else:
+                print(f"Precision = {practice_hits}/{practice_reviewed} = {practice_precision:.0%}")
+                print(f"Recall = {practice_hits}/{practice_positives} = {practice_recall:.0%}")
+                passes = expected_precision >= 0.70 and expected_recall >= 0.50
+                print("Decision: continue to a larger study." if passes else "Decision: revise the approach.")
+    '''.replace("RUN_CYPRUS_PRACTICE = False", f"RUN_CYPRUS_PRACTICE = {instructor}")
+       .replace("practice_precision = ...", "practice_precision = practice_hits / practice_reviewed" if instructor else "practice_precision = ...")
+       .replace("practice_recall = ...", "practice_recall = practice_hits / practice_positives" if instructor else "practice_recall = ..."),
+        "cyprus-study-practice"), md('''
+    **Step 4 — change one number.** Predict what happens if the shortlist contains
+    only **10** positives. Change `practice_hits = 14` to `10`, rerun the cell and check.
+
+    **My conclusion — replace the blanks:** with 14 hits, precision is ... and recall
+    is ..., so the practice rule says ... . With 10 hits, they become ... and ...,
+    so the rule says ... .
+
+    **Finished when:** the five plan answers and both decisions are written. Ask a
+    partner whether your plan would count missed positives as well as successful finds.
+    Use one next step from the plan in section 6. Keep these invented percentages in
+    the practice exercise; section 6's Cyprus measurement comes from section 5.3.
+    ''' if not instructor else '''
+    **Worked conclusion:** 14 hits give precision `14/20 = 70%` and recall `14/25 = 56%`.
+    Both meet the supplied rule, so the decision is to continue to a larger study.
+    With 10 hits, precision is `10/20 = 50%` and recall is `10/25 = 40%`; the decision
+    becomes “revise”. Meeting the practice rule would support more investigation,
+    not deployment. These are invented counts, not measurements on the bundled Cyprus
+    images. Use the five-row plan to discuss how the real evidence would be collected.
+    ''', "cyprus-study-discussion")]
 
     cells += [md('''
     ## 6. Make a recommendation and export
@@ -1338,7 +1413,7 @@ def notebook(instructor, payload):
     4. **Cyprus measurement and limit:** cite one catalogue-agreement calculation from
        section 5.3, then explain why it does not establish detection accuracy.
     5. **Next evidence:** propose suitable local imagery, expert labels and locations
-       reserved for independent assessment. Use lab C's proposal if you completed it.
+       reserved for independent assessment. Use lab C's plan if you completed it.
 
     Run the cell to display your text. Exchange it with a partner, or reread it yourself:
     can the reader identify the proposed use, its evidence and a claim that still needs
@@ -1482,6 +1557,15 @@ def notebook(instructor, payload):
       PCA axes differ between panels, and overlap can hide separation in omitted
       dimensions. Visual separation is not validation performance. The classifiers
       still use their full feature vectors; the projection is only for exploration.
+    - **Optional lab B:** distinguish training-image counts from the fixed 50 reviews.
+      Learners change one flag, copy counts into a two-row table, subtract the means
+      at 20 and 200 images, and use the DINOv2 50/200 comparison to choose a starting
+      budget. The instructor answer is calculated from the run. Bars show the range
+      from three choices of training examples, not three independent regions.
+    - **Optional lab C:** use the supplied A/B/C-area scenario and five-answer template.
+      Then calculate precision and recall from the invented 14/20/25 counts and apply
+      the supplied 70%/50% rule. Changing hits to 10 should reverse the decision.
+      Keep this practice result separate from the real catalogue metrics in section 5.3.
     - **Short exercise:** precision is `hits / reviewed`; recall is
       `hits / total_positives`. Have learners calculate these from the ranking before
       displaying the comparison table, then check against its colour/texture row.
@@ -1519,7 +1603,7 @@ def notebook(instructor, payload):
       limitation and next study. Accept a recommendation against deployment. Keep the
       original 50-image comparison distinct from the larger-budget experiment. The sample
       report uses six sentences and the currently selected model's validation row.
-      Lab C combines the evaluation design and decision-rule extensions.
+      Lab C supplies a concrete plan that can contribute one next step to the report.
     - **Export and debrief:** the ZIP records the current run; rerunning export replaces it.
       Share the recommendation before the reveal. The test cell scores the saved ranking
       against Enki source labels, not Cyprus labels. Discuss the comparison with validation
@@ -1527,7 +1611,7 @@ def notebook(instructor, payload):
       nor a weak test result resolves the missing geographic or Cyprus evidence.
 
     Choose only one optional lab at the block before section 6, or use that time for
-    catch-up. The instructor copy runs both computational labs for reference. Model
+    catch-up. The instructor copy shows the plots and worked Lab C practice. Model
     extraction and live imagery acquisition belong in preparation, outside class.
     ''', "instructor-notes")]
 
