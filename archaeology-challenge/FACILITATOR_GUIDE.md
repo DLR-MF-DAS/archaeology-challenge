@@ -26,29 +26,32 @@ or use that time for support; completing every lab is not the four-hour task.
 - Budget roughly 73 MB of network transfer for the first Enki sample download and about 400 MB of free space. Download time and service availability vary. For weak connectivity, distribute a previously prepared `enki_workshop_sample.zip`; place it in `archaeology_workshop/` before the Enki data cell. It is validated before reuse. The ZIP may be supplied separately from the repository. Package installation still needs network access unless dependencies are already present.
 - Review the instructor notebook's outputs and source notices. Do not share it with participants until your planned debrief; it includes worked interpretation and held-out results. Treat the public-source holdout as educational: source labels are recoverable and it is not a secure competition.
 - Choose how learners will answer prompts: individually in notes, in pairs, or in a brief group discussion. If tools for displaying notebook widgets are unavailable, text progress displays are acceptable. Set expectations that time estimates vary across groups.
+- Point out the short settings cells and the folded **Supplied** cells. Participants
+  edit their exercise functions and settings, then run the supplied cell below.
+  Supporting code can be expanded; detailed teaching explanations stay in this guide.
 
 ## Completion-time estimate
 
 This is a planning estimate, not a timed learner study. Count the participant copy,
-excluding optional labs, credits and the folded setup source. It has about **4,376
+excluding optional labs, credits and supplied code. It has about **1,666
 words of core explanation**. At an assumed 150 technical words per minute, reading
-takes about **29 minutes**. The active-work allowance below covers running and
+takes about **11 minutes**. The active-work allowance below covers running and
 understanding code, completing tasks and discussion; it excludes that reading allowance.
 
 | Core block | Prose words | Reading minutes | Active-work minutes |
 |---|---:|---:|---:|
-| Orientation and setup | 453 | 3.0 | 18 |
-| 1. Images and split | 451 | 3.0 | 16 |
-| 2. Shortlist metrics | 329 | 2.2 | 14 |
-| 3. Model comparison | 1481 | 9.9 | 40 |
-| 4. Mistake inspection | 292 | 1.9 | 17 |
-| 5. Cyprus comparison and calculations | 1054 | 7.0 | 17 |
-| 6. Recommend, save and check | 316 | 2.1 | 35 |
-| Total | 4376 | 29.2 | 157 |
+| Orientation and setup | 124 | 0.8 | 18 |
+| 1. Images and split | 168 | 1.1 | 16 |
+| 2. Shortlist metrics | 135 | 0.9 | 14 |
+| 3. Model comparison | 458 | 3.1 | 40 |
+| 4. Mistake inspection | 124 | 0.8 | 17 |
+| 5. Cyprus comparison and calculations | 389 | 2.6 | 17 |
+| 6. Recommend, save and check | 268 | 1.8 | 35 |
+| Total | 1666 | 11.1 | 157 |
 
-Calculation: **29.2 + 157 + 10-minute break + 15 minutes for support
-≈ 211 minutes**, approximately **3½ hours** for the core path.
-One optional lab adds 25–35 minutes, giving roughly **4 hours**.
+Calculation: **11.1 + 157 + 10-minute break + 15 minutes for support
+≈ 193 minutes**, approximately **3¼ hours** for the core path.
+One optional lab adds 25–35 minutes; the four-hour schedule leaves further room for discussion and support.
 All three labs add 75–100 minutes and belong in a longer session or follow-up.
 
 Assumptions: a working Python environment, the supplied cached features, basic Python
@@ -159,11 +162,11 @@ weights. Do not describe this as training DINOv2 to detect archaeology.
 3. **Score:** `predict_proba` receives validation features only. Its second column is
    the score for label `1`. The preview attaches existing labels after prediction and
    shows the four highest-scoring images for each model, colour/texture then DINOv2,
-   with a matching table and row of thumbnails for each.
-   Image captions give rank, score and tile ID; read left to right in descending score order.
+   in a row of thumbnails for each.
+   Image captions give rank, score, tile ID and source label; read left to right in descending score order.
    This preview does not select a winner.
    Both full rankings enter the next calculation. No new image labelling is required.
-4. **Compare:** use the table and printed fractions to connect `hits`, `reviewed`,
+4. **Compare:** use the table and participants' calculated fractions to connect `hits`, `reviewed`,
    precision and recall to actual counts. Higher recall at 50 wins. Equal recall means
    equal hits on the same pool; AP then compares ordering across the full ranking.
    An exact tie in both metrics is resolved by name for reproducibility, not evidence.
@@ -267,7 +270,8 @@ from 5 August 2024, paired into six catalogued and six nearby unlabelled locatio
 Their common 64 × 64 model inputs span about 15.6 m per input pixel. Matching array
 size is not matching Enki's physical scale. The galleries display original chips.
 `paired_site` joins the two images of a pair; `tile_id` identifies one image.
-The table ranks all twelve images; the first gallery previews four.
+Both models score all twelve images; the first gallery shows the selected model's top four.
+The complete scores remain available in the exported evidence.
 
 **Clarify the records:** catalogue membership says where a settlement is recorded,
 not whether remains are visible in this image. `unlabelled_background` is a stored
@@ -313,7 +317,7 @@ sampling remain necessary for a performance claim about archaeological detection
 Read both models' current score distributions against Enki validation before the pair
 exercise. An overall shift towards zero or one, or disagreement between the models,
 exposes a transfer concern; it does not measure Cyprus accuracy or establish causality.
-Read the current pair table to compare `CY5` and `CY479`. The `CY5` images show larger bright angular patches in the catalogued
+Read the image captions to compare `CY5` and `CY479`. The `CY5` images show larger bright angular patches in the catalogued
 tile and winding pale lines through darker terrain in the other. These observations
 do not show which cues the classifier used. Neither ordering is evidence of a false
 positive or false negative without suitable independent image labels.
@@ -373,9 +377,9 @@ and both image investigations for reference; participants still choose just one 
 
 **Lab A: PCA (25–35 minutes, including interpretation):** ask learners to project the same
 200 training images for both feature representations. The participant function has
-three blanks; the separate plotting cell is supplied and starts with
-`RUN_PROJECTION = False`. After completing the function, run it, enable plotting and
-run the plotting cell. This guard allows a fresh notebook to run before the exercise
+three blanks; the short settings cell starts with `RUN_PROJECTION = False`.
+After completing the function, run it, enable the flag, run the settings cell and
+then the supplied plotting cell. This guard allows a fresh notebook to run before the exercise
 is completed. The instructor copy supplies the solution and enables the plot.
 
 The three replacements are:
@@ -453,7 +457,7 @@ have unit length, so the dot product is cosine similarity. The second expression
 `np.argsort(-similarities, kind="stable")[:k]`. Negation sorts the largest values first.
 Use the original vectors, not classifier-standardised features. Labels are attached
 after retrieval; they do not choose the matches. The runner loads query IDs and vectors
-together because section 5's table has been sorted into a different order.
+together because section 5's ranking has been sorted into a different order.
 
 Start with `C_PAIR_IDS = ["CY754"]` and four neighbours. The site-centred query has a
 classifier score of about 0.829 but only one tell-labelled neighbour; the nearby

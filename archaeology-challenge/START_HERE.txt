@@ -6,7 +6,9 @@ Facilitation plan and teaching research: FACILITATOR_GUIDE.md
 
 Open https://colab.research.google.com/ and choose File > Upload notebook.
 No paid Colab plan, Earth Engine account, API key or guaranteed GPU is needed.
-Run cells in order. Six sections lead from image inspection to a two-model
+Run cells in order. Cells marked "Supplied" contain code you can run as given;
+exercise code and short settings cells stay visible. After editing settings,
+run that cell and then the supplied runner below it. Six sections lead from image inspection to a two-model
 comparison, mistake review, Cyprus transfer and one short recommendation.
 The instructor version adds worked exercises, optional lab plots and final test outputs.
 
@@ -51,9 +53,9 @@ KEEP THE INSTRUCTOR NOTEBOOK PRIVATE UNTIL THE DEBRIEF
 
 CORE PATH AND TIME
 
-Allow about 3½ hours for the core path, including discussion, a short
-break and routine setup support. The four-hour schedule leaves about 30 minutes for
-one optional lab or catch-up. This is an estimate for basic Python/pandas users;
+Allow about 3¼ hours for the core path, including discussion, a short
+break and routine setup support. The four-hour schedule adds one optional lab and
+room for further discussion or catch-up. This is an estimate for basic Python/pandas users;
 slow downloads or unfamiliar software can add time. The calculation and checkpoints
 are in FACILITATOR_GUIDE.md.
 
@@ -162,4 +164,4 @@ Enki declares CC BY-SA 4.0 and describes separate Google/Bing imagery provenance
 and provider conditions; retain the source notices when sharing derived imagery.
 The Cyprus catalogue is CC BY 4.0. Cyprus image chips contain modified Copernicus
 Sentinel data (2024), accessed through Microsoft Planetary Computer. Detailed
-revisions, attribution and acquisition metadata are embedded in the notebooks.
+revisions and acquisition details are documented in README.md and the bundled metadata.

@@ -23,6 +23,13 @@ def md(source, cell_id):
     return nbf.v4.new_markdown_cell(textwrap.dedent(source).strip(), id=cell_id)
 
 
+def supplied(source, cell_id, title):
+    """Fold provided plumbing while leaving its output visible."""
+    return code(f"# @title Supplied · {title}\n" + textwrap.dedent(source).strip(), cell_id,
+                tags=["supplied"], **{"jupyter": {"source_hidden": True},
+                                     "colab": {"cellView": "form"}})
+
+
 def embedded_assets(asset_dir=None):
     """Repack only the pinned data and current helper source, with stable ZIP metadata.
 
@@ -69,121 +76,48 @@ def notebook(instructor, payload):
     role = "Instructor copy" if instructor else "Participant notebook"
     cells = [md('''
     # From tells to Cyprus
-    **Participant notebook · four-hour workshop with a choice of optional lab**
+    **Participant notebook · four-hour workshop**
 
-    An archaeological survey team has more overhead images than it can inspect carefully.
-    Can a model help decide which to open first? We use **50 image reviews** as a teaching
-    budget so that every model is compared at the same effort. This is a scenario, not
-    a measured limit on a real team's work.
+    Help a survey team choose which **50 images** to review first. Compare two models
+    on labelled tell images, inspect their mistakes, then try Cyprus imagery.
+    A *tell* is a mound formed by repeated human occupation.
 
-    Our initial target is a *tell*: a mound built up through repeated human occupation.
-    [Enki](https://zenodo.org/records/14950565) supplies image crops labelled as tell (`1`)
-    or non-tell/background (`0`). We use these source labels to evaluate rankings; we
-    do not trace site boundaries or independently verify discoveries. DINOv2 supplies one
-    way to turn images into numbers; the classifiers we fit are logistic regressions.
+    1. Run the six sections in order. Complete the `...` expressions and keep brief notes.
+    2. Choose one optional lab before section 6, if time permits.
+    3. Write your recommendation, then share the ZIP and saved notebook before the test reveal.
 
-    The workshop follows one decision:
-
-    1. Inspect the labelled images and their training/validation/test split.
-    2. Learn how precision and recall describe a shortlist.
-    3. Compare two image representations using validation results.
-    4. Inspect the chosen model's included and missed images.
-    5. Apply it to Cyprus imagery, where catalogue locations are not equivalent to image labels.
-    6. Write a recommendation, export the evidence, then assess the saved choice on test images.
-
-    ### How to work through this notebook
-
-    Allow **about 3½ hours for the core path**, including discussion, a short break and
-    some setup support. The four-hour plan leaves about **30 minutes for one optional lab
-    or catch-up**. These are planning estimates for learners with basic Python and pandas;
-    internet or unfamiliar software can add time.
-
-    Run cells in order and pause at each exercise before running the result below it.
-    Complete two arithmetic expressions for Enki in section 3.4 and three for Cyprus
-    in section 5.3. Other exercises change one value or interpret output. Keep brief notes for
-    the final recommendation rather than writing a separate report for each question.
-    If working alone, write a short answer in place of pair discussion.
-
-    The **optional lab is between sections 5 and 6**. Choose one activity if time permits,
-    or skip the whole block and continue to section 6. Optional plots start disabled.
-    Finish any experiments before exporting and revealing the test result.
-
-    Submit **`team_submission.zip` and your saved notebook**. The ZIP contains the ranked
-    Enki test CSV, settings, results and a five-sentence recommendation. The notebook keeps
-    your exercise notes and figures. Leave `REVEAL_TEST = False` until the final debrief.
-
-    Use Jupyter or [Google Colab](https://colab.research.google.com/). Setup installs missing
-    packages and downloads about 73 MB of images; allow about 400 MB of disk space. No GPU,
-    API key or model download is needed. For an offline image load, place the facilitator's
-    `enki_workshop_sample.zip` in `archaeology_workshop/` before section 1's loading cell.
-    Dependencies must already be installed if internet is unavailable.
+    Run cells marked **Supplied** as they are; their code is folded. Exercise code and
+    settings remain visible. Use Jupyter or Colab; setup needs internet on first use
+    and downloads about 73 MB of images. No GPU is needed.
     ''' if not instructor else '''
     # From tells to Cyprus
-    **Instructor copy · four-hour workshop with a choice of optional lab**
+    **Instructor copy · four-hour workshop**
 
-    An archaeological survey team has more overhead images than it can inspect carefully.
-    Can a model help decide which to open first? We use **50 image reviews** as a teaching
-    budget so that every model is compared at the same effort. This is a scenario, not
-    a measured limit on a real team's work.
+    Help a survey team choose which **50 images** to review first. Compare two models
+    on labelled tell images, inspect their mistakes, then try Cyprus imagery.
+    A *tell* is a mound formed by repeated human occupation.
 
-    Our initial target is a *tell*: a mound built up through repeated human occupation.
-    [Enki](https://zenodo.org/records/14950565) supplies image crops labelled as tell (`1`)
-    or non-tell/background (`0`). We use these source labels to evaluate rankings; we
-    do not trace site boundaries or independently verify discoveries. DINOv2 supplies one
-    way to turn images into numbers; the classifiers we fit are logistic regressions.
+    1. Run the six sections in order. Complete the `...` expressions and keep brief notes.
+    2. Choose one optional lab before section 6, if time permits.
+    3. Write your recommendation, then share the ZIP and saved notebook before the test reveal.
 
-    The workshop follows one decision:
-
-    1. Inspect the labelled images and their training/validation/test split.
-    2. Learn how precision and recall describe a shortlist.
-    3. Compare two image representations using validation results.
-    4. Inspect the chosen model's included and missed images.
-    5. Apply it to Cyprus imagery, where catalogue locations are not equivalent to image labels.
-    6. Write a recommendation, export the evidence, then assess the saved choice on test images.
-
-    ### How to work through this notebook
-
-    Allow **about 3½ hours for the core path**, including discussion, a short break and
-    some setup support. The four-hour plan leaves about **30 minutes for one optional lab
-    or catch-up**. These are planning estimates for learners with basic Python and pandas;
-    internet or unfamiliar software can add time.
-
-    Run cells in order and pause at each exercise before running the result below it.
-    Complete two arithmetic expressions for Enki in section 3.4 and three for Cyprus
-    in section 5.3. Other exercises change one value or interpret output. Keep brief notes for
-    the final recommendation rather than writing a separate report for each question.
-    If working alone, write a short answer in place of pair discussion.
-
-    The **optional lab is between sections 5 and 6**. Choose one activity if time permits,
-    or skip the whole block and continue to section 6. Optional plots start disabled.
-    Finish any experiments before exporting and revealing the test result.
-
-    Submit **`team_submission.zip` and your saved notebook**. The ZIP contains the ranked
-    Enki test CSV, settings, results and a five-sentence recommendation. The notebook keeps
-    your exercise notes and figures. Leave `REVEAL_TEST = False` until the final debrief.
-
-    Use Jupyter or [Google Colab](https://colab.research.google.com/). Setup installs missing
-    packages and downloads about 73 MB of images; allow about 400 MB of disk space. No GPU,
-    API key or model download is needed. For an offline image load, place the facilitator's
-    `enki_workshop_sample.zip` in `archaeology_workshop/` before section 1's loading cell.
-    Dependencies must already be installed if internet is unavailable.
+    Run cells marked **Supplied** as they are; their code is folded. Exercise code and
+    settings remain visible. Use Jupyter or Colab; setup needs internet on first use
+    and downloads about 73 MB of images. No GPU is needed.
     ''', "introduction")]
     if instructor:
         cells += [md('''
-    This copy supplies the completed expressions, optional lab plots, worked
-    interpretations and final test results. Participants choose one optional lab; this
-    copy runs the experiments and image searches, with worked answers for all three labs.
-    Keep it for the debrief.
+    This copy includes solutions, lab outputs and the final test result. Teaching prompts,
+    timing and troubleshooting are in the [facilitator guide](https://github.com/DLR-MF-DAS/hackathEOn/blob/main/archaeology-challenge/FACILITATOR_GUIDE.md).
     ''', "instructor-introduction")]
 
     cells += [md('''
     ## 1. Look at the images
 
-    Run the folded setup cell once, then the loading cell below the split explanation.
-    Setup unpacks the bundled features, Cyprus images and helper functions. Later code
-    uses those helpers through `workshop`; you do not need to edit the setup cell.
+    Run setup, then load the images. Enki's source labels are **tell (`1`)** and
+    **negative (`0`)**.
     ''', "setup-introduction"), code(f'''
-    # @title Setup — run once; no edits needed
+    # @title Supplied · setup (run once)
     import base64, importlib.util, io, os, shutil, subprocess, sys, zipfile
     from pathlib import Path
 
@@ -215,37 +149,20 @@ def notebook(instructor, payload):
     print("Ready. Run the next cell to load the images.")
     ''', "setup", tags=["infrastructure"],
         **{"jupyter": {"source_hidden": True}, "colab": {"cellView": "form"}}), md('''
-    Our **600-image sample comes from Enki's training archive**; we create our own
-    teaching split within it. The release's separate test archive is not used here.
-    We selected 300 source-positive and 300 source-negative crops. This balance does
-    not estimate the frequency of tells in a real survey.
+    We use a balanced 600-image sample from Enki's training archive. Removing similar
+    images and conflicting labels leaves 593 images, split as follows:
 
-    We group near-identical images, keep one per group and exclude groups with conflicting
-    labels. **593 images remain**. This reduces overlap from near-copies before splitting:
-
-    | Set | Images with default settings | Role |
+    | Set | Images | Use |
     |---|---:|---|
-    | Training | 200: 100 tells and 100 backgrounds | Fit both classifiers. |
-    | Validation | 119 | Compare the fitted classifiers and choose one. |
-    | Test | 119 | Assess the saved choice at the final reveal. |
-    | Unused | 155 | Left out to keep the training set small. |
+    | Training | 200 | Fit the models: 100 tells and 100 negatives. |
+    | Validation | 119 | Compare models and choose one. |
+    | Test | 119 | Check the saved choice at the end. |
+    | Unused | 155 | Keep the training exercise small. |
 
-    The 100-per-class limit applies only to training. Labels for validation and test are
-    reserved for their respective evaluations.
-
-    **Image-size confound:** all 300 retained tell images are originally 350 × 350;
-    249 of the 293 negatives are 64 × 64. File size and sharpness can therefore reveal
-    the source label. Both feature pipelines now first resize every image to the same
-    **64 × 64 grid**; DINO then enlarges this common input to its required 224 × 224.
-    Section 3 measures the original size shortcut and checks performance within each
-    original size. This reduces a known shortcut, but does not equalise metres per pixel,
-    image rendering or all acquisition differences. Cyprus uses the same preprocessing.
-
-    **Limit of the split:** filtering similar images does not identify every repeated
-    site or neighbouring landscape. The sample lacks verified site or region groups, so
-    we cannot establish geographic independence. Keep that limitation for the final
-    recommendation; section 5 will examine a different setting.
-    ''', "images-introduction"), code('''
+    All tells were originally 350 × 350 pixels; most negatives were 64 × 64.
+    Both models receive 64 × 64 images to reduce this shortcut. Section 3 checks the
+    remaining acquisition bias. This teaching split has no verified geographic separation.
+    ''', "images-introduction"), supplied('''
     import numpy as np
     import pandas as pd
     import matplotlib.pyplot as plt
@@ -260,64 +177,33 @@ def notebook(instructor, payload):
     splits = workshop.workshop_split(images, per_class=100)
     train, validation, test = (splits[name] for name in ("train", "validation", "test"))
     print(f"{audit['raw_images']} images → {len(images)} after filtering.")
-    display(pd.Series({name: len(part) for name, part in splits.items()}, name="tiles").to_frame())
+    print(f"Training: {len(train)}; validation: {len(validation)}; test: {len(test)}.")
     size_counts = images.groupby(["label", "width", "height"]).size().rename("images").reset_index()
-    print("Original dimensions by source label (0 = negative, 1 = tell):")
-    display(size_counts)
     audit["native_size_counts"] = size_counts.to_dict("records")
     audit["image_preprocessing"] = workshop.IMAGE_PREPROCESS_ID
-    print(f"Both feature pipelines use the same {workshop.COMMON_IMAGE_SIZE} × "
-          f"{workshop.COMMON_IMAGE_SIZE} input grid. Preview below shows the original images.")
     workshop.contact_sheet(train.sample(12, random_state=42), title="Training images: 1 = tell, 0 = negative")
-    ''', "images"), md('''
-    **Warm-up: compare one pair from the 12 training images above.** Their captions use
-    the source labels: `1` for tell, `0` for background.
-
-    Choose one of each label. Note the tile IDs and describe one visible difference,
-    such as a rounded patch, vegetation or blurred edges. Could it help distinguish
-    tell form, or could it reflect how the images were collected?
-
-    The size table establishes an acquisition difference associated with the labels.
-    A classifier could use the resulting sharpness or texture as a *shortcut* instead
-    of recognising a mound. The table does not establish which cues a fitted model uses.
-    Discuss briefly, then continue; no site identification
-    or written report is required here.
+    ''', "images", title='load and preview images'), md('''
+    **Inspect:** choose one tell and one negative from the gallery. Record their IDs and
+    one visible difference. Could it describe tell shape, or how the imagery was collected?
     ''', "image-question")]
 
     cells += [md('''
     ## 2. What makes a useful shortlist?
 
-    In a real review, a person opens images to examine possible features. Here we can
-    evaluate an ordering using labels already supplied by the source: rank the validation
-    images, take the first 50 and count their positive labels.
+    - **Precision** = positives in the shortlist / images reviewed.
+    - **Recall** = positives in the shortlist / all available positives.
 
-    - **Precision:** what fraction of the selected images have a positive label?
-    - **Recall:** what fraction of all available positives were selected?
-
-    **The next example uses five invented labels, not images.** The list is already in
-    an imagined model's score order: `1` means positive, `0` negative. It has no connection
-    to the training-image grid; there are no images to open or classify for this calculation.
+    Practise on this invented ranking of five labels: `1` means positive, `0` negative.
+    The list is already ordered by an imagined model's score.
     ''', "shortlist-introduction"), code('''
-    # Supplied labels for a counting exercise; no images are loaded here.
-    # Position in the list represents position in an imagined model ranking.
-    # 1 = tell-labelled example; 0 = background-labelled example.
+    # Invented ranking: 1 = positive, 0 = negative.
     ranked_labels = [1, 1, 0, 1, 0]
     ''', "shortlist-labels"), md('''
-    **What does "take the first two" mean?** Select the first two entries of
-    `[1, 1, 0, 1, 0]`. That gives the shorter list `[1, 1]`.
+    For `k = 2`, the first two entries are `[1, 1]`: two positives in two reviews,
+    out of three positives in the full list. Precision is `2/2 = 100%`; recall is
+    `2/3 ≈ 67%`.
 
-    Count three things:
-
-    1. There are **2 entries** in the shorter list.
-    2. Both are `1`, so it contains **2 positives**.
-    3. The complete five-entry list contains **3 positives**.
-
-    Therefore, precision is `2 / 2 = 100%`: both selected entries are positive.
-    Recall is `2 / 3 ≈ 67%`: the selection includes two of the three positives available.
-
-    Run the next cell to carry out these same counts. `k` is the number of list entries
-    to include. Python's `[:k]` takes that many entries from the beginning, and `sum()`
-    counts the `1`s by adding the labels together.
+    Run the cell. `[:k]` selects the first `k` entries; `sum()` counts their positive labels.
     ''', "shortlist-predict"), code('''
     k = 2  # Number of list entries to include in the shortlist
 
@@ -335,64 +221,29 @@ def notebook(instructor, payload):
     print(f"Precision: {positives_in_shortlist}/{shortlist_size} = {precision:.1%}")
     print(f"Recall: {positives_in_shortlist}/{positives_in_full_list} = {recall:.1%}")
     ''', "shortlist-example"), md('''
-    **Try a larger selection.** Before rerunning, predict the fractions for `k = 4`.
-    The selected entries are `[1, 1, 0, 1]`. Count their `1`s, then divide by **4** for
-    precision and by **3** (all positives in the full list) for recall.
-
-    Change `k = 2` to `k = 4`, run the cell and explain why the two fractions change
-    differently. This uses only the supplied labels, not new image judgements.
-
-    Section 3 applies the same calculation to actual model rankings at `k = 50`.
-    We will choose the model that puts more source positives into that fixed shortlist.
+    **Try it:** predict precision and recall for `k = 4`, then change the value and rerun.
+    Why do the fractions change differently? Section 3 uses the same calculation on
+    real validation images at `k = 50`.
     ''', "shortlist-discussion")]
 
     cells += [md('''
     ## 3. Compare two models
 
-    We now return to the **actual Enki images** split in section 1. Our question is:
-    **which of two ways of describing an image helps us put more tell-labelled examples
-    into a 50-image shortlist?** Run the cells below in order. They prepare the image
-    descriptions, train two classifiers, score the validation images and compare the results.
+    Which image representation puts more tells into a 50-image shortlist?
 
-    ### 3.1. Turn each image into a row of numbers
+    ### 3.1. Turn images into features
 
-    The classifier used here takes numbers as input. A **feature** is one number describing
-    an image, such as its average red intensity. A **feature vector** is the whole list of
-    numbers for one image; a **feature matrix** stacks those lists, with one image per row
-    and one feature per column. A source label (`1` or `0`) is kept separately: it is the
-    answer we want the classifier to learn to predict.
+    A **feature matrix** has one image per row and one numeric measurement per column.
+    Labels are stored separately. We compare:
 
-    We give the same images two different numerical descriptions, also called representations:
+    | Representation | Features per image | Description |
+    |---|---:|---|
+    | `colour_texture` | 68 | Colour distributions, variation and edges: a simple baseline. |
+    | `dinov2` | 384 | Visual features from a pretrained neural network. |
 
-    | Name in the code | What describes one image? | Where do the numbers come from? |
-    |---|---|---|
-    | `colour_texture` | `68` measurements of colour distributions, average colour, variation, and edge strength and direction. | Fixed calculations on the image pixels. This is our simple baseline: a reference against which to judge the more complex representation. |
-    | `dinov2` | `384` numbers describing visual patterns. This vector is also called an embedding. | A pretrained neural network converts the image into features. Individual numbers do not have simple names such as “mound height” or “probability of a tell”. |
-
-    **Pretrained** means DINOv2 learned visual representations before this workshop, on a
-    large image collection without human-provided training labels. ([DINOv2 documentation](https://github.com/facebookresearch/dinov2))
-    We keep that encoder **frozen**: its learned parameters do not change when we use our
-    Enki labels. Its vectors have already been computed and bundled in
-    `enki_embeddings.npz`, so this notebook loads them without running or training the
-    neural network. No GPU is needed for this path.
-
-    Both branches start with the same 64 × 64 RGB image. The DINO cache was rebuilt
-    after this correction; the loader rejects old preprocessing versions and changed
-    image pixels. The displayed original images can contain detail the model never sees.
-
-    Both representations will feed the **same kind of classifier: logistic regression**.
-    We train a separate classifier for each. The comparison is therefore simple image
-    measurements plus logistic regression versus DINOv2 features plus logistic regression.
-    The question is whether the pretrained representation contains useful distinctions
-    that our simple colour and edge summaries miss. The validation results will tell us
-    whether that helps with this particular labelled sample.
-
-    Run the next cell to prepare both feature matrices. `partition_features` puts their
-    rows into the training, validation and test groups already defined in section 1,
-    matching image IDs so each row stays aligned with its label. Preparing these fixed
-    descriptions does not fit a classifier or use the held-out labels. In the summary,
-    `200` training images and `68` features means a matrix with `200` rows and `68` columns;
-    it does not mean we have 68 images.
+    DINOv2's features are already computed and bundled. Its weights stay frozen; we fit
+    one logistic regression for each representation. Both use the same images and split.
+    Run the next cell to prepare the matrices.
     ''', "models-introduction"), code('''
     # Compute simple measurements and load the previously computed DINOv2 vectors.
     colour_features = workshop.handcrafted_features(images.path)
@@ -414,32 +265,15 @@ def notebook(instructor, payload):
         })
     display(pd.DataFrame(feature_summary))
     ''', "features"), md('''
-    ### 3.2. Learn from the training labels
+    ### 3.2. Fit the classifiers
 
-    **Logistic regression** is a classification method despite its name. It learns weights
-    for the features and an offset, then converts their combination into a score between
-    `0` and `1` for label `1`. We fit one classifier per representation on the same
-    training images and labels. Validation will choose between them; test remains reserved.
+    Each pipeline learns two steps from **training data only**:
 
-    Each classifier is a **pipeline** with two fitted steps:
+    1. `StandardScaler` centres and scales each feature using its training mean and spread.
+    2. Logistic regression learns feature weights to predict the source label.
 
-    1. `StandardScaler` subtracts each feature's training mean and divides by its training
-       standard deviation, putting measurements on comparable scales.
-    2. Logistic regression learns weights from those scaled training rows and their labels.
-
-    The pipeline saves the training means and scales and reuses them for later images.
-    It does not fit either step on validation or test data.
-
-    Both models use `C=1`, which controls the penalty on large weights; smaller values
-    apply a stronger penalty. `class_weight="balanced"` gives classes equal total weight,
-    which makes no difference to our already balanced training set. `max_iter=2000`
-    limits optimisation iterations. See the [scaler](https://scikit-learn.org/stable/modules/generated/sklearn.preprocessing.StandardScaler.html)
-    and [classifier](https://scikit-learn.org/stable/modules/generated/sklearn.linear_model.LogisticRegression.html)
-    references for the remaining options.
-
-    Run the next cell: `.fit(training_features, training_labels)` learns each pipeline,
-    and `models` stores it. The classifiers use all 68 or 384 features. Optional lab A
-    later projects those features into 2D or 3D without changing these classifiers.
+    The fitted pipeline reuses those transformations for later images. Run `.fit(...)`
+    below to train both models.
     ''', "training-explanation"), code('''
     models = {}
 
@@ -453,20 +287,11 @@ def notebook(instructor, payload):
         print(f"Fitted {name}: {len(train)} training images, "
               f"{features['train'].shape[1]} features per image.")
     ''', "train-models"), md('''
-    ### 3.3. Score images the classifiers were not fitted on
+    ### 3.3. Rank the validation images
 
-    Each pipeline receives **validation features only**. `predict_proba` returns two
-    columns, for labels `0` and `1`; `[:, 1]` takes the second column for every image.
-    The source labels are attached afterwards for evaluation.
-
-    Higher scores mean **inspect earlier**. Although these are probability estimates,
-    a score of `0.9` has not been established as a 90% chance of archaeology in a new
-    survey. We rank images rather than apply a `0.5` cutoff.
-
-    Run the next cell. It keeps both full rankings and displays the **four highest-scoring
-    images per model**, colour/texture followed by DINOv2. Read each row left to right;
-    captions give rank, score and tile ID, and the tables include source labels. These
-    four-image previews are not the 50-image shortlists used in the next calculation.
+    `predict_proba(...)[:, 1]` gives each image's score for label `1`.
+    Higher scores are reviewed first. Run the cell to rank validation images and preview
+    each model's top four.
     ''', "validation-explanation"), code('''
     validation_scores = {}
 
@@ -483,13 +308,11 @@ def notebook(instructor, payload):
         ranking.insert(0, "rank", np.arange(1, len(ranking) + 1))
         validation_rankings[name] = ranking
         preview = ranking.head(4)
-        print(f"{name}: first {len(preview)} of {len(validation)} ranked validation images")
-        display(preview[["rank", "tile_id", "score", "label"]].round(6))
 
         fig, axes = plt.subplots(1, 4, figsize=(12, 3.5), layout="constrained")
         for ax, row in zip(axes, preview.itertuples(index=False)):
             ax.imshow(plt.imread(row.path))
-            ax.set_title(f"Rank {row.rank} · score {row.score:.6f}\\n{row.tile_id}", fontsize=9)
+            ax.set_title(f"Rank {row.rank} · score {row.score:.6f}\\n{row.tile_id} · label {row.label}", fontsize=9)
             ax.axis("off")
         fig.suptitle(f"{name}: highest-scoring validation images")
         plt.show()
@@ -497,39 +320,22 @@ def notebook(instructor, payload):
     # Section 3.4's short exercise still uses the colour/texture ranking.
     ranking_example = validation_rankings["colour_texture"]
     ''', "score-validation"), md('''
-    ### 3.4. Count positives in each shortlist and choose a model
+    ### 3.4. Calculate precision and recall, then choose
 
-    We now apply section 2's fractions to the real validation rankings. Our budget is
-    50 images per model. Complete the two expressions below **before** running the comparison.
-
-    The resulting table uses these columns:
+    Use the first 50 images in each ranking. The result columns are:
 
     | Column | Meaning |
     |---|---|
-    | `model` | The representation used by the fitted classifier. |
-    | `hits` | Source-positive tiles among the first 50, not newly discovered sites. |
-    | `reviewed` | Number of images selected by the simulated budget. |
-    | `precision_at_k` | `hits / reviewed`. |
-    | `recall_at_k` | `hits / all_validation_positives`. |
-    | `AP` | Average precision: how well positives are placed throughout the full ranking. |
+    | `hits` | Tell-labelled images retrieved. |
+    | `reviewed` | Images in the shortlist. |
+    | `precision_at_k` | Hits divided by reviews. |
+    | `recall_at_k` | Hits divided by all validation positives. |
+    | `AP` | Average precision: performance across the full ranking. |
 
-    **Selection rule:** higher recall at 50 wins; higher AP breaks a recall tie. Because
-    the images and budget are shared, higher recall here also means more hits and higher
-    precision. An exact tie in both metrics is resolved by model name for reproducibility,
-    not stronger evidence.
-
-    AP can distinguish rankings with the same number of hits in their first 50 places.
-    For the untied example `[1, 1, 0, 1, 0]`, average the precisions at the positive ranks:
-    `(1/1 + 2/2 + 3/4) / 3 ≈ 0.917`. The helper uses scikit-learn's
-    [AP calculation](https://scikit-learn.org/stable/modules/generated/sklearn.metrics.average_precision_score.html),
-    including tied scores. No additional AP coding is required.
+    Choose the model with higher recall at 50 reviews; higher AP breaks a tie.
     ''', "comparison-explanation"), md('''
-    **Exercise (about 3 minutes):** replace the two `...` expressions with the fractions
-    for precision and recall. `ranking_example` contains the full colour/texture ranking;
-    the supplied lines select its first 50 rows and count the positives.
-
-    Run your completed cell, then the comparison underneath. Check against its colour/texture
-    row. If your output says `Ellipsis`, the corresponding `...` is still a placeholder.
+    **Complete the two expressions** using the supplied counts for the colour/texture
+    ranking. Run your cell, then compare your answers with its row in the results below.
     ''', "shortlist-exercise-instructions"), code('''
     shortlist = ranking_example.head(50)
     hits = int(shortlist["label"].sum())
@@ -573,10 +379,6 @@ def notebook(instructor, payload):
     selected = results.iloc[0]["model"]
     display(results.round(3))
 
-    for row in results.itertuples(index=False):
-        print(f"{row.model}: precision = {row.hits}/{row.reviewed} = {row.precision_at_k:.1%}; "
-              f"recall = {row.hits}/{validation_positives} = {row.recall_at_k:.1%}.")
-
     winner, runner_up = results.iloc[0], results.iloc[1]
     extra_hits = int(winner["hits"] - runner_up["hits"])
     print(f"Selected using validation: {selected}")
@@ -588,22 +390,13 @@ def notebook(instructor, payload):
     else:
         print("Recall and AP tie exactly; model-name order broke the tie, not stronger evidence.")
     ''', "compare-models"), md('''
-    ### 3.5. Put the result in context
+    ### 3.5. Compare with random selection and the budget limit
 
-    The table needs two reference points:
+    Randomly selecting 50 out of 119 images gives each positive a `50/119` chance of
+    being included: the expected recall. Even a perfect ordering can recover at most
+    50 of the 60 positives, giving a recall ceiling of `50/60`.
 
-    - **Random selection:** if we selected 50 validation images uniformly at random, each
-      positive would have a `50 / number_of_validation_images` chance of being included.
-      That fraction is the expected recall. The expected number of hits is that fraction
-      times the positive count. This is an average over random selections, not a guarantee
-      for one draw or a third trained model.
-    - **Best possible at this budget:** a 50-image shortlist can contain at most 50 positives.
-      If there are 60 positives in the pool, even a perfect ordering reaches only
-      `50/60 ≈ 83.3%` recall. The remaining 10 cannot fit. That limit is the **recall ceiling**;
-      it explains why 100% precision can coexist with less than 100% recall.
-
-    The next cell calculates both references from the current validation set. They concern
-    this sampled pool and budget, not the unknown rate of archaeological sites in a landscape.
+    The cell below calculates both references from the current counts.
     ''', "comparison-references"), code('''
     shortlist_size = min(REVIEW_BUDGET, validation_size)
     random_recall = shortlist_size / validation_size
@@ -618,57 +411,35 @@ def notebook(instructor, payload):
     print(f"Selected model: {int(winner['hits'])} source positives in the shortlist, "
           f"{validation_positives - int(winner['hits'])} outside it.")
     ''', "validation-benchmarks"), md('''
-    ### 3.6. Check the acquisition shortcut
+    ### 3.6. Check the image-size shortcut
 
-    A deliberately limited reference predicts labels using **only original width and
-    height**. It learns the positive fraction for each size from the training set, then
-    scores validation images. It never examines pixels. Its accuracy measures how much
-    the source collection process reveals about the labels; it is not a candidate model.
+    A reference using **only original width and height**, learned from training labels,
+    shows how much acquisition differences predict the label.
 
-    The second table evaluates the image models within each original size. The
-    350 × 350 subset contains both labels, so original dimensions alone cannot separate
-    them there. Compare its AP with its positive fraction, the usual no-skill reference:
-    this subset contains many more positives than negatives. AP is left undefined for
-    the 64 × 64 subset because it has only negatives. Small subsets remain uncertain.
-
-    Common resizing reduces the resolution shortcut but cannot prove it removed all
-    acquisition cues. These diagnostics use validation only; test remains reserved.
-    ''', "resolution-audit-explanation"), code('''
+    The table also compares model AP within each original size. Compare AP with the
+    positive fraction; AP is omitted for groups containing only one label. Common resizing
+    reduces the size shortcut but does not remove every acquisition difference.
+    ''', "resolution-audit-explanation"), supplied('''
     validation_audit = workshop.validation_diagnostics(
         train, validation, validation_scores, k=REVIEW_BUDGET)
     size_probe = validation_audit.loc[validation_audit.model.eq("source_size_only")]
-    print("Original-size-only reference (learned on training metadata):")
-    display(size_probe[["model", "images", "accuracy", "precision_at_k", "recall_at_k", "AP"]].round(3))
-    print("Image models after common preprocessing, grouped by original dimensions:")
+    print(f"Original-size-only reference: {size_probe.iloc[0].accuracy:.1%} validation label accuracy.")
     display(validation_audit.loc[validation_audit.model.ne("source_size_only"),
         ["model", "subset", "images", "positives", "positive_fraction", "AP"]].round(3))
-    ''', "resolution-audit"), md('''
-    **Checkpoint:** explain the selected model's result to a partner using its hit count,
-    review budget and total positive count. Compare recall with random selection and the
-    budget ceiling. If the hit counts tie, say what decided the choice.
-
-    Keep `selected` for the following sections. Next we inspect actual mistakes, then
-    ask whether the same fitted pipeline makes sense for different Cyprus images.
+    ''', "resolution-audit", title='check acquisition bias'), md('''
+    **Explain your choice:** cite hits, precision and recall. How does it compare with
+    random selection and the recall ceiling? Keep the selected model for the next sections.
     ''', "model-question")]
 
     cells += [md('''
     ## 4. Inspect the shortlist
 
-    Section 3 counted the selected model's hits. Now inspect what it included and left out
-    at the **50-image budget**:
+    - **False alarm:** a source-negative image among ranks 1–50.
+    - **Miss:** a source-positive image below rank 50.
 
-    - **False alarm:** a source-negative image (`0`) inside the shortlist.
-    - **Miss:** a source-positive image (`1`) outside the shortlist.
-
-    Ranks 1–50 are included; rank 51 onwards is excluded. A high-scoring positive at rank
-    51 is still a miss at this budget. As the recall ceiling showed, some misses cannot
-    be avoided when more positives exist than review slots.
-
-    The next cell counts both groups and displays **up to four images per group**, highest
-    score first, with ranks, scores and IDs. An empty group is reported explicitly;
-    no false alarms does not mean no misses. These categories refer to the source labels,
-    not an independent archaeological assessment.
-    ''', "mistakes-introduction"), code('''
+    Run the cell to see up to four examples of each. Some positives must remain outside
+    when there are more positives than review slots.
+    ''', "mistakes-introduction"), supplied('''
     review = validation_rankings[selected].copy()
     shortlist = review.head(REVIEW_BUDGET)
     false_alarms = shortlist.query("label == 0")
@@ -688,7 +459,6 @@ def notebook(instructor, payload):
             continue
 
         examples = group.head(4)
-        display(examples[["rank", "tile_id", "label", "score"]].round(6))
         fig, axes = plt.subplots(1, 4, figsize=(12, 3.5), layout="constrained")
         for ax in axes:
             ax.axis("off")
@@ -697,26 +467,18 @@ def notebook(instructor, payload):
             ax.set_title(f"Rank {row.rank} · score {row.score:.6f}\\n{row.tile_id}", fontsize=9)
         fig.suptitle(f"{selected} — {title}")
         plt.show()
-    ''', "mistakes"), md('''
-    **Keep one observation for your recommendation.** Choose a displayed tile; use a miss
-    if there are no false alarms. Record its ID, rank and one visible feature. Distinguish
-    that observation from a hypothesis about the score, and suggest one comparison that
-    could test the hypothesis. Uncertainty is a valid observation.
+    ''', "mistakes", title='inspect false alarms and misses'), md('''
+    **Keep one observation:** record a displayed tile's ID, rank and visible feature.
+    Suggest a comparison that could test why it received that score.
     ''', "mistake-question"), md('''
-    ### Exercise: what would ten more reviews recover?
+    ### Try ten more reviews
 
-    Predict whether ten extra slots will recover ten positives. Then change
-    **`inspection_budget = 50` to `60`** and run the supplied code. It examines the next
-    ten images in the same ranking, displays them in a table and shows any newly included
-    source negatives.
+    Predict how many additional positives ten slots will recover. Change
+    `inspection_budget = 50` to `60` and run the cell. Report extra positives found,
+    extra negatives reviewed and positives still missed.
 
-    Use the output to explain the trade-off: extra positives recovered, extra negatives
-    reviewed and positives still missed. Find one of the previously displayed missed tiles
-    in the added rows if it was recovered.
-
-    **Optional five-minute challenge:** find the smallest budget that includes every
-    source positive. The comparison and report keep the original `REVIEW_BUDGET = 50`;
-    this is a separate validation experiment.
+    **Extension:** find the smallest budget that recovers every validation positive.
+    Keep `REVIEW_BUDGET = 50` for the original comparison and report.
     ''', "inspection-budget-exercise"), code('''
     inspection_budget = 50  # Change to 60 to inspect ten more images.
 
@@ -750,43 +512,24 @@ def notebook(instructor, payload):
     cells += [md('''
     ## 5. Try the same model in Cyprus
 
-    We chose a model using Enki validation labels. Now we ask a different question:
-    **what happens when that fitted model receives images from another setting?**
-    Applying a model elsewhere is called *transfer*. The selected classifier and its
-    training scaler are reused unchanged; this cell does not fit a new Cyprus model.
-    We compare both models' score distributions with Enki validation to expose changes
-    in their behaviour. The selected model still determines the review order.
+    ### 5.1. Score a different landscape
 
-    ### 5.1. Understand the new images and records
+    Reuse the fitted models on **12 Sentinel-2 images**: six catalogued settlement
+    locations and six nearby unlabelled locations, paired 2 km apart. Each image covers
+    1 km × 1 km at 10 m per pixel, acquired on 5 August 2024.
 
-    The bundle contains **12 Sentinel-2 images**, acquired on **5 August 2024**. Each covers
-    a 1 km square at 10 m per pixel: a 100 × 100 pixel image. Enlarging the display does
-    not add detail. Small features may be difficult to distinguish, and a catalogued
-    settlement need not have the mound form associated with Enki's tell images.
-    The common 64 × 64 model input is coarser still: about 15.6 m per input pixel here.
-    Matching pixel dimensions does not match the geographic scale of the Enki crops.
+    | `kind` | Meaning |
+    |---|---|
+    | `catalogued_location` | Centred on a recorded settlement. |
+    | `unlabelled_background` | Nearby location without a catalogue label. |
 
-    There are six pairs. Each pair contains an image centred on a catalogued settlement
-    and one centred 2 km to its east, away from catalogue points. `paired_site` identifies
-    the pair; `tile_id` identifies the individual image.
+    **These are not visibility labels.** A catalogue point need not have visible remains;
+    an unlabelled location is not a confirmed absence. We can measure catalogue agreement,
+    but detection accuracy remains unknown. Resolution, landscape and target form also
+    differ from Enki.
 
-    | Value in `kind` | What it tells us | What it does not tell us |
-    |---|---|---|
-    | `catalogued_location` | The image is centred on a settlement recorded in the catalogue. | Whether remains are visible in this image on this date. |
-    | `unlabelled_background` | The image is centred at a nearby location without a catalogue label. | Whether archaeology is absent. The word `background` in the filename is not a verified negative label. |
-
-    Enki supplied image-class labels for counting hits and misses. These Cyprus records
-    supply **locations and occupation periods**, not equivalent image labels. Several
-    occupation rows can refer to one settlement. We can measure how well the ranking
-    recovers catalogue locations. Section 5.3 calculates that agreement explicitly;
-    it does not establish precision, recall or accuracy for visible archaeology.
-
-    Run the next cell. It scores all 12 images with both models, compares their score
-    ranges with Enki validation, then ranks by the selected model and shows the first
-    four. The score is the model's response learned from Enki; it has not been validated
-    as a probability of archaeology in Cyprus. Rank 1 means first among these 12 images.
-    Sorting uses unrounded scores, even when displayed values look equal. Use this view
-    to ask what should be investigated, rather than to count discovered sites.
+    Run the cell to compare score ranges and view the four highest-ranked Cyprus images.
+    The scores have not been calibrated as Cyprus probabilities.
     ''', "cyprus-introduction"), code('''
     cyprus, cyprus_dino = workshop.load_cyprus(assets)
     cyprus_features = {
@@ -798,43 +541,21 @@ def notebook(instructor, payload):
         cyprus_scores[name] = model.predict_proba(cyprus_features[name])[:, 1]
         cyprus[f"{name}_score"] = cyprus_scores[name]
     transfer_audit = workshop.transfer_summary(validation.label, validation_scores, cyprus_scores)
-    print("Source-trained scores: these are not calibrated Cyprus probabilities.")
-    display(transfer_audit.round(6))
+    display(transfer_audit.round(3))
     cyprus["score"] = cyprus_scores[selected]
     cyprus = cyprus.sort_values("score", ascending=False, kind="stable").reset_index(drop=True)
     cyprus.insert(0, "rank", range(1, len(cyprus) + 1))
-    display(cyprus[["rank", "tile_id", "kind", "paired_site", "score"]].round(6))
     workshop.contact_sheet(cyprus, cyprus.score.to_numpy(), n=4, show_labels=False,
                            title=f"Cyprus: four highest scores from {selected}")
     ''', "cyprus"), md('''
-    **Read the distribution comparison first.** A shift towards zero or one for the
-    whole Cyprus sample, or disagreement between the two models, calls the transfer
-    assumptions into question. Neither direction establishes presence or absence.
-    The shared preprocessing addresses pixel dimensions; target shape, geographic
-    scale, rendering, land cover and label meaning still differ. Low scores should not
-    be repaired by relabelling catalogue locations as visible positives or by fitting
-    the scaler to these twelve images. A Cyprus model needs suitable local imagery,
-    expert visibility labels and a separate geographic evaluation set.
+    ### 5.2. Compare two pairs
 
-    ### 5.2. Exercise: compare two nearby landscapes
-
-    The next cell places the **catalogued location on the left** and its **nearby unlabelled
-    location on the right**. Allow about five minutes for both pairs and your notes,
-    then six to eight minutes for the calculation in section 5.3.
-
-    1. Run `pair_id = "CY5"`. Compare scores and ranks, then describe one visible difference.
-    2. Change only `pair_id` to `"CY479"` and rerun. Does the same kind of location rank first?
-       If displayed scores are indistinguishable, say so.
-    3. In the notes cell, name the tiles, record an observation and explain what evidence
-       is missing before either ordering can be called a detection error.
-
-    Keep this to two or three sentences for section 6. You do not need to identify remains
-    from these images. Optional lab C retrieves similar Enki training images to
-    investigate what the Cyprus landscapes resemble in feature space.
+    1. Run `pair_id = "CY5"`: catalogue location on the left, unlabelled neighbour on the right.
+    2. Change it to `"CY479"` and rerun. Does the catalogue location rank first in both pairs?
+    3. Record one visible difference and the evidence needed to judge either ordering as an error.
     ''', "cyprus-question"), code('''
     pair_id = "CY5"  # Then change this to "CY479" and rerun.
     pair = cyprus.loc[cyprus["paired_site"].eq(pair_id)].sort_values("kind")
-    display(pair[["rank", "tile_id", "kind", "score"]].round(6))
 
     fig, axes = plt.subplots(1, 2, figsize=(8, 4), layout="constrained")
     for ax, row in zip(axes, pair.itertuples(index=False)):
@@ -845,32 +566,19 @@ def notebook(instructor, payload):
     fig.suptitle(f"{selected}: pair {pair_id}")
     plt.show()
     ''', "cyprus-pair"), md('''
-    **Your comparison:** double-click this Markdown cell and replace this text with
-    your two or three sentences, then run the cell to display your notes. Include tile IDs,
-    a score comparison, one image observation and the evidence needed to judge correctness.
+    **Your notes:** replace this text with two or three sentences naming the tiles,
+    describing an observation and stating what evidence is missing.
     ''' if not instructor else '''
-    **Worked interpretation:** read the current table for `CY5`, then run `CY479`.
-    State which image ranks higher in each pair and quote the current scores.
-    In the `CY5` pair, the catalogued image has larger bright angular patches, while the
-    unlabelled image has winding pale lines through darker terrain; these are observations,
-    not evidence that the classifier used those features.
-    Neither ordering establishes a detection error because we lack independent labels
-    for archaeological features visible in these particular images.
-
-    Compare the two models' distributions above. Scores close to either `0` or `1`
-    are responses of a source-trained classifier, not validated local probabilities.
+    **Worked observation:** `CY5_site` shows bright angular patches; its neighbour has
+    pale winding lines through darker terrain. This describes the images, not the
+    classifier's reasoning. Check the current ranks and repeat for `CY479`; suitable
+    visibility labels are needed before calling either ordering a detection error.
     ''', "cyprus-pair-notes"), md('''
     ### 5.3. Calculate agreement with the Cyprus catalogue
 
-    **Does the model rank catalogued locations ahead of nearby unlabelled locations?**
-    Answer with counts and fractions, using all six pairs. This is a small catalogue
-    agreement exercise; the missing visibility labels still prevent detection accuracy.
-
-    We use a **four-image Cyprus review budget**, separate from Enki's 50 reviews.
-    Run the next cell to see the six pair comparisons and the four-image shortlist.
-    A pair is a **win** when the catalogued image scores higher, a **loss** when the
-    unlabelled image scores higher, and a **tie** when their unrounded scores are equal.
-    A tie gets half credit: a model assigning every image the same score achieves 50%.
+    Use all six pairs and a **four-image shortlist**. A pair is a win if its catalogued
+    image scores higher than its unlabelled neighbour, a loss if lower, and a tie if equal.
+    Run the cell to obtain the counts for the selected model.
     ''', "cyprus-metrics-introduction"), code('''
     CYPRUS_BUDGET = 4
     cyprus_pairs, cyprus_counts = workshop.catalogue_agreement(cyprus, k=CYPRUS_BUDGET)
@@ -889,16 +597,14 @@ def notebook(instructor, payload):
     print(f"Shortlist: {cyprus_hits} catalogued locations in {cyprus_reviewed} reviews; "
           f"{catalogued_total} catalogued locations in the full sample.")
     ''', "cyprus-counts"), md('''
-    **Your calculation:** replace the three `...` expressions below.
+    **Complete three expressions** using the named counts above:
 
-    1. **Pair agreement:** `(wins + half the ties) / number of pairs`.
-    2. **Catalogue fraction in the shortlist:** `catalogued locations retrieved / images reviewed`.
-       This uses the same denominator as precision, but the target is catalogue membership.
-    3. **Catalogue recovery:** `catalogued locations retrieved / all catalogued locations`.
-       This uses the same denominator as recall.
+    1. Pair agreement: `(wins + half the ties) / number of pairs`.
+    2. Catalogue fraction: `catalogued locations retrieved / images reviewed`.
+    3. Catalogue recovery: `catalogued locations retrieved / all catalogued locations`.
 
-    Use the named counts from the previous cell. Convert your fractions to percentages
-    and predict whether they beat random selection before running the supplied check.
+    The last two use the same denominators as precision and recall, with catalogue membership
+    as the target. Run your calculation, then the supplied check.
     ''', "cyprus-calculation-instructions"), code('''
     pair_agreement = ...  # Include half credit for ties.
     catalogue_fraction = ...  # Fraction of reviewed images that are catalogued.
@@ -916,15 +622,9 @@ def notebook(instructor, payload):
     print("Catalogue fraction in shortlist:", catalogue_fraction)
     print("Catalogue recovery:", catalogue_recovery)
     ''', "cyprus-calculation"), md('''
-    **Check and interpret:** the next cell checks your arithmetic and compares both models.
-    Random ordering averages **50% pair agreement**, **50% catalogue fraction** and
-    **4/12 = 33.3% catalogue recovery** at four reviews. These are reference expectations,
-    not guarantees for one draw. The code recalculates them if the budget changes.
-
-    Exact ties use image-ID order for the shortlist. If a tie crosses its cutoff, the
-    output also reports the range of possible catalogue counts from other tie orderings.
-    Do not interpret an arbitrary tie order as evidence of better ranking.
-    ''', "cyprus-check-explanation"), code('''
+    Compare with the printed random references. If scores tie across a shortlist cutoff,
+    the check reports the possible range of catalogue counts under different tie orderings.
+    ''', "cyprus-check-explanation"), supplied('''
     cyprus_metric_rows, cyprus_pair_rows = [], []
     for name in models:
         pairs_for_model, metrics = workshop.catalogue_agreement(
@@ -933,9 +633,13 @@ def notebook(instructor, payload):
         cyprus_pair_rows.append(pairs_for_model.assign(model=name))
     cyprus_metrics = pd.DataFrame(cyprus_metric_rows)
     cyprus_pair_results = pd.concat(cyprus_pair_rows, ignore_index=True)
-    display(cyprus_metrics[["model", "wins", "ties", "losses", "pair_agreement"]].round(3))
-    display(cyprus_metrics[["model", "catalogued_at_k", "reviewed", "catalogued_total",
-        "catalogue_fraction_at_k", "catalogue_recovery_at_k", "cutoff_tie"]].round(3))
+    cyprus_table = pd.DataFrame({"Model": cyprus_metrics.model,
+        "Pairs: win/tie/loss": [f"{row.wins}/{row.ties}/{row.losses}" for row in cyprus_metrics.itertuples()]})
+    for column, title in (("pair_agreement", "Pair agreement"),
+                          ("catalogue_fraction_at_k", "Catalogue fraction"),
+                          ("catalogue_recovery_at_k", "Catalogue recovery")):
+        cyprus_table[title] = cyprus_metrics[column].map(lambda value: f"{value:.1%}")
+    display(cyprus_table)
 
     cyprus_reference = cyprus_metrics.set_index("model").loc[selected]
     print(f"{selected}: pair agreement = ({pair_wins} + 0.5 × {pair_ties})/{pair_count} "
@@ -961,100 +665,45 @@ def notebook(instructor, payload):
     else:
         print("Recheck the counts, denominators and half credit for ties against the reference above.")
     print("Cyprus detection accuracy: unknown; independent image-visibility labels are missing.")
-    ''', "cyprus-metrics-check"), md('''
-    **Record your conclusion:** state the three percentages with their counts and compare
-    them with the random references. Does this support prioritising catalogue locations
-    in this sample? Explain why it does not establish accuracy for visible archaeology.
-    Six selected pairs are few, and nearby chips can overlap; they are not an independent
-    geographic benchmark. Keep one Cyprus calculation for your final recommendation.
+    ''', "cyprus-metrics-check", title='check your Cyprus calculations'), md('''
+    **Conclude:** compare your percentages with random ordering. Keep one calculation for
+    your recommendation and explain why it cannot establish detection accuracy. These six
+    selected pairs, with some overlapping image footprints, are a small sample.
     ''' if not instructor else '''
-    **Worked interpretation:** use the selected model's printed fractions above. Compare
-    pair wins and ties as well as the total: identical agreement percentages can conceal
-    very different numbers of ties. A better-than-random catalogue result supports a
-    limited statement about these sampled locations. It does not validate visible-site
-    detection, because unlabelled neighbours are not verified negatives and catalogue
-    membership does not establish image visibility. Six pairs, with possible overlap
-    between nearby chips, are insufficient for a geographic performance claim.
+    **Worked interpretation:** compare wins and ties as well as agreement percentages.
+    Better catalogue recovery supports a statement about these sampled locations. The
+    six pairs and missing visibility labels cannot establish detection accuracy in Cyprus.
     ''', "cyprus-metrics-discussion")]
 
     cells += [md('''
     ## Optional lab — choose one before section 6
 
-    **Main path:** if time is short, skip this whole block and go to section 6.
-    The four-hour session reserves about 30 minutes here for **one lab or catch-up**,
-    not all the extensions. All three choices use the work already completed.
+    Allow about 30 minutes for **one lab**, or continue to section 6.
 
-    | Choice | Time | Deliverable |
-    |---|---:|---|
-    | A. Project the training features | 25–35 min | Complete three expressions; compare the 2D plots and optionally a 3D view. |
-    | B. Which mistakes does more training data fix? | 25–35 min | Complete a training function, compare three runs and inspect tells entering or leaving the shortlist. |
-    | C. What does Cyprus resemble in the training set? | 25–30 min | Implement image retrieval, inspect matches for two real Cyprus pairs and compare them with classifier scores. |
+    | Lab | Task |
+    |---|---|
+    | A. Feature projection | Complete PCA and compare the feature spaces. |
+    | B. Training data | Fit smaller models and inspect changed mistakes. |
+    | C. Cyprus image search | Retrieve similar Enki images and inspect the matches. |
 
-    Optional code starts disabled so an uncompleted lab does not stop the main path.
-    Complete the chosen lab's function, then enable its supplied experiment:
-    `RUN_PROJECTION`, `RUN_LABEL_EXPERIMENT` or `RUN_CYPRUS_NEIGHBOURS`.
-    Use training/validation evidence only. The original model comparison and the
-    50-image review budget remain the report's reference result.
+    Complete the chosen function, edit its short settings cell, then run the supplied
+    plotting cell. The main model choice and 50-review budget stay fixed.
     ''', "optional-experiments"), md('''
     ### Lab A. See the training features in 2D or 3D
 
-    **Question:** do the two source-label groups occupy different parts of feature space?
-    Allow 25–35 minutes, including interpretation. You have already fitted and compared
-    the classifiers; this lab visualises their inputs without changing them.
+    **Question:** do the label groups occupy different parts of feature space?
+    PCA creates axes that retain as much feature variation as possible. It uses no labels;
+    we add those as plot colours afterwards.
 
-    An image has 68 colour/texture values or 384 DINOv2 values. **Principal component
-    analysis (PCA)** constructs new axes from combinations of these features. PC1 follows
-    the greatest variation; PC2 captures the most remaining variation at right angles
-    to PC1. Keeping two or three components gives each image two or three coordinates.
-    PCA uses feature values, not labels, to choose these directions.
+    Complete three expressions:
 
-    We standardise the **training** features first and fit a separate PCA for each
-    representation. Every dot will be one of the same 200 training images. Colours and
-    shapes add the source labels afterwards; validation and test images are excluded.
+    1. Select `feature_sets[name]["train"]`.
+    2. Standardise it with `scaler.fit_transform(...)`.
+    3. Project it with `pca.fit_transform(...)`.
 
-    **Fill the three `...` expressions below:**
-
-    1. Select the training matrix for `name` from `feature_sets`.
-    2. Use `scaler.fit_transform(...)` to scale that matrix.
-    3. Use `pca.fit_transform(...)` to obtain the projected coordinates.
-
-    The returned `explained_variance_ratio_` describes how much feature variation each
-    axis retains; it is not classification accuracy. See the
-    [PCA reference](https://scikit-learn.org/stable/modules/generated/sklearn.decomposition.PCA.html).
-
-    Run the completed function cell, set `RUN_PROJECTION = True` and run the supplied
-    plotting cell. Begin with `N_COMPONENTS = 2`. Until enabled, plotting prints a reminder.
-    ''' if not instructor else '''
-    ### Lab A. See the training features in 2D or 3D
-
-    **Question:** do the two source-label groups occupy different parts of feature space?
-    Allow 25–35 minutes, including interpretation. You have already fitted and compared
-    the classifiers; this lab visualises their inputs without changing them.
-
-    An image has 68 colour/texture values or 384 DINOv2 values. **Principal component
-    analysis (PCA)** constructs new axes from combinations of these features. PC1 follows
-    the greatest variation; PC2 captures the most remaining variation at right angles
-    to PC1. Keeping two or three components gives each image two or three coordinates.
-    PCA uses feature values, not labels, to choose these directions.
-
-    We standardise the **training** features first and fit a separate PCA for each
-    representation. Every dot will be one of the same 200 training images. Colours and
-    shapes add the source labels afterwards; validation and test images are excluded.
-
-    **Fill the three `...` expressions below:**
-
-    1. Select the training matrix for `name` from `feature_sets`.
-    2. Use `scaler.fit_transform(...)` to scale that matrix.
-    3. Use `pca.fit_transform(...)` to obtain the projected coordinates.
-
-    The returned `explained_variance_ratio_` describes how much feature variation each
-    axis retains; it is not classification accuracy. See the
-    [PCA reference](https://scikit-learn.org/stable/modules/generated/sklearn.decomposition.PCA.html).
-
-    Run the completed function cell, set `RUN_PROJECTION = True` and run the supplied
-    plotting cell. Begin with `N_COMPONENTS = 2`. Until enabled, plotting prints a reminder.
-
-    **Instructor copy:** the function is completed and plotting is enabled below.
+    Run the function cell, set `RUN_PROJECTION = True` below, then run the supplied plot.
+    Start with two components. Each dot is a training image; the reported percentage is
+    feature variance retained, not classification accuracy.
     ''', "projection-instructions"), code('''
     from sklearn.decomposition import PCA
 
@@ -1093,9 +742,9 @@ def notebook(instructor, payload):
     RUN_PROJECTION = {instructor}  # Set True after completing and running the function above.
     N_COMPONENTS = 2         # Start with 2; change to 3 for the extension.
     ELEVATION, AZIMUTH = 20, -60  # Camera angles for the 3D view, in degrees.
-
+    ''', "projection-settings"), supplied(f'''
     if not RUN_PROJECTION:
-        print("Complete the three blanks above, run that cell, then set RUN_PROJECTION = True here.")
+        print("Lab A skipped. Complete the function, then enable RUN_PROJECTION in its settings cell.")
     else:
         if N_COMPONENTS not in (2, 3):
             raise ValueError("Choose N_COMPONENTS = 2 or 3 for this plotting exercise.")
@@ -1133,38 +782,28 @@ def notebook(instructor, payload):
 
         fig.suptitle(f"PCA of {{len(train)}} training images — source labels added for display")
         plt.show()
-    ''', "projection-plot"), md('''
-    **Interpret the plots:** describe one region of overlap or separation and record
-    the retained variance in each panel. Why could a classifier distinguish images that
-    overlap here? Why is separation among training images not validation performance?
+    ''', "projection-plot", title='draw the PCA plots'), md('''
+    **Interpret:** describe overlap or separation and record the retained variance.
+    Could images overlapping in two dimensions be separable using all features?
+    Each panel has its own axes; training separation alone does not measure performance.
 
-    Each panel has its own axes; positions cannot be compared directly between panels.
-    PCA prioritises variation, which need not be the variation that separates the labels.
-    The classifiers still use their full feature vectors.
-
-    **If time permits:** set `N_COMPONENTS = 3`. Does PC3 reveal structure hidden in 2D?
-    Inline views may be static: change `AZIMUTH` from `-60` to `30` and rerun to see another
-    angle. The angle changes apparent overlap, not the underlying data.
-
-    After this lab, continue to section 6. Lab B and lab C are alternatives, not prerequisites.
+    **Extension:** set `N_COMPONENTS = 3`. Change `AZIMUTH` from `-60` to `30` to inspect
+    another angle. Does the third component expose additional structure?
     ''', "projection-discussion"), md('''
     ### Lab B. Which mistakes does more training data fix?
 
-    **Build a small-data model, then inspect what changes when it gets more examples.**
-    Allow 25–35 minutes. You will fit on 20 training images and compare with the
-    existing 200-image model. Both rank the same validation images for **50 reviews**.
+    Fit on **20 training images** and compare with the existing 200-image model.
+    Both rank the same validation images for **50 reviews**.
 
-    **1. Complete the three expressions below.** `rows` contains the positions of the
-    chosen training images. Use:
+    Complete the three selections below. `rows` contains training row positions:
 
-    - `feature_sets[name]["train"]` indexed by `rows` for their features;
-    - `train.label.to_numpy()` indexed by the same `rows` for their labels;
-    - `feature_sets[name]["validation"]` for the images to score afterwards.
+    - Training features: `feature_sets[name]["train"]` indexed by `rows`.
+    - Matching labels: `train.label.to_numpy()` indexed by `rows`.
+    - Prediction inputs: `feature_sets[name]["validation"]`.
 
-    The supplied `clone` creates a fresh pipeline, so its scaler and classifier both
-    learn from the smaller set. Run your function cell, then enable the experiment.
-    Before seeing the result, predict: will the larger model keep every tell found
-    by the smaller one?
+    `clone` creates a fresh pipeline, so both scaling and classification learn from the
+    smaller set. Run your function, then enable the experiment in its settings cell.
+    Predict whether the larger model will retain every previously found tell.
     ''', "label-experiment-instructions"), code('''
     from sklearn.base import clone
 
@@ -1182,12 +821,12 @@ def notebook(instructor, payload):
     '''.replace("X_small = ...", 'X_small = feature_sets[name]["train"][rows]' if instructor else "X_small = ...")
        .replace("y_small = ...", "y_small = train.label.to_numpy()[rows]" if instructor else "y_small = ...")
        .replace("X_validation = ...", 'X_validation = feature_sets[name]["validation"]' if instructor else "X_validation = ..."),
-        "label-experiment-function"), code('''
-    RUN_LABEL_EXPERIMENT = False  # Enable after completing the function above.
+        "label-experiment-function"), code(f'''
+    RUN_LABEL_EXPERIMENT = {instructor}  # Enable after completing the function above.
     B_MODEL = "dinov2"
     B_TRAINING_IMAGES = 20  # Total: half tells, half negatives. Then try 50.
     B_SEED = 0             # Then try 1 with 20 images to change which examples are used.
-
+    ''', "label-experiment-settings"), supplied('''
     if not RUN_LABEL_EXPERIMENT:
         print("Lab B skipped. Complete its function and enable RUN_LABEL_EXPERIMENT to try it.")
     else:
@@ -1239,28 +878,20 @@ def notebook(instructor, payload):
                     ax.set_title(f"{row.tile_id}\\nRank {row.small_rank} → {row.full_rank}", fontsize=9)
                 fig.suptitle(f"{title} · {B_TRAINING_IMAGES} → {len(train)} training images")
                 plt.show()
-    '''.replace("RUN_LABEL_EXPERIMENT = False", f"RUN_LABEL_EXPERIMENT = {instructor}"),
-        "label-experiment-run"), md('''
-    **2. Investigate the changed mistakes.** The galleries show tells entering and
-    leaving the first 50 when training grows to 200 images. Pick one tile, record its
-    ID and two ranks, and describe a visible feature. Does the larger model improve
-    every image, or only the total? Use the entering/leaving counts to explain.
+    ''', "label-experiment-run", title='compare training sets and changed images'), md('''
+    **Investigate:** pick a tell entering or leaving the shortlist. Record its ID, two
+    ranks and a visible feature. Does more training data improve every image or only
+    the total? Use the entering/leaving counts.
 
-    **3. Test whether the conclusion holds.** Rerun with 50 training images and seed 0;
-    then with 20 images and seed 1. The seed changes which training examples are used.
-    Keep the model and 50-review budget fixed. Note whether the total improves and
-    whether the same tells are found.
+    **Rerun:** try 50 training images with seed 0, then 20 with seed 1. The seed changes
+    which examples are selected. Keep hit counts for all three runs and a short conclusion
+    that cites your tile. Does the conclusion hold across runs?
 
-    **Your result:** keep your completed function, the three runs' hit counts, and a
-    short conclusion citing one changed tile. Explain whether more labels consistently
-    helped in your runs. The labels already exist here; a gain on this validation
-    sample cannot tell us the value of collecting labels in a new region.
-
-    **Extension:** repeat with `B_MODEL = "colour_texture"`. Does the representation
-    change your conclusion? Continue to section 6 when finished.
+    **Extension:** try `B_MODEL = "colour_texture"`. These experiments concern this
+    validation sample; new regions need their own evaluation.
     ''', "label-experiment-discussion")]
     if instructor:
-        cells += [code('''
+        cells += [supplied('''
     if RUN_LABEL_EXPERIMENT and b_scores is not None:
         b_worked_rows = []
         b_full_set = set(workshop.ranking_indices(validation_scores[B_MODEL])[:REVIEW_BUDGET])
@@ -1278,27 +909,22 @@ def notebook(instructor, payload):
         display(pd.DataFrame(b_worked_rows))
         print("Compare net gains with the entering and leaving images. Equal hit counts need not mean "
               "the same shortlist; more training data need not improve every image's rank.")
-    ''', "label-experiment-answer")]
+    ''', "label-experiment-answer", title='worked comparison of the three runs')]
 
     cells += [md('''
     ### Lab C. What does Cyprus resemble in the training set?
 
-    **Build an image search and inspect its matches.** Allow 25–30 minutes. For a Cyprus
-    image, retrieve the four Enki training images with the most similar DINOv2 features.
-    Then compare their labels with the classifier's score for that Cyprus image.
+    Retrieve the **four closest Enki training images** for each Cyprus image, then compare
+    their labels with its classifier score.
 
-    **1. Complete two expressions below.** The cached vectors have length one, so their
-    dot product is **cosine similarity**: larger values mean closer directions in
-    feature space. This is a comparison of image features, not a probability.
+    Complete two expressions:
 
-    - Multiply the training matrix by the query vector using `@`. This produces one
-      similarity per training image.
-    - Use `np.argsort` on the negative similarities to put the largest first, then take
-      the first `k` indices with `[:k]`.
+    1. Compute `training_vectors @ query_vector`: one dot product per training image.
+    2. Apply `np.argsort` to the negative similarities, then take `[:k]`.
 
-    Use the original cached DINOv2 vectors. The search does not fit a scaler or use
-    labels to choose neighbours; labels are attached after retrieval. Run your function
-    cell, enable the next cell, and start with pair `CY754`.
+    The cached vectors have length one, so the dot product is cosine similarity. Larger
+    values mean closer feature directions. Labels do not choose the matches.
+    Run your function, enable the supplied search and start with pair `CY754`.
     ''', "cyprus-neighbour-instructions"), code('''
     def nearest_training_indices(query_vector, training_vectors, k=4):
         similarities = ...  # One dot product per training image.
@@ -1310,11 +936,11 @@ def notebook(instructor, payload):
         return indices, similarities[indices]
     '''.replace("similarities = ...", "similarities = training_vectors @ query_vector" if instructor else "similarities = ...")
        .replace("indices = ...", 'indices = np.argsort(-similarities, kind="stable")[:k]' if instructor else "indices = ..."),
-        "cyprus-neighbour-function"), code('''
-    RUN_CYPRUS_NEIGHBOURS = False  # Enable after completing the function above.
-    C_PAIR_IDS = ["CY754"]        # Then try ["CY479"].
+        "cyprus-neighbour-function"), code(f'''
+    RUN_CYPRUS_NEIGHBOURS = {instructor}  # Enable after completing the function above.
+    C_PAIR_IDS = {["CY754", "CY479"] if instructor else ["CY754"]}  # Pair IDs to investigate.
     C_NEIGHBOURS = 4
-
+    ''', "cyprus-neighbour-settings"), supplied('''
     if not RUN_CYPRUS_NEIGHBOURS:
         print("Lab C skipped. Complete its search function and enable RUN_CYPRUS_NEIGHBOURS to try it.")
     else:
@@ -1354,53 +980,32 @@ def notebook(instructor, payload):
             c_neighbour_summary = pd.DataFrame(c_summary_rows)
             display(c_neighbour_summary.round(3))
             print("Neighbour labels describe Enki images. They are not visibility labels for the Cyprus query.")
-    '''.replace("RUN_CYPRUS_NEIGHBOURS = False", f"RUN_CYPRUS_NEIGHBOURS = {instructor}")
-       .replace('C_PAIR_IDS = ["CY754"]        # Then try ["CY479"].',
-                'C_PAIR_IDS = ["CY754", "CY479"]  # Worked results for both pairs.' if instructor
-                else 'C_PAIR_IDS = ["CY754"]        # Then try ["CY479"].'),
-        "cyprus-neighbour-run"), md('''
-    **2. Inspect the matches.** Each row starts with a Cyprus image, followed by its
-    nearest Enki training images. Choose one match: record both IDs, one visible
-    resemblance and one difference. Uncertainty about a feature is a valid observation.
+    ''', "cyprus-neighbour-run", title='show the Cyprus image matches'), md('''
+    **Inspect:** name a Cyprus query and an Enki match. Describe a visible resemblance
+    and difference. Do the neighbours' labels agree with a high or low classifier score?
+    Logistic regression uses learned weights on scaled features; this search compares
+    vector directions, so agreement is not guaranteed.
 
-    For each Cyprus image, how many neighbours are tell-labelled? Does their majority
-    agree with a high or low classifier score? Explain any mismatch: the logistic
-    classifier learns weights on scaled features; this search compares vector directions.
-    It is not a nearest-neighbour vote or an explanation of which features caused a score.
-
-    **3. Try another landscape.** Change `C_PAIR_IDS` to `["CY479"]` and rerun. Does the
-    same resemblance recur? Use a named image to support your answer.
-
-    **Your result:** keep your search function and a short comparison of the two pairs,
-    including one image match. State what independent evidence would be needed to
-    decide whether archaeology is visible in a Cyprus tile. Similar-looking Enki images
-    do not supply those labels. Continue to section 6 when finished.
+    **Rerun:** change `C_PAIR_IDS` to `["CY479"]`. Keep a short comparison of the two pairs
+    with one named image match. What independent evidence would establish whether a Cyprus
+    tile contains visible archaeology? Its neighbours' Enki labels cannot supply that answer.
     ''' if not instructor else '''
-    **Worked interpretation:** in the default `CY754` pair, the site-centred image has
-    a high classifier score but only one tell-labelled neighbour among four; the nearby
-    unlabelled image has a low score but four tell-labelled neighbours. Read the actual
-    values above. In `CY479`, both images have one tell-labelled neighbour among four
-    despite different classifier scores. The two methods use the features differently,
-    so a neighbour majority need not reproduce logistic regression.
+    **Worked interpretation:** `CY754_site` scores highly with one tell-labelled neighbour;
+    its nearby query scores low with four. Both `CY479` queries have one tell-labelled
+    neighbour despite different scores. The methods weight features differently.
 
-    Ask participants to name a query and a retrieved image, describe a visible resemblance
-    and difference, then test their observation on `CY479`. Do not infer a classifier
-    explanation or a detection error from the neighbour labels. Expert visibility labels
-    on suitable Cyprus imagery are still needed to judge either image. The search makes
-    the training examples available for inspection; it does not validate transfer.
+    Ask for a named image resemblance and difference. Similarity neither explains the
+    classifier's score nor supplies Cyprus visibility labels.
     ''', "cyprus-neighbour-discussion")]
 
 
     cells += [md('''
     ## 6. Recommend, save and check
 
-    Finish any optional lab, then complete these three steps.
-
     ### 6.1. Write a five-sentence recommendation
 
-    Run this cell to collect your evidence. It uses the original review budgets and
-    the Cyprus catalogue results from section 5.3.
-    ''', "report-introduction"), code('''
+    Run the evidence summary, then write your paragraph below.
+    ''', "report-introduction"), supplied('''
     report_validation = results.loc[results.model.eq(selected)].iloc[0]
     report_cyprus = cyprus_metrics.loc[cyprus_metrics.model.eq(selected)].iloc[0]
     print(f"Selected model: {selected}")
@@ -1416,17 +1021,17 @@ def notebook(instructor, payload):
               f"{report_cyprus.min_catalogued_at_k / report_cyprus.catalogued_total:.1%} to "
               f"{report_cyprus.max_catalogued_at_k / report_cyprus.catalogued_total:.1%} "
               "depending on how tied scores are ordered.")
-    ''', "report-evidence"), md('''
-    Write **one paragraph of five sentences** between the triple quotes below:
+    ''', "report-evidence", title='collect evidence for the recommendation'), md('''
+    Write **five sentences** between the triple quotes:
 
-    1. **Decide:** “I recommend [model] for [a specific use]…” Further evaluation or no deployment are valid choices.
-    2. **Support:** report the Enki hit count, reviews, available positives, precision and recall shown above.
-    3. **Observe:** name one tile from section 4 or 5 and describe a visible feature without claiming it caused the score.
-    4. **Qualify:** report Cyprus catalogue recovery and explain why it does not measure detection accuracy.
-    5. **Act:** name the next evidence to collect—suitable local imagery, expert visibility labels and separate assessment locations.
+    1. **Decide:** name the model, proposed use and scope. Further evaluation or no deployment are valid choices.
+    2. **Support:** cite Enki hits, reviews, available positives, precision and recall.
+    3. **Observe:** name one tile and describe a visible feature.
+    4. **Qualify:** report Cyprus catalogue recovery and its detection-accuracy limitation.
+    5. **Act:** identify the next local imagery, expert labels and independent assessment needed.
 
-    Reuse your notes. Read the paragraph to a partner, or reread it yourself: does the
-    evidence support the proposed use? Revise once if needed, then save it.
+    Reuse your notes. Read the paragraph to a partner, or reread it yourself, and revise
+    any claim that goes beyond the evidence.
     ''', "report-prompts"), code('''
     # Write five sentences using the evidence and prompts above.
     recommendation = """
@@ -1456,7 +1061,7 @@ def notebook(instructor, payload):
 
     A blank paragraph produces a draft. Finish it and rerun export before sharing;
     rerun export after any further edits too.
-    ''', "export-introduction"), code('''
+    ''', "export-introduction"), supplied('''
     test_scores = models[selected].predict_proba(feature_sets[selected]["test"])[:, 1]
     submission = workshop.write_submission(test, test_scores, ROOT / "submission.csv")
     bundle = workshop.export_results(ROOT, results, cyprus, recommendation, configuration={
@@ -1476,10 +1081,11 @@ def notebook(instructor, payload):
     submitted_validation["positives"] = int(validation.label.sum())
     display(FileLink(str(bundle)))
     print("Download the ZIP using this link or Colab's Files panel; also save your notebook.")
-    ''', "export"), md('''
+    ''', "export", title='save the submission ZIP'), md('''
     ### 6.3. Check the saved choice on Enki test images
 
-    After sharing, set `REVEAL_TEST = True` and run the cell. Compare validation and
+    After sharing, set `REVEAL_TEST = True`, run the settings cell, then run the
+    supplied comparison below. Compare validation and
     test results at the same review budget, then complete the one-sentence debrief.
     Keep your original recommendation. This check uses the same Enki source; it does
     not test a new region. Stop model selection after this reveal.
@@ -1490,8 +1096,9 @@ def notebook(instructor, payload):
     the participant copy starts with `REVEAL_TEST = False`. Compare validation and
     test at the saved budget, then discuss the debrief. Keep the original recommendation
     and finish model selection; Cyprus detection accuracy remains unmeasured.
-    ''', "reveal-introduction"), code('''
-    REVEAL_TEST = False  # Enable after sharing the ZIP and notebook.
+    ''', "reveal-introduction"), code(f'''
+    REVEAL_TEST = {instructor}  # Enable after sharing the ZIP and notebook.
+    ''', "reveal-settings"), supplied('''
     if REVEAL_TEST:
         final_result = workshop.score_submission(submission, test, workshop.ranking_metrics, submitted_budget)
         final_result["positives"] = int(test.label.sum())
@@ -1505,7 +1112,7 @@ def notebook(instructor, payload):
         print(f"Random selection on test: expected recall {min(submitted_budget, len(test)) / len(test):.1%}.")
     else:
         print("Test labels remain unused. Finish and share your recommendation before the reveal.")
-    '''.replace("REVEAL_TEST = False", f"REVEAL_TEST = {instructor}"), "reveal"), md('''
+    ''', "reveal", title='compare validation and test'), md('''
     **Debrief — complete one sentence here:** the test [supports / weakens] my
     recommendation because ..., while ... still needs to be tested.
 
@@ -1519,113 +1126,16 @@ def notebook(instructor, payload):
     their reflection in the notebook alongside the original recommendation.
     ''', "debrief-notes")]
 
-    if instructor:
-        cells += [md('''
-    ### Instructor discussion notes
-
-    - **Shortlist example:** this is arithmetic on supplied labels, not an image-review
-      task. No images are displayed or judged here; the list is unrelated to the earlier
-      training-image grid. At `k=2`, select `[1, 1]`: precision is 2/2 (100%) and recall
-      is 2/3 (about 67%). At `k=4`, select `[1, 1, 0, 1]`: they are 3/4 (75%) and
-      3/3 (100%). The extra entries are `0` and `1`, so recall rises while precision
-      falls. The denominators refer to the selection size and the total positive count.
-    - **Model comparison:** distinguish feature extraction from classifier fitting. The
-      colour/texture vector has 68 measurements; the cached DINOv2 vector has 384 values.
-      Each gets a separately fitted scaler and logistic regression using the same training
-      images and labels. DINOv2 stays frozen. Validation labels enter the evaluation after
-      prediction, not the classifier fit. Test results must not choose the representation.
-    - **Optional lab A:** complete the participant function with the training matrix,
-      `scaler.fit_transform(X)`, then `pca.fit_transform(X_scaled)`. Fit on training
-      features only; labels supply plot colours, not PCA directions. Compare both
-      representations in 2D and optionally 3D, including the variance retained.
-      PCA axes differ between panels, and overlap can hide separation in omitted
-      dimensions. Visual separation is not validation performance. The classifiers
-      still use their full feature vectors; the projection is only for exploration.
-    - **Optional lab B:** participants complete the small-training function, then compare
-      20/50 images and two choices of examples against the 200-image model. All use the
-      same validation pool and 50 reviews. Inspect both recovered and newly missed tells:
-      a net gain can hide regressions, and equal hit counts can hide different shortlists.
-      Clone the pipeline so the scaler also learns only from the selected training rows.
-    - **Optional lab C:** participants implement cosine retrieval on unit-length DINOv2
-      vectors and inspect Enki neighbours of two Cyprus pairs. Keep the query ID aligned
-      with its vector. Neighbour labels need not agree with logistic regression, which
-      weights scaled features. Resemblance neither explains the score nor labels Cyprus.
-    - **Short exercise:** precision is `hits / reviewed`; recall is
-      `hits / total_positives`. Have learners calculate these from the ranking before
-      displaying the comparison table, then check against its colour/texture row.
-    - **Model choice:** use the actual counts printed in section 3. Higher recall at 50
-      wins; AP describes the full ranking and breaks a recall tie. Equal hits mean neither
-      shortlist finds more positives at this budget. The name breaks an exact metric tie
-      without establishing a superior model. Compare against expected random recall and
-      the budget ceiling. A strong baseline can reflect useful information or shortcuts;
-      performance alone cannot tell us which.
-    - **Mistakes:** use the displayed ranks to explain inclusion at the review budget.
-      Zero false alarms can coexist with missed positives; do not invent an empty group's
-      examples. Ask for a tile ID and a visible observation before accepting an explanation.
-      The sample recommendation cites the displayed Cyprus pair.
-    - **Resolution audit:** the original image sizes predict labels surprisingly well.
-      Both models now use a common 64 × 64 input; the DINO cache was regenerated.
-      Compare within-size AP with positive fraction. This is a diagnostic of remaining
-      acquisition bias, not a geographic evaluation or proof that all shortcuts vanished.
-    - **Budget experiment:** read the actual added positives, negatives and remaining
-      misses after increasing the budget from 50 to 60. Find the last positive's rank
-      for the optional all-positives question. This
-      experiment does not change `REVIEW_BUDGET` or the reported model comparison.
-    - **Cyprus pairs:** participants change one pair ID, from `CY5` to `CY479`, and compare
-      the two landscapes. Use the current scores to describe the order. Ask for IDs and an observation,
-      then the missing image-visibility labels. Neither ordering establishes an error.
-      Compare both models' score distributions; extremes do not establish archaeological presence.
-      For the extension, sample across scores and regions, retain uncertain judgements,
-      and reserve separate locations for assessment. Catalogue absence is not a negative label.
-    - **Cyprus calculation:** section 5.3 has three arithmetic blanks: pair agreement
-      with half credit for ties, catalogue fraction in a four-image shortlist, and
-      catalogue recovery. The instructor code supplies all three expressions; the next
-      cell checks them and displays both models' results and random references. A tie
-      at the shortlist cutoff is flagged with the range of possible catalogue counts.
-      Interpret these as catalogue agreement, keeping detection accuracy unknown.
-    - **Recommendation:** use five prompts: decision, measured evidence, image observation,
-      limitation and next study. Accept a recommendation against deployment. Keep the
-      original 50-image comparison distinct from the larger-budget experiment. The sample
-      report uses five sentences and the evidence summary directly above the writing cell.
-      Lab C can supply an additional image comparison and a question for local experts.
-    - **Export and debrief:** the ZIP records the current run; rerunning export replaces it.
-      Share the recommendation before the reveal. The test cell scores the saved ranking
-      against Enki source labels, not Cyprus labels. Discuss the comparison with validation
-      and random ordering without selecting again on test performance. Neither a strong
-      nor a weak test result resolves the missing geographic or Cyprus evidence.
-
-    Choose only one optional lab at the block before section 6, or use that time for
-    catch-up. The instructor copy shows the plots and worked image investigations. Model
-    extraction and live imagery acquisition belong in preparation, outside class.
-    ''', "instructor-notes")]
-
     cells += [md('''
-    ### Data and credits
+    ### Sources
 
-    - **Enki:** [Rosati (2025)](https://zenodo.org/records/14950565), a curated 600-image sample
-      from `Normalized_Tell_combined_350.zip` (whole-archive MD5 `1d4ea398ea5669f9bca4539416847206`).
-      Member CRCs and decoded-pixel hashes verify the partial download. Five RGB positive
-      categories are used; masked and black-and-white folders are excluded.
-      The source declares CC BY-SA 4.0 and separate Google/Bing imagery conditions; retain its notices.
-    - **Cyprus catalogue:** [Crawford & Vella (2022)](https://doi.org/10.5334/joad.96), CC BY 4.0;
-      [source revision](https://github.com/K-A-Crawford/Cyprus_Settlements/tree/70a5c3d399a2451e1d8dd5eb947eb80055276b44).
-      There are 8,766 occupation rows and 1,559 settlement IDs.
-    - **Image features:** [DINOv2](https://github.com/facebookresearch/dinov2),
-      `facebook/dinov2-small`, revision `ed25f3a31f01632728cabb09d1542f84ab7b0056`.
-      Enki and Cyprus use full-frame bicubic resizing to 64 × 64 before DINO's 224 × 224
-      input, ImageNet normalization and L2 normalization. Both caches bind image IDs to
-      decoded-pixel hashes, pinned weights and the preprocessing version.
-    - **Cyprus imagery:** modified Copernicus Sentinel data (2024), via
-      [Microsoft Planetary Computer](https://planetarycomputer.microsoft.com/dataset/sentinel-2-l2a).
-      Scene `S2A_MSIL2A_20240805T082601_R021_T36SVD_20240805T144559`.
-      The [Sentinel-2 band specifications](https://documentation.dataspace.copernicus.eu/APIs/SentinelHub/Data/S2L2A.html)
-      give 10 m sampling for the visible bands used here.
-      Nearby centres are 2 km east and at least 750 m from catalogue points; chips have at least
-      90% clear-land pixels. Acquisition details are in `assets/cyprus/provenance.json`.
+    - **Enki:** [Rosati (2025)](https://zenodo.org/records/14950565). CC BY-SA 4.0 with separate Google/Bing imagery conditions; retain the source notices.
+    - **Cyprus catalogue:** [Crawford & Vella (2022)](https://doi.org/10.5334/joad.96), CC BY 4.0.
+    - **Features:** [DINOv2](https://github.com/facebookresearch/dinov2).
+    - **Cyprus imagery:** modified Copernicus Sentinel data (2024), via [Microsoft Planetary Computer](https://planetarycomputer.microsoft.com/dataset/sentinel-2-l2a).
 
-    **If a download fails:** use the facilitator's sample ZIP at the path given at the start;
-    do not rename the full source archive to that filename. After restarting the kernel, rerun
-    from the top. In Colab, download your outputs before the runtime ends.
+    Versions, acquisition details and troubleshooting are in the
+    [workshop README](https://github.com/DLR-MF-DAS/hackathEOn/blob/main/archaeology-challenge/README.md).
     ''', "credits")]
     nb = nbf.v4.new_notebook(cells=cells, metadata={
         "kernelspec": {"display_name": "Python 3 (ipykernel)", "language": "python", "name": "python3"},

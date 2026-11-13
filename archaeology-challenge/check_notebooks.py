@@ -286,7 +286,9 @@ class ScientificChecks(unittest.TestCase):
     def test_small_training_exercise_fits_only_selected_rows_on_a_clone(self):
         participant = {c.id: c for c in builder.notebook(False, "").cells}
         instructor = {c.id: c for c in builder.notebook(True, "").cells}
-        exec(participant["label-experiment-run"].source, {"print": Mock()})
+        disabled = {"print": Mock()}
+        exec(participant["label-experiment-settings"].source, disabled)
+        exec(participant["label-experiment-run"].source, disabled)
         unfilled = {}
         exec(participant["label-experiment-function"].source, unfilled)
         self.assertIsNone(unfilled["small_training_scores"]("dinov2", [1, 3]))
@@ -312,7 +314,9 @@ class ScientificChecks(unittest.TestCase):
     def test_neighbour_exercise_ranks_original_vectors_and_handles_ties(self):
         participant = {c.id: c for c in builder.notebook(False, "").cells}
         instructor = {c.id: c for c in builder.notebook(True, "").cells}
-        exec(participant["cyprus-neighbour-run"].source, {"print": Mock()})
+        disabled = {"print": Mock()}
+        exec(participant["cyprus-neighbour-settings"].source, disabled)
+        exec(participant["cyprus-neighbour-run"].source, disabled)
         query = np.array([0., 1.])
         vectors = np.array([[1., 0.], [0., 1.], [-1., 0.], [.6, .8], [.6, .8]])
         unfilled = {"np": np}
@@ -328,10 +332,12 @@ class ScientificChecks(unittest.TestCase):
         np.testing.assert_array_equal(vectors[3], [.6, .8])
 
     def test_test_reveal_uses_exported_choice_and_budget(self):
-        source = next(cell.source for cell in builder.notebook(False, "").cells
-                      if cell.id == "reveal")
+        cells = {cell.id: cell for cell in builder.notebook(False, "").cells}
+        source, settings = cells["reveal"].source, cells["reveal-settings"].source
         # The disabled participant cell must run without any test data in scope.
-        exec(source, {"print": Mock()})
+        disabled = {"print": Mock()}
+        exec(settings, disabled)
+        exec(source, disabled)
         truth = pd.DataFrame({"tile_id": list("abcdef"), "label": [1, 1, 0, 1, 0, 0]})
         submission = pd.DataFrame({"tile_id": list("abcdef"), "score": [.8, .6, .7, .9, .4, .1]})
         saved_validation = {"hits": 1, "reviewed": 2, "positives": 3,
@@ -343,7 +349,8 @@ class ScientificChecks(unittest.TestCase):
                   submitted_validation=saved_validation.copy(),
                   selected="colour_texture", REVIEW_BUDGET=5,
                   display=Mock(), print=Mock())
-        exec(source.replace("REVEAL_TEST = False", "REVEAL_TEST = True"), ns)
+        exec(settings.replace("REVEAL_TEST = False", "REVEAL_TEST = True"), ns)
+        exec(source, ns)
         self.assertEqual(helper.score_submission.call_args.args[-1], 2)
         self.assertEqual(ns["comparison"].loc["Test", "reviewed"], 2)
         self.assertEqual(ns["comparison"].loc["Test", "hits"], 2)
@@ -373,7 +380,7 @@ class ScientificChecks(unittest.TestCase):
                 if cell.cell_type == "code":
                     ast.parse(cell.source)
             if not instructor:
-                reveal = next(c for c in nb.cells if c.id == "reveal")
+                reveal = next(c for c in nb.cells if c.id == "reveal-settings")
                 self.assertIn("REVEAL_TEST = False", reveal.source)
                 by_id = {cell.id: cell for cell in nb.cells}
                 order = [cell.id for cell in nb.cells]
@@ -385,9 +392,16 @@ class ScientificChecks(unittest.TestCase):
                 for identifier in ("projection-exercise", "label-experiment-function", "cyprus-neighbour-function"):
                     self.assertLess(order.index("optional-experiments"), order.index(identifier))
                     self.assertLess(order.index(identifier), order.index("report-introduction"))
-                self.assertIn("RUN_PROJECTION = False", by_id["projection-plot"].source)
-                self.assertIn("RUN_LABEL_EXPERIMENT = False", by_id["label-experiment-run"].source)
-                self.assertIn("RUN_CYPRUS_NEIGHBOURS = False", by_id["cyprus-neighbour-run"].source)
+                self.assertIn("RUN_PROJECTION = False", by_id["projection-settings"].source)
+                self.assertIn("RUN_LABEL_EXPERIMENT = False", by_id["label-experiment-settings"].source)
+                self.assertIn("RUN_CYPRUS_NEIGHBOURS = False", by_id["cyprus-neighbour-settings"].source)
+                for settings, runner in (("projection-settings", "projection-plot"),
+                                         ("label-experiment-settings", "label-experiment-run"),
+                                         ("cyprus-neighbour-settings", "cyprus-neighbour-run"),
+                                         ("reveal-settings", "reveal")):
+                    self.assertLess(order.index(settings), order.index(runner))
+                    self.assertFalse(by_id[settings].metadata.get("jupyter", {}).get("source_hidden", False))
+                    self.assertTrue(by_id[runner].metadata["jupyter"]["source_hidden"])
                 self.assertLess(order.index("label-experiment-function"), order.index("label-experiment-run"))
                 self.assertLess(order.index("label-experiment-run"), order.index("label-experiment-discussion"))
                 self.assertLess(order.index("cyprus-neighbour-function"), order.index("cyprus-neighbour-run"))
