@@ -1,41 +1,66 @@
-Validation completed on real data, 11 November 2026.
+Validation completed on real data, 13 November 2026.
 
-Instructor: all 10 code cells executed, including the final holdout evaluation.
-Participant: all 10 code cells executed in an isolated working directory with
-its recommendation left blank and test reveal disabled. The draft export warns
-that the recommendation must be completed before sharing. The executed participant
-copy is under .work/participant_validation.ipynb; the distributed copy has no outputs.
+Instructor: all 21 code cells executed, including both optional computational labs
+and the final test evaluation. Participant: all 21 code cells executed in an
+isolated working directory; optional labs and test reveal remain disabled and the
+recommendation remains blank. Its draft export requests completion before sharing.
+The executed participant copy is .work/participant_validation.ipynb; the distributed
+participant notebook has no saved outputs. There are 52 participant cells and 54
+instructor cells, retaining the six-section workshop and choice of optional lab.
 
-Eight automated checks passed: metric denominators and stable ties; invalid inputs;
-submission ID alignment and duplicate rejection; conflicting similarity families;
-catalogue coordinate/quality conflicts; both model paths in the Cyprus notebook
-cell; complete exports; notebook schema, Python syntax and agreement with the builder.
+Twelve automated checks passed: shared image preprocessing; rejection of stale,
+misaligned, nonfinite or pixel-mismatched caches (including edited Cyprus images);
+training-only size probe and single-class strata; transfer score summaries without
+target labels; metric denominators and ties; invalid inputs; submission alignment;
+contradictory image families; catalogue conflicts; both model paths in Cyprus;
+complete exports; notebook schema, Python syntax and agreement with the builder.
 
-The notebooks now have six main sections. The participant notebook has 25 cells
-(previously 58), 10 code cells (previously 29), and 90 visible lines of code
-(previously 344). Infrastructure is one folded setup cell. The instructor has 27 cells.
-The model search is now a direct comparison at fixed C=1, followed by one written
-recommendation. Model selection, shortlist inspection, Cyprus scoring and export
-use the same selected classifier.
+The source-size audit found 300 retained tells at 350 x 350, 249 negatives at
+64 x 64 and 44 negatives at 350 x 350. Both feature branches and both regions now
+use a common full-frame bicubic 64 x 64 RGB input. DINO enlarges that input to
+224 x 224 before ImageNet normalization and frozen CLS/L2 feature extraction.
+The pinned DINOv2-small revision is unchanged. A size-only reference learned on
+training metadata achieves 92.4% validation accuracy; the notebooks expose it and
+report validation AP within each original size. Common resizing reduces a known
+detail shortcut, but does not match geographic scale or remove all acquisition bias.
 
-The existing 600-image ZIP was checked and reused; 593 image families remained
-after the similarity audit. The split contains 200 training, 119 validation and
-119 test tiles. All 18 original bundled data files are unchanged byte-for-byte.
-The pinned catalogue audit still yields 8,766 occupation rows and 1,559 IDs;
-CY453 has conflicting coordinates and retains no summary point.
+Both feature caches were genuinely recomputed for all 600 Enki and 12 Cyprus images
+using the pinned weights. Image IDs are unchanged and embedding L2 norms are one
+within floating-point precision. The 256 original 64-pixel images have bit-identical
+embeddings to the old cache, providing a control for the encoder/preprocessing update.
+Only the two feature caches and helper source changed inside the notebook bundle;
+the image chips, catalogue, sample manifest and acquisition provenance are unchanged.
+Both caches now bind features to IDs, decoded-pixel hashes and preprocessing version.
+prepare_workshop.py rebuilds them from the committed bundle without private prep files.
 
-Measured at a review budget of 50, DINOv2 finds 50 validation positives (recall
-0.833, precision 1.0) versus 40 for colour/texture (recall 0.667, precision 0.8).
-There are 60 validation positives, so 0.833 is the maximum possible recall at this
-budget; the notebook displays that ceiling. The selected model finds 49 test
-positives (recall 0.817, precision 0.98). These are results for this teaching split,
-not estimates for independent sites or new regions.
+The existing 600-image ZIP was verified and reused. Similarity filtering still
+retains 593 images; training has 200, validation 119 and test 119. At 50 reviews:
+  DINOv2 validation: 47 hits, precision 0.940, recall 0.783, AP 0.956.
+  Colour/texture validation: 40 hits, precision 0.800, recall 0.667, AP 0.864.
+  Selected DINOv2 test: 48 hits, precision 0.960, recall 0.800, AP 0.961.
+The validation recall ceiling remains 50/60 = 0.833. Within the native 350-pixel
+validation subset (60 tells, nine negatives), AP is 0.996 for DINOv2 and 0.960 for
+colour/texture, against a positive fraction of 0.870. Native 64-pixel validation
+images are all negative, so within-stratum AP is undefined. These are results for
+the existing teaching split, not a fresh geographic or site-independent benchmark.
 
-Saved training, shortlist and Cyprus figures were visually inspected. The Cyprus
-sample remains an interpretation exercise without image-visibility ground truth.
-The exported ZIP contains submission.csv, configuration.json, validation_results.csv,
-cyprus_review.csv and recommendation.md. Source notices and provenance are retained.
+DINOv2 Cyprus scores now span 0.029189 to 0.974996 with median 0.786875; the old
+median was 0.040930. Colour/texture scores still saturate near one. Higher scores
+do not establish better archaeological detection: the twelve chips have no expert
+image-visibility labels and nearby unlabelled locations are not verified absences.
+Both models' score distributions are shown against Enki validation, and the notes
+explain the remaining target, scale, rendering and annotation differences.
 
-Execution used local Python 3.13.18 and Jupyter kernels with cached features on CPU.
-No hosted Colab run, fresh network download, model extraction or live Sentinel-2
-refresh was performed during this revision.
+Saved Cyprus, pair-comparison, mistake and learning-curve figures were visually
+inspected. Both exports contain submission.csv, configuration.json,
+validation_results.csv, cyprus_review.csv, recommendation.md, data_audit.json,
+validation_diagnostics.csv and transfer_diagnostics.csv. Configuration records
+common input size, preprocessing and the absence of Cyprus calibration/labels.
+The instructor's recommendation uses current metrics and a displayed Cyprus image;
+stale score/rank examples have been removed from the generated text and guide.
+
+Execution used Python 3.13.18, the locked dependencies and Jupyter kernels. Feature
+re-extraction used torch 2.15.0 and transformers 4.57.6 on MPS; notebook execution
+uses cached features on CPU and needs no model download. The pinned weights were
+downloaded for preparation. No hosted Colab execution or live Sentinel refresh was
+performed. Local personal *-Copy notebooks remain historical snapshots.

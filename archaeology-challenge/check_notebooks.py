@@ -23,11 +23,91 @@ from nbclient import NotebookClient
 from jupyter_client import KernelManager
 import numpy as np
 import pandas as pd
+from PIL import Image
 from archaeology_challenge import runtime
 import build_notebooks as builder
 
 
 class ScientificChecks(unittest.TestCase):
+    def test_feature_branches_use_the_same_common_grid(self):
+        with tempfile.TemporaryDirectory() as folder:
+            root = Path(folder)
+            rng = np.random.default_rng(42)
+            for size in (64, 100, 350):
+                raw, common = root / f"raw{size}.png", root / f"common{size}.png"
+                Image.fromarray(rng.integers(0, 256, (size, size, 3), dtype=np.uint8)).save(raw)
+                source_hash = runtime.image_pixel_digest(raw)
+                runtime.image_input(raw).save(common)
+                self.assertEqual(Image.open(common).size, (64, 64))
+                np.testing.assert_array_equal(runtime.dino_input(raw), runtime.dino_input(common))
+                features = runtime.handcrafted_features([raw, common])
+                np.testing.assert_array_equal(features[0], features[1])
+                self.assertEqual(runtime.image_pixel_digest(raw), source_hash)
+
+    def test_feature_caches_reject_stale_tampered_and_misaligned_data(self):
+        with tempfile.TemporaryDirectory() as folder:
+            root = Path(folder)
+            paths = [root / "a.png", root / "b.png"]
+            for path, colour in zip(paths, ("red", "blue")):
+                Image.new("RGB", (100, 100), colour).save(path)
+            frame = pd.DataFrame({"tile_id": ["a", "b"], "path": list(map(str, paths)),
+                                  "pixel_sha256": [runtime.image_pixel_digest(p) for p in paths]})
+            vectors = np.eye(2, 384, dtype=np.float32)
+            cache_path = root / "embeddings.npz"
+            runtime.save_embedding_cache(frame, cache_path, vectors)
+            np.testing.assert_array_equal(runtime.load_embedding_cache(frame.iloc[::-1], cache_path),
+                                          vectors[::-1])
+            with np.load(cache_path) as data:
+                valid = {key: data[key].copy() for key in data.files}
+            corruptions = [
+                {"preprocessing": "old-full-resolution-input"},
+                {"pixel_sha256": np.array(["changed", "changed"])},
+                {"tile_ids": np.array(["a", "a"])},
+                {"embeddings": np.full((2, 384), np.nan)},
+                {"embeddings": np.zeros((2, 383))},
+                {"tile_ids": np.array(["missing", "b"])},
+                {"revision": "different-weights"},
+            ]
+            for change in corruptions:
+                with self.subTest(change=list(change)):
+                    np.savez_compressed(cache_path, **{**valid, **change})
+                    with self.assertRaises(ValueError):
+                        runtime.load_embedding_cache(frame, cache_path)
+            cy_dir = root / "cyprus"
+            cy_dir.mkdir()
+            cy_frame = frame.assign(filename=[p.name for p in paths])
+            for path in paths:
+                shutil.copy2(path, cy_dir / path.name)
+            cy_frame[["tile_id", "filename"]].to_csv(cy_dir / "manifest.csv", index=False)
+            np.savez_compressed(cy_dir / "embeddings.npz", **valid)
+            runtime.load_cyprus(root)
+            Image.new("RGB", (100, 100), "green").save(cy_dir / "a.png")
+            with self.assertRaisesRegex(ValueError, "Image/cache mismatch"):
+                runtime.load_cyprus(root)
+
+    def test_size_probe_uses_training_labels_and_strata_keep_class_counts(self):
+        train = pd.DataFrame({"width": [64, 64, 350, 350], "height": [64, 64, 350, 350],
+                              "label": [0, 0, 1, 1]})
+        validation = pd.DataFrame({"width": [64, 350, 350], "height": [64, 350, 350],
+                                   "label": [0, 0, 1]})
+        expected = [0, 1, 1]
+        np.testing.assert_array_equal(runtime.source_size_scores(train, validation), expected)
+        np.testing.assert_array_equal(runtime.source_size_scores(train, validation.assign(label=1)), expected)
+        unseen = pd.DataFrame({"width": [100], "height": [100]})
+        np.testing.assert_array_equal(runtime.source_size_scores(train, unseen), [.5])
+        diagnostic = runtime.validation_diagnostics(train, validation, {"model": [.1, .2, .9]}, k=1)
+        strata = diagnostic.set_index("subset")
+        self.assertTrue(np.isnan(strata.loc["native_64x64", "AP"]))
+        self.assertEqual(strata.loc["native_350x350", "AP"], 1)
+        self.assertEqual(strata.loc["native_350x350", "positive_fraction"], .5)
+
+    def test_transfer_summary_never_uses_catalogue_membership_as_labels(self):
+        table = runtime.transfer_summary([0, 1], {"a": [.2, .8]}, {"a": [.01, .02, .03]})
+        target = table.loc[table.group.eq("Cyprus (unlabelled)")].iloc[0]
+        self.assertEqual(target["images"], 3)
+        self.assertEqual(target["median"], .02)
+        self.assertNotIn("AP", table.columns)
+
     def test_ranking_denominators_and_empty_positives(self):
         actual = runtime.ranking_metrics([1, 0, 1, 0], [.9, .8, .7, .1], 2)
         self.assertEqual(actual["hits"], 1)
@@ -91,17 +171,22 @@ class ScientificChecks(unittest.TestCase):
         for selected in matrices:
             with self.subTest(selected=selected):
                 models = {name: Mock() for name in matrices}
-                models[selected].predict_proba.return_value = np.array([[.8, .2], [.1, .9]])
+                for model in models.values():
+                    model.predict_proba.return_value = np.array([[.8, .2], [.1, .9]])
                 helper = SimpleNamespace(
                     load_cyprus=lambda assets: (frame.copy(), matrices["dinov2"]),
                     handcrafted_features=lambda paths: matrices["colour_texture"],
                     contact_sheet=Mock(),
+                    transfer_summary=runtime.transfer_summary,
                 )
                 ns = dict(workshop=helper, assets=Path("unused"), models=models,
-                          selected=selected, display=lambda value: None)
+                          selected=selected, display=lambda value: None,
+                          validation=pd.DataFrame({"label": [0, 1]}),
+                          validation_scores={name: np.array([.1, .9]) for name in matrices})
                 exec(source, ns)
-                np.testing.assert_array_equal(models[selected].predict_proba.call_args.args[0], matrices[selected])
-                models[next(name for name in matrices if name != selected)].predict_proba.assert_not_called()
+                for name in matrices:
+                    np.testing.assert_array_equal(models[name].predict_proba.call_args.args[0], matrices[name])
+                    self.assertIn(f"{name}_score", ns["cyprus"].columns)
                 self.assertEqual(ns["cyprus"].tile_id.tolist(), ["background", "site"])
 
     def test_exports_are_complete_and_preserve_the_recommendation(self):
@@ -112,14 +197,19 @@ class ScientificChecks(unittest.TestCase):
             result = pd.DataFrame({"model": ["colour_texture"], "recall_at_k": [.5]})
             cyprus = pd.DataFrame({"tile_id": ["site"], "path": ["/local/image.png"], "score": [.2]})
             path = runtime.export_results(root, result, cyprus, "Inspect before deployment.",
-                                          {"selected_model": "colour_texture", "review_budget": 50})
+                                          {"selected_model": "colour_texture", "review_budget": 50},
+                                          data_audit={"native_size_counts": []},
+                                          validation_audit=result, transfer_audit=result)
             with zipfile.ZipFile(path) as bundle:
                 self.assertEqual(set(bundle.namelist()), {"submission.csv", "configuration.json",
-                                 "validation_results.csv", "cyprus_review.csv", "recommendation.md"})
+                                 "validation_results.csv", "cyprus_review.csv", "recommendation.md",
+                                 "data_audit.json", "validation_diagnostics.csv", "transfer_diagnostics.csv"})
                 self.assertEqual(bundle.read("recommendation.md").decode(), "Inspect before deployment.\n")
                 config = json.loads(bundle.read("configuration.json"))
                 self.assertIsNone(config["encoder"])
                 self.assertFalse(config["geographic_independence_verified"])
+                self.assertEqual(config["common_image_size"], 64)
+                self.assertFalse(config["cyprus_scores_calibrated"])
                 self.assertNotIn("/local/", bundle.read("cyprus_review.csv").decode())
 
     def test_generated_notebooks_match_source_and_bundle(self):
@@ -127,6 +217,12 @@ class ScientificChecks(unittest.TestCase):
         with zipfile.ZipFile(io.BytesIO(base64.b64decode(payload))) as bundle:
             self.assertEqual(bundle.read("workshop_helpers.py"),
                              (HERE / "src/archaeology_challenge/runtime.py").read_bytes())
+            for name in ("enki_embeddings.npz", "cyprus/embeddings.npz"):
+                with np.load(io.BytesIO(bundle.read(name))) as cache:
+                    self.assertEqual(str(cache["preprocessing"]), runtime.PREPROCESS_ID)
+                    self.assertEqual(str(cache["revision"]), runtime.MODEL_REVISION)
+                    self.assertEqual(cache["pixel_sha256"].shape, cache["tile_ids"].shape)
+                    self.assertTrue(np.isfinite(cache["embeddings"]).all())
         for instructor, filename in ((False, "archaeology_participants.ipynb"),
                                      (True, "archaeology_instructor.ipynb")):
             nb = nbformat.read(HERE / filename, as_version=4)

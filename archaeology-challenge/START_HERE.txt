@@ -34,6 +34,11 @@ training archive or 12 GB test archive is needed.
 Both notebooks use the cached features on CPU. Model extraction and live imagery
 acquisition are preparation utilities, outside the notebooks' main path.
 
+Both representations start from the same 64 x 64 RGB input, including Cyprus.
+DINO then enlarges this input to 224 x 224; both frozen caches were regenerated.
+Old caches and changed image pixels are rejected. Restart the kernel and rerun
+setup after updating a notebook; personal *-Copy notebooks remain snapshots.
+
 FOR A WORKSHOP WITH UNRELIABLE INTERNET
 
 If your facilitator provides a prepared enki_workshop_sample.zip, upload it to the archaeology_workshop/ directory in the Colab Files panel
@@ -46,7 +51,7 @@ KEEP THE INSTRUCTOR NOTEBOOK PRIVATE UNTIL THE DEBRIEF
 
 CORE PATH AND TIME
 
-Allow about 3 hours 25–30 minutes for the core path, including discussion, a short
+Allow about 3½ hours for the core path, including discussion, a short
 break and routine setup support. The four-hour schedule leaves about 30 minutes for
 one optional lab or catch-up. This is an estimate for basic Python/pandas users;
 slow downloads or unfamiliar software can add time. The calculation and checkpoints
@@ -87,10 +92,23 @@ archive does not provide verified site identities or geographic grouping. The
 holdout is therefore not a geographic-generalisation benchmark or a secure blind
 competition. Source labels remain recoverable from the public archive.
 
+The retained sample has 300 tell images at 350 x 350; negatives include 249 at
+64 x 64 and 44 at 350 x 350. The original dimensions alone predict validation
+labels well. Common 64-pixel preprocessing reduces this detail shortcut; it does
+not match metres per pixel or eliminate all source/acquisition differences.
+Section 3 reports a training-derived size-only baseline and validation AP within
+each original size, alongside the positive fraction. Single-class strata have
+undefined AP. The evidence ZIP now also includes data_audit.json,
+validation_diagnostics.csv and transfer_diagnostics.csv.
+
 Cyprus chips are 1 km windows at 10 m/pixel from 5 August 2024. They support an
 interpretation and domain-shift exercise, not archaeological visibility ground
 truth. Nearby background locations are unlabelled, not confirmed absences. The
 notebooks explicitly avoid reporting detection accuracy for this sample.
+Section 5 compares both models' score ranges with Enki validation. A whole-sample
+shift to low or high scores cannot establish local archaeological absence or
+presence. The necessary next step is representative local imagery, expert labels
+for visible target features, and separate geographic assessment locations.
 
 EDITING AND VALIDATION
 

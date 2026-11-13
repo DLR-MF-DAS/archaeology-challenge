@@ -232,6 +232,14 @@ def notebook(instructor, payload):
     The 100-per-class limit applies only to training. Labels for validation and test are
     reserved for their respective evaluations.
 
+    **Image-size confound:** all 300 retained tell images are originally 350 × 350;
+    249 of the 293 negatives are 64 × 64. File size and sharpness can therefore reveal
+    the source label. Both feature pipelines now first resize every image to the same
+    **64 × 64 grid**; DINO then enlarges this common input to its required 224 × 224.
+    Section 3 measures the original size shortcut and checks performance within each
+    original size. This reduces a known shortcut, but does not equalise metres per pixel,
+    image rendering or all acquisition differences. Cyprus uses the same preprocessing.
+
     **Limit of the split:** filtering similar images does not identify every repeated
     site or neighbouring landscape. The sample lacks verified site or region groups, so
     we cannot establish geographic independence. Keep that limitation for the final
@@ -252,6 +260,13 @@ def notebook(instructor, payload):
     train, validation, test = (splits[name] for name in ("train", "validation", "test"))
     print(f"{audit['raw_images']} images → {len(images)} after filtering.")
     display(pd.Series({name: len(part) for name, part in splits.items()}, name="tiles").to_frame())
+    size_counts = images.groupby(["label", "width", "height"]).size().rename("images").reset_index()
+    print("Original dimensions by source label (0 = negative, 1 = tell):")
+    display(size_counts)
+    audit["native_size_counts"] = size_counts.to_dict("records")
+    audit["image_preprocessing"] = workshop.IMAGE_PREPROCESS_ID
+    print(f"Both feature pipelines use the same {workshop.COMMON_IMAGE_SIZE} × "
+          f"{workshop.COMMON_IMAGE_SIZE} input grid. Preview below shows the original images.")
     workshop.contact_sheet(train.sample(12, random_state=42), title="Training images: 1 = tell, 0 = negative")
     ''', "images"), md('''
     **Warm-up: compare one pair from the 12 training images above.** Their captions use
@@ -261,10 +276,10 @@ def notebook(instructor, payload):
     such as a rounded patch, vegetation or blurred edges. Could it help distinguish
     tell form, or could it reflect how the images were collected?
 
-    For example, **if** tell-labelled images were usually sharper, a classifier could
-    use sharpness without recognising a mound. This would be a possible *shortcut*:
-    a pattern that helps with these labels but may fail elsewhere. It is a hypothesis,
-    not a finding from this preview. Discuss briefly, then continue; no site identification
+    The size table establishes an acquisition difference associated with the labels.
+    A classifier could use the resulting sharpness or texture as a *shortcut* instead
+    of recognising a mound. The table does not establish which cues a fitted model uses.
+    Discuss briefly, then continue; no site identification
     or written report is required here.
     ''', "image-question")]
 
@@ -359,6 +374,10 @@ def notebook(instructor, payload):
     Enki labels. Its vectors have already been computed and bundled in
     `enki_embeddings.npz`, so this notebook loads them without running or training the
     neural network. No GPU is needed for this path.
+
+    Both branches start with the same 64 × 64 RGB image. The DINO cache was rebuilt
+    after this correction; the loader rejects old preprocessing versions and changed
+    image pixels. The displayed original images can contain detail the model never sees.
 
     Both representations will feed the **same kind of classifier: logistic regression**.
     We train a separate classifier for each. The comparison is therefore simple image
@@ -598,6 +617,31 @@ def notebook(instructor, payload):
     print(f"Selected model: {int(winner['hits'])} source positives in the shortlist, "
           f"{validation_positives - int(winner['hits'])} outside it.")
     ''', "validation-benchmarks"), md('''
+    ### 3.6. Check the acquisition shortcut
+
+    A deliberately limited reference predicts labels using **only original width and
+    height**. It learns the positive fraction for each size from the training set, then
+    scores validation images. It never examines pixels. Its accuracy measures how much
+    the source collection process reveals about the labels; it is not a candidate model.
+
+    The second table evaluates the image models within each original size. The
+    350 × 350 subset contains both labels, so original dimensions alone cannot separate
+    them there. Compare its AP with its positive fraction, the usual no-skill reference:
+    this subset contains many more positives than negatives. AP is left undefined for
+    the 64 × 64 subset because it has only negatives. Small subsets remain uncertain.
+
+    Common resizing reduces the resolution shortcut but cannot prove it removed all
+    acquisition cues. These diagnostics use validation only; test remains reserved.
+    ''', "resolution-audit-explanation"), code('''
+    validation_audit = workshop.validation_diagnostics(
+        train, validation, validation_scores, k=REVIEW_BUDGET)
+    size_probe = validation_audit.loc[validation_audit.model.eq("source_size_only")]
+    print("Original-size-only reference (learned on training metadata):")
+    display(size_probe[["model", "images", "accuracy", "precision_at_k", "recall_at_k", "AP"]].round(3))
+    print("Image models after common preprocessing, grouped by original dimensions:")
+    display(validation_audit.loc[validation_audit.model.ne("source_size_only"),
+        ["model", "subset", "images", "positives", "positive_fraction", "AP"]].round(3))
+    ''', "resolution-audit"), md('''
     **Checkpoint:** explain the selected model's result to a partner using its hit count,
     review budget and total positive count. Compare recall with random selection and the
     budget ceiling. If the hit counts tie, say what decided the choice.
@@ -709,6 +753,8 @@ def notebook(instructor, payload):
     **what happens when that fitted model receives images from another setting?**
     Applying a model elsewhere is called *transfer*. The selected classifier and its
     training scaler are reused unchanged; this cell does not fit a new Cyprus model.
+    We compare both models' score distributions with Enki validation to expose changes
+    in their behaviour. The selected model still determines the review order.
 
     ### 5.1. Understand the new images and records
 
@@ -716,6 +762,8 @@ def notebook(instructor, payload):
     a 1 km square at 10 m per pixel: a 100 × 100 pixel image. Enlarging the display does
     not add detail. Small features may be difficult to distinguish, and a catalogued
     settlement need not have the mound form associated with Enki's tell images.
+    The common 64 × 64 model input is coarser still: about 15.6 m per input pixel here.
+    Matching pixel dimensions does not match the geographic scale of the Enki crops.
 
     There are six pairs. Each pair contains an image centred on a catalogued settlement
     and one centred 2 km to its east, away from catalogue points. `paired_site` identifies
@@ -731,7 +779,8 @@ def notebook(instructor, payload):
     occupation rows can refer to one settlement. We therefore cannot calculate Cyprus
     precision or recall by treating catalogue membership as `1` and its absence as `0`.
 
-    Run the next cell. It scores all 12 images, prints their ranking and shows the first
+    Run the next cell. It scores all 12 images with both models, compares their score
+    ranges with Enki validation, then ranks by the selected model and shows the first
     four. The score is the model's response learned from Enki; it has not been validated
     as a probability of archaeology in Cyprus. Rank 1 means first among these 12 images.
     Sorting uses unrounded scores, even when displayed values look equal. Use this view
@@ -742,13 +791,29 @@ def notebook(instructor, payload):
         "colour_texture": workshop.handcrafted_features(cyprus.path),
         "dinov2": cyprus_dino,
     }
-    cyprus["score"] = models[selected].predict_proba(cyprus_features[selected])[:, 1]
+    cyprus_scores = {}
+    for name, model in models.items():
+        cyprus_scores[name] = model.predict_proba(cyprus_features[name])[:, 1]
+        cyprus[f"{name}_score"] = cyprus_scores[name]
+    transfer_audit = workshop.transfer_summary(validation.label, validation_scores, cyprus_scores)
+    print("Source-trained scores: these are not calibrated Cyprus probabilities.")
+    display(transfer_audit.round(6))
+    cyprus["score"] = cyprus_scores[selected]
     cyprus = cyprus.sort_values("score", ascending=False, kind="stable").reset_index(drop=True)
     cyprus.insert(0, "rank", range(1, len(cyprus) + 1))
     display(cyprus[["rank", "tile_id", "kind", "paired_site", "score"]].round(6))
     workshop.contact_sheet(cyprus, cyprus.score.to_numpy(), n=4, show_labels=False,
                            title=f"Cyprus: four highest scores from {selected}")
     ''', "cyprus"), md('''
+    **Read the distribution comparison first.** A shift towards zero or one for the
+    whole Cyprus sample, or disagreement between the two models, calls the transfer
+    assumptions into question. Neither direction establishes presence or absence.
+    The shared preprocessing addresses pixel dimensions; target shape, geographic
+    scale, rendering, land cover and label meaning still differ. Low scores should not
+    be repaired by relabelling catalogue locations as visible positives or by fitting
+    the scaler to these twelve images. A Cyprus model needs suitable local imagery,
+    expert visibility labels and a separate geographic evaluation set.
+
     ### 5.2. Exercise: compare two nearby landscapes
 
     The next cell places the **catalogued location on the left** and its **nearby unlabelled
@@ -781,18 +846,16 @@ def notebook(instructor, payload):
     your two or three sentences, then run the cell to display your notes. Include tile IDs,
     a score comparison, one image observation and the evidence needed to judge correctness.
     ''' if not instructor else '''
-    **Worked comparison — default DINOv2 run:** `CY5_background` scores `0.232614`,
-    above `CY5_site` at `0.004146`; for `CY479`, the catalogued image scores higher
-    (`0.214828` versus `0.014940` for its unlabelled neighbour).
+    **Worked interpretation:** read the current table for `CY5`, then run `CY479`.
+    State which image ranks higher in each pair and quote the current scores.
     In the `CY5` pair, the catalogued image has larger bright angular patches, while the
     unlabelled image has winding pale lines through darker terrain; these are observations,
     not evidence that the classifier used those features.
     Neither ordering establishes a detection error because we lack independent labels
     for archaeological features visible in these particular images.
 
-    Use the actual outputs if you changed the model or training settings. Try `CY479` in
-    the cell above to inspect the second pair. The colour/texture model can produce scores
-    very close to `1` for both images; that does not establish archaeological presence.
+    Compare the two models' distributions above. Scores close to either `0` or `1`
+    are responses of a source-trained classifier, not validated local probabilities.
     ''', "cyprus-pair-notes")]
 
     cells += [md('''
@@ -1175,11 +1238,12 @@ def notebook(instructor, payload):
         f"On this validation sample it finds {int(winner.hits)} of {int(validation.label.sum())} "
         f"source positives in {int(winner.reviewed)} reviews "
         f"(recall {winner.recall_at_k:.3f}, precision {winner.precision_at_k:.3f}). "
-        "Validation tile 8bf27fc6264ea16a shows a small tree-covered patch between fields; "
+        "Cyprus tile CY5_site shows bright angular patches in the displayed image; "
         "that observation does not establish which cues the classifier used. "
         "Cyprus accuracy remains unknown because catalogue membership is not an image-visibility "
         "label and the other locations are unlabelled. "
-        "The Enki split also does not establish performance at geographically independent sites. "
+        "Common 64-pixel preprocessing reduces the source-size shortcut, but acquisition "
+        "differences and geographic independence remain unresolved. "
         "Before field deployment, evaluate representative local imagery with expert visibility "
         "labels and a geographic holdout, using imagery appropriate to the size of the features sought."
     )
@@ -1197,6 +1261,9 @@ def notebook(instructor, payload):
     | `configuration.json` | The selected model, settings, sample information and review budget. |
     | `validation_results.csv` | The two models' validation results used for selection. |
     | `cyprus_review.csv` | Cyprus scores and location metadata, not measured detection outcomes. |
+    | `data_audit.json` | Duplicate audit, original size/label counts and common preprocessing. |
+    | `validation_diagnostics.csv` | Size-only reference and validation AP within original dimensions. |
+    | `transfer_diagnostics.csv` | Both models' score distributions on Enki validation and Cyprus. |
     | `recommendation.md` | Your written recommendation. |
 
     This records the current run; it does not lock the notebook or save a fitted model
@@ -1213,7 +1280,7 @@ def notebook(instructor, payload):
         "class_weight": "balanced", "scaler": "StandardScaler",
         "training_tiles": len(train), "test_tiles": len(test),
         "sample_manifest_sha256": workshop.file_digest(assets / "sample_manifest.json"),
-    })
+    }, data_audit=audit, validation_audit=validation_audit, transfer_audit=transfer_audit)
     display(submission.head())
     display(FileLink(str(bundle)))
     print("Saved:", bundle, "— in Colab, download it from the Files panel.")
@@ -1301,17 +1368,19 @@ def notebook(instructor, payload):
     - **Mistakes:** use the displayed ranks to explain inclusion at the review budget.
       Zero false alarms can coexist with missed positives; do not invent an empty group's
       examples. Ask for a tile ID and a visible observation before accepting an explanation.
-      The sample recommendation cites an image in the supplied missed-positive gallery.
-    - **Budget experiment:** for the default DINOv2 run, increasing the budget from 50
-      to 60 recovers 7 positives and adds 3 source negatives; 3 positives remain outside.
-      The last positive is at rank 64, so 64 reviews recover all 60 positives: 14 more
-      reviews than the original budget. Use current ranks if settings change. This
+      The sample recommendation cites the displayed Cyprus pair.
+    - **Resolution audit:** the original image sizes predict labels surprisingly well.
+      Both models now use a common 64 × 64 input; the DINO cache was regenerated.
+      Compare within-size AP with positive fraction. This is a diagnostic of remaining
+      acquisition bias, not a geographic evaluation or proof that all shortcuts vanished.
+    - **Budget experiment:** read the actual added positives, negatives and remaining
+      misses after increasing the budget from 50 to 60. Find the last positive's rank
+      for the optional all-positives question. This
       experiment does not change `REVIEW_BUDGET` or the reported model comparison.
     - **Cyprus pairs:** participants change one pair ID, from `CY5` to `CY479`, and compare
-      the two landscapes. In the default DINOv2 run, the unlabelled `CY5` tile scores
-      higher; the catalogued `CY479` tile scores higher. Ask for IDs and an observation,
+      the two landscapes. Use the current scores to describe the order. Ask for IDs and an observation,
       then the missing image-visibility labels. Neither ordering establishes an error.
-      Scores near 1 from the colour/texture model do not establish archaeological presence.
+      Compare both models' score distributions; extremes do not establish archaeological presence.
       For the extension, sample across scores and regions, retain uncertain judgements,
       and reserve separate locations for assessment. Catalogue absence is not a negative label.
     - **Recommendation:** use five prompts: decision, measured evidence, image observation,
@@ -1343,7 +1412,9 @@ def notebook(instructor, payload):
       There are 8,766 occupation rows and 1,559 settlement IDs.
     - **Image features:** [DINOv2](https://github.com/facebookresearch/dinov2),
       `facebook/dinov2-small`, revision `ed25f3a31f01632728cabb09d1542f84ab7b0056`.
-      Enki and Cyprus use the same full-frame preprocessing, recorded in each feature cache.
+      Enki and Cyprus use full-frame bicubic resizing to 64 × 64 before DINO's 224 × 224
+      input, ImageNet normalization and L2 normalization. Both caches bind image IDs to
+      decoded-pixel hashes, pinned weights and the preprocessing version.
     - **Cyprus imagery:** modified Copernicus Sentinel data (2024), via
       [Microsoft Planetary Computer](https://planetarycomputer.microsoft.com/dataset/sentinel-2-l2a).
       Scene `S2A_MSIL2A_20240805T082601_R021_T36SVD_20240805T144559`.

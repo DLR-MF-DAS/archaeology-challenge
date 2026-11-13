@@ -28,7 +28,9 @@ CYPRUS_REVISION = "70a5c3d399a2451e1d8dd5eb947eb80055276b44"
 CYPRUS_URL = f"https://raw.githubusercontent.com/K-A-Crawford/Cyprus_Settlements/{CYPRUS_REVISION}/Cyprus_Settlements.csv"
 MODEL_ID = "facebook/dinov2-small"
 MODEL_REVISION = "ed25f3a31f01632728cabb09d1542f84ab7b0056"
-PREPROCESS_ID = "rgb-full-frame-bicubic-224-imagenet-mean-std-cls-l2-v1"
+COMMON_IMAGE_SIZE = 64
+IMAGE_PREPROCESS_ID = "rgb-full-frame-bicubic-64-v2"
+PREPROCESS_ID = IMAGE_PREPROCESS_ID + "-bicubic-224-imagenet-mean-std-cls-l2"
 CYPRUS_ITEM = "S2A_MSIL2A_20240805T082601_R021_T36SVD_20240805T144559"
 ROOT = Path(os.environ.get("ARCHAEOLOGY_WORKSHOP_ROOT", "archaeology_workshop"))
 
@@ -39,6 +41,36 @@ def file_digest(path, algorithm="sha256"):
         for block in iter(lambda: stream.read(1024 * 1024), b""):
             h.update(block)
     return h.hexdigest()
+
+
+def pixel_digest(image):
+    """Hash decoded RGB pixels, including dimensions, independently of the file encoding."""
+    rgb = image.convert("RGB")
+    return hashlib.sha256(str(rgb.size).encode() + rgb.tobytes()).hexdigest()
+
+
+def image_pixel_digest(path):
+    with Image.open(path) as image:
+        return pixel_digest(image)
+
+
+def image_input(path):
+    """Common pixel grid for both feature branches and both regions.
+
+    Downsample before DINO's required upsampling so native 350px positives cannot
+    retain detail unavailable in the 64px negatives. This does not match ground
+    sampling distance or remove every acquisition/appearance confound.
+    """
+    with Image.open(path) as image:
+        return image.convert("RGB").resize(
+            (COMMON_IMAGE_SIZE, COMMON_IMAGE_SIZE), Image.Resampling.BICUBIC,
+        )
+
+
+def dino_input(path):
+    """Enlarge the shared low-resolution input; do not bypass it for large originals."""
+    return np.asarray(image_input(path).resize((224, 224), Image.Resampling.BICUBIC),
+                      dtype=np.float32).copy() / 255
 
 
 def download(url, destination, md5=None):
@@ -163,9 +195,10 @@ def index_enki(archive, image_dir):
             target = image_dir / f"{tile_id}.png"
             with Image.open(io.BytesIO(source.read(name))) as original:
                 rgb = original.convert("RGB")
-                pixel_hash = hashlib.sha256(str(rgb.size).encode() + rgb.tobytes()).hexdigest()
+                pixel_hash = pixel_digest(rgb)
                 phash = str(imagehash.phash(rgb))
-                if not target.exists():
+                # Recover from stale or locally edited extracted images, not just a missing file.
+                if not target.exists() or image_pixel_digest(target) != pixel_hash:
                     rgb.save(target)
                 width, height = rgb.size
             rows.append(dict(tile_id=tile_id, member=name, path=str(target), label=label,
@@ -253,8 +286,7 @@ def handcrafted_features(paths):
     """Colour distributions, global moments and simple gradient histograms (no pretrained network)."""
     features = []
     for path in tqdm(paths, desc="Colour and texture features"):
-        with Image.open(path) as im:
-            rgb = np.asarray(im.convert("RGB").resize((64, 64)), dtype=np.float32) / 255
+        rgb = np.asarray(image_input(path), dtype=np.float32) / 255
         colour = np.concatenate([np.histogram(rgb[:, :, c], bins=16, range=(0, 1), density=False)[0]
                                  / (64 * 64) for c in range(3)])
         grey = rgb.mean(axis=2)
@@ -269,7 +301,7 @@ def handcrafted_features(paths):
 
 
 def extract_dino(paths, local_model=None, batch_size=16):
-    """Frozen CLS embeddings, full-frame resize to 224x224, ImageNet normalisation, L2 normalisation.
+    """Frozen CLS embeddings, shared 64px input then 224px, ImageNet and L2 normalisation.
 
     Model weights and preprocessing are pinned. The same function is used for Enki and Cyprus.
     Imports are lazy so the bundled embedding path also works without torch/transformers.
@@ -295,9 +327,7 @@ def extract_dino(paths, local_model=None, batch_size=16):
         for start in tqdm(range(0, len(paths), batch_size), desc=f"DINOv2 ({device})"):
             batch = []
             for path in paths[start:start + batch_size]:
-                with Image.open(path) as im:
-                    arr = np.asarray(im.convert("RGB").resize((224, 224), Image.Resampling.BICUBIC),
-                                     dtype=np.float32).copy() / 255
+                arr = dino_input(path)
                 batch.append((torch.from_numpy(arr).permute(2, 0, 1) - mean) / std)
             tensor = torch.stack(batch).to(device)
             feature = model(pixel_values=tensor).last_hidden_state[:, 0]
@@ -307,16 +337,85 @@ def extract_dino(paths, local_model=None, batch_size=16):
     return np.concatenate(vectors).astype(np.float32)
 
 
+def save_embedding_cache(frame, cache_path, embeddings):
+    """Write the same versioned, pixel-bound cache format for Enki and Cyprus."""
+    vectors = np.asarray(embeddings, dtype=np.float32)
+    if not frame.tile_id.is_unique or vectors.shape != (len(frame), 384) or not np.isfinite(vectors).all():
+        raise ValueError("Expected unique image IDs and one finite 384-dimensional vector per image.")
+    hashes = [image_pixel_digest(path) for path in frame.path]
+    np.savez_compressed(cache_path, tile_ids=frame.tile_id.to_numpy(dtype=str),
+                        pixel_sha256=np.asarray(hashes), embeddings=vectors,
+                        model_id=MODEL_ID, revision=MODEL_REVISION, preprocessing=PREPROCESS_ID)
+
+
 def load_embedding_cache(frame, cache_path):
     with np.load(cache_path, allow_pickle=False) as cache:
-        assert str(cache["model_id"]) == MODEL_ID
-        assert str(cache["revision"]) == MODEL_REVISION
-        assert str(cache["preprocessing"]) == PREPROCESS_ID
-        positions = {str(k): i for i, k in enumerate(cache["tile_ids"])}
-        indices = [positions[k] for k in frame.tile_id]
+        required = {"model_id", "revision", "preprocessing", "tile_ids", "pixel_sha256", "embeddings"}
+        if not required.issubset(cache.files) or any(
+            str(cache[key]) != value for key, value in (
+                ("model_id", MODEL_ID), ("revision", MODEL_REVISION), ("preprocessing", PREPROCESS_ID))
+        ):
+            raise ValueError("Stale feature cache: rebuild both regions with prepare_workshop.py.")
+        ids = cache["tile_ids"].astype(str)
+        vectors = cache["embeddings"]
+        if (not frame.tile_id.is_unique or len(set(ids)) != len(ids)
+                or vectors.shape != (len(ids), 384) or cache["pixel_sha256"].shape != (len(ids),)
+                or not np.isfinite(vectors).all()):
+            raise ValueError("Invalid feature cache: duplicate IDs, invalid dimensions or nonfinite vectors.")
+        positions = {key: i for i, key in enumerate(ids)}
+        if not set(frame.tile_id).issubset(positions):
+            raise ValueError("Feature cache is missing image IDs.")
+        indices = [positions[key] for key in frame.tile_id]
         expected = cache["pixel_sha256"][indices].astype(str)
-        assert np.array_equal(expected, frame.pixel_sha256.to_numpy()), "Image/cache mismatch."
-        return cache["embeddings"][indices].astype(np.float32)
+        if not np.array_equal(expected, frame.pixel_sha256.to_numpy()):
+            raise ValueError("Image/cache mismatch: pixels changed; rebuild the features.")
+        return vectors[indices].astype(np.float32)
+
+
+def source_size_scores(train, frame):
+    """Metadata-only confound probe; learn size/label associations on training rows only."""
+    frequencies = train.groupby(["width", "height"]).label.mean()
+    prior = float(train.label.mean())
+    return np.asarray([frequencies.get((row.width, row.height), prior)
+                       for row in frame.itertuples()], dtype=float)
+
+
+def validation_diagnostics(train, validation, scores, k=50):
+    """Expose the size shortcut and evaluate each image model within native-size strata.
+
+    AP is undefined for single-class strata. Positive fraction is the no-skill
+    population reference for AP, not an exact finite-sample expected random AP.
+    """
+    probe = source_size_scores(train, validation)
+    rows = [dict(model="source_size_only", subset="all", images=len(validation),
+                 positives=int(validation.label.sum()), positive_fraction=float(validation.label.mean()),
+                 accuracy=float(((probe >= .5) == validation.label).mean()),
+                 **ranking_metrics(validation.label, probe, k))]
+    for name, values in scores.items():
+        for (width, height), indices in validation.groupby(["width", "height"]).indices.items():
+            labels = validation.iloc[indices].label.to_numpy()
+            both_classes = len(np.unique(labels)) == 2
+            rows.append(dict(model=name, subset=f"native_{width}x{height}", images=len(labels),
+                             positives=int(labels.sum()), positive_fraction=float(labels.mean()),
+                             AP=float(average_precision_score(labels, np.asarray(values)[indices]))
+                             if both_classes else float("nan")))
+    return pd.DataFrame(rows)
+
+
+def transfer_summary(validation_labels, validation_scores, target_scores):
+    """Describe score distributions without assigning target labels or claiming calibration."""
+    rows = []
+    labels = np.asarray(validation_labels)
+    for name, values in validation_scores.items():
+        for group, scores in (
+            ("Enki validation negatives", np.asarray(values)[labels == 0]),
+            ("Enki validation tells", np.asarray(values)[labels == 1]),
+            ("Cyprus (unlabelled)", np.asarray(target_scores[name])),
+        ):
+            rows.append(dict(model=name, group=group, images=len(scores),
+                             minimum=float(np.min(scores)), median=float(np.median(scores)),
+                             maximum=float(np.max(scores))))
+    return pd.DataFrame(rows)
 
 
 def partition_features(frame, features, splits):
@@ -379,17 +478,13 @@ def load_cyprus(assets):
     directory = Path(assets) / "cyprus"
     frame = pd.read_csv(directory / "manifest.csv")
     frame["path"] = [str(directory / name) for name in frame.filename]
-    with np.load(directory / "embeddings.npz", allow_pickle=False) as cache:
-        if not (np.array_equal(cache["tile_ids"], frame.tile_id.to_numpy())
-                and str(cache["model_id"]) == MODEL_ID
-                and str(cache["revision"]) == MODEL_REVISION
-                and str(cache["preprocessing"]) == PREPROCESS_ID):
-            raise ValueError("Cyprus features do not match the manifest or pinned model.")
-        vectors = cache["embeddings"].copy()
+    frame["pixel_sha256"] = [image_pixel_digest(path) for path in frame.path]
+    vectors = load_embedding_cache(frame, directory / "embeddings.npz")
     return frame, vectors
 
 
-def export_results(root, validation_results, cyprus, recommendation, configuration):
+def export_results(root, validation_results, cyprus, recommendation, configuration,
+                   data_audit=None, validation_audit=None, transfer_audit=None):
     """Package the ranked submission, evidence and one plain-text recommendation."""
     root = Path(root)
     configuration = {
@@ -400,16 +495,29 @@ def export_results(root, validation_results, cyprus, recommendation, configurati
         "encoder": MODEL_ID if configuration["selected_model"] == "dinov2" else None,
         "encoder_revision": MODEL_REVISION if configuration["selected_model"] == "dinov2" else None,
         "preprocessing": PREPROCESS_ID if configuration["selected_model"] == "dinov2" else None,
+        "image_preprocessing": IMAGE_PREPROCESS_ID,
+        "common_image_size": COMMON_IMAGE_SIZE,
+        "cyprus_scores_calibrated": False,
+        "cyprus_image_visibility_labels_available": False,
     }
     validation_results.to_csv(root / "validation_results.csv", index=False)
     cyprus.drop(columns=["path"], errors="ignore").to_csv(root / "cyprus_review.csv", index=False)
     (root / "configuration.json").write_text(json.dumps(configuration, indent=2), encoding="utf-8")
     report = recommendation.strip() or "Recommendation not yet written."
     (root / "recommendation.md").write_text(report + "\n", encoding="utf-8")
+    names = ["submission.csv", "configuration.json", "validation_results.csv",
+             "cyprus_review.csv", "recommendation.md"]
+    if data_audit is not None:
+        (root / "data_audit.json").write_text(json.dumps(data_audit, indent=2), encoding="utf-8")
+        names.append("data_audit.json")
+    for name, frame in (("validation_diagnostics.csv", validation_audit),
+                        ("transfer_diagnostics.csv", transfer_audit)):
+        if frame is not None:
+            frame.to_csv(root / name, index=False)
+            names.append(name)
     bundle = root / "team_submission.zip"
     with zipfile.ZipFile(bundle, "w", zipfile.ZIP_DEFLATED) as output:
-        for name in ("submission.csv", "configuration.json", "validation_results.csv",
-                     "cyprus_review.csv", "recommendation.md"):
+        for name in names:
             output.write(root / name, name)
     if not recommendation.strip():
         print("Draft saved. Write your recommendation and rerun the export cell before sharing.")
@@ -521,9 +629,8 @@ def make_cyprus_bundle(phases, output_dir, local_model=None):
         raise RuntimeError(f"Expected six usable pairs; found {len(manifest)} chips.")
     manifest.to_csv(output_dir / "manifest.csv", index=False)
     vectors = extract_dino([str(output_dir / f) for f in manifest.filename], local_model=local_model)
-    np.savez_compressed(output_dir / "embeddings.npz", tile_ids=manifest.tile_id.to_numpy(dtype=str),
-                        embeddings=vectors, model_id=MODEL_ID, revision=MODEL_REVISION,
-                        preprocessing=PREPROCESS_ID)
+    cache_frame = manifest.assign(path=[str(output_dir / name) for name in manifest.filename])
+    save_embedding_cache(cache_frame, output_dir / "embeddings.npz", vectors)
     metadata = dict(item_url=item_url, item_id=CYPRUS_ITEM, acquisition=item["properties"]["datetime"],
                     attribution="Contains modified Copernicus Sentinel data (2024), accessed through Microsoft Planetary Computer.",
                     interpretation="Landscape-context stress test, not archaeological detection ground truth.")

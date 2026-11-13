@@ -27,6 +27,18 @@ frozen image features and Cyprus assets; the Enki images download on first use.
 No GPU or model download is needed. `ARCHAEOLOGY_SKIP_INSTALL=1` disables installation
 entirely for offline validation.
 
+Both feature pipelines now start from the same 64 × 64 RGB input, including Cyprus.
+This reduces the original size/detail confound (all Enki tells are 350 × 350, while
+most negatives are 64 × 64). The notebooks expose a size-only reference and validation
+results within original-size groups. Matching pixel dimensions does not match ground
+resolution or remove all acquisition differences. Cyprus has no image-visibility labels;
+its scores remain an uncalibrated transfer exercise. Both models' score distributions
+and the data audit are included in the exported evidence.
+
+After updating an older notebook, restart its kernel and run from setup. Both DINO
+caches were regenerated; stale preprocessing versions or changed image pixels are
+rejected. Local `*-Copy*.ipynb` files are personal snapshots and are not regenerated.
+
 ## Development
 
 Run the quick checks from the workshop directory:
@@ -53,3 +65,19 @@ notes are in the facilitator guide.
 Preparing new DINOv2 features requires `uv run --extra model ...`; the
 `runtime.make_cyprus_bundle` acquisition utility requires `uv run --extra refresh ...`.
 These are preparation tasks with additional network/model downloads, outside the main lesson.
+
+To rebuild the frozen features reproducibly from the committed bundle and the original
+600-image sample, run from this directory:
+
+```sh
+uv run --locked --extra model --extra dev python prepare_workshop.py
+uv run --locked --extra dev python build_notebooks.py --assets-dir .work/prepared-assets
+uv run --locked --extra dev python check_notebooks.py --execute
+```
+
+Preparation downloads the pinned DINOv2-small weights once and rebuilds both regions
+in one pass. It reuses the verified local sample ZIP, downloading the indexed ranges
+only if needed. `--archive PATH` selects another copy of that sample;
+`--local-model PATH` permits an offline copy of the exact pinned weights.
+No private ZIP index or new satellite acquisition is needed. The notebook builder
+embeds the updated features, original Cyprus chips and current helper source.

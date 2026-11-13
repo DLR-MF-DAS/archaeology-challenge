@@ -30,25 +30,25 @@ or use that time for support; completing every lab is not the four-hour task.
 ## Completion-time estimate
 
 This is a planning estimate, not a timed learner study. Count the participant copy,
-excluding optional labs, credits and the folded setup source. It has about **3,713
+excluding optional labs, credits and the folded setup source. It has about **4,230
 words of core explanation**. At an assumed 150 technical words per minute, reading
-takes about **25 minutes**. The active-work allowance below covers running and
+takes about **28 minutes**. The active-work allowance below covers running and
 understanding code, completing tasks and discussion; it excludes that reading allowance.
 
 | Core block | Prose words | Reading minutes | Active-work minutes |
 |---|---:|---:|---:|
-| Orientation and setup | 467 | 3.1 | 18 |
-| 1. Images and split | 339 | 2.3 | 16 |
-| 2. Shortlist metrics | 320 | 2.1 | 14 |
-| 3. Model comparison | 1299 | 8.7 | 40 |
-| 4. Mistake inspection | 287 | 1.9 | 17 |
-| 5. Cyprus comparison | 510 | 3.4 | 17 |
-| 6. Report, export and debrief | 491 | 3.3 | 35 |
-| Total | 3713 | 24.8 | 157 |
+| Orientation and setup | 454 | 3.0 | 18 |
+| 1. Images and split | 451 | 3.0 | 16 |
+| 2. Shortlist metrics | 329 | 2.2 | 14 |
+| 3. Model comparison | 1481 | 9.9 | 40 |
+| 4. Mistake inspection | 292 | 1.9 | 17 |
+| 5. Cyprus comparison | 681 | 4.5 | 17 |
+| 6. Report, export and debrief | 542 | 3.6 | 35 |
+| Total | 4230 | 28.2 | 157 |
 
-Calculation: **24.8 + 157 + 10-minute break + 15 minutes for support
-= 207 minutes**, approximately **3 hours 25–30 minutes** for the core path.
-One optional lab adds 25–35 minutes, giving roughly **3 hours 50 minutes to 4 hours**.
+Calculation: **28.2 + 157 + 10-minute break + 15 minutes for support
+= 210 minutes**, approximately **3½ hours** for the core path.
+One optional lab adds 25–35 minutes, giving roughly **4 hours**.
 All three labs add 75–100 minutes and belong in a longer session or follow-up.
 
 Assumptions: a working Python environment, the supplied cached features, basic Python
@@ -99,7 +99,12 @@ pair to choose one image with each label, record both tile IDs, and describe a v
 difference before suggesting an explanation. Participants are not being asked to authenticate
 archaeological sites from these thumbnails. A possible mound shape is a candidate cue related
 to the task; a systematic difference in sharpness could let a model predict labels from image
-quality instead. Present that sharpness example as a hypothesis, not an established result.
+quality instead. The size audit now establishes a source acquisition confound: all
+300 retained tells are 350 × 350, whereas 249 negatives are 64 × 64 and 44 are 350 × 350.
+Both models now receive a common 64 × 64 RGB input; DINO enlarges that input to 224 × 224.
+This reduces the difference in available pixel detail, without matching ground sampling
+distance or removing all acquisition cues. Whether a classifier uses residual sharpness
+differences remains a hypothesis.
 Colour and land cover are not automatically shortcuts. Accept uncertainty and ask what further
 image comparisons or archaeological evidence would distinguish the explanations. This small
 preview cannot establish a pattern across the dataset or show which features a model uses.
@@ -205,6 +210,16 @@ return to the results: feature count or prior training alone does not decide the
 A simple baseline can capture useful cues or source-specific rendering differences.
 Proceed to section 4 to inspect actual mistakes; keep test results for the final reveal.
 
+**Resolution audit:** a metadata-only reference learns the positive fraction for each
+original width/height on training rows, then predicts validation labels. It achieves
+92.4% accuracy on the default split without seeing pixels. It does not compete for
+model selection. The following table measures each image model within each native
+size after common preprocessing. Native 350 × 350 validation images include 60 tells
+and nine negatives: compare AP with the positive fraction (about 0.870), not with zero.
+The 50 native 64 × 64 validation images are all negatives, so their AP is undefined.
+The small same-size subset tests one confound; it does not establish geographic
+generalisation or prove that the common resizing removed every source cue.
+
 ### 4. Inspect mistakes and the review budget
 
 **Clarify the decision:** source negatives inside the shortlist are false alarms;
@@ -213,26 +228,26 @@ not a score threshold of 0.5. A high-scoring positive at rank 51 is outside a 50
 shortlist. Neither category independently verifies archaeological presence or absence.
 
 The cell prints complete group counts and shows at most four examples per group,
-highest score first. The default DINOv2 result has no false alarms in its first 50
-images and ten missed positives. An empty false-alarm gallery is expected, not a
-plotting failure. Direct learners to the missed positives in that case.
+highest score first. Use the counts from the corrected run. If the false-alarm
+gallery is empty, that is a reported outcome, not a plotting failure; direct learners
+to the missed positives in that case.
 
 **Image reading:** ask for a tile ID, rank and visible observation, then distinguish
 that observation from a hypothesis about the model. Accept uncertainty. A rounded
 boundary or vegetation is observable; saying the classifier used it requires further
 evidence. Ask which comparison with other images would test the proposed explanation.
-The default recommendation's tile, `8bf27fc6264ea16a`, is a missed positive at rank 52.
+The default recommendation uses the displayed `CY5_site` image from section 5,
+so it does not depend on a particular model placing an Enki tile in its mistake gallery.
 
 **Exercise (about five minutes):** before running the budget cell, ask whether ten
 extra reviews necessarily recover ten positives. Participants change just
 `inspection_budget = 50` to `60`, then inspect the added-image table and the newly
 included source-negative images. Which original missed example was recovered?
 
-For the default run, ranks 51–60 add seven positives and three source negatives,
-leaving three positives outside. The model's order is unchanged; the budget decides
-how far down it we inspect. The harder extension reaches every positive at rank 64:
-14 extra reviews in total, including four source negatives. If learners changed the
-training settings or selected model, use their actual ranking instead of these numbers.
+Read the new positives, negatives and remaining misses from the current output.
+The model's order is unchanged; the budget decides how far down it we inspect.
+For the harder extension, locate the last positive's rank in the current ranking;
+that is the minimum budget that recovers all positives on this validation sample.
 The instructor copy runs the 60-review example. The original comparison and export
 retain `REVIEW_BUDGET = 50`.
 
@@ -249,6 +264,8 @@ retain `REVIEW_BUDGET = 50`.
 Begin with the changed data. The fitted Enki pipeline and training scaler are reused;
 there is no Cyprus classifier fit. The twelve chips are 1 km squares at 10 m per pixel
 from 5 August 2024, paired into six catalogued and six nearby unlabelled locations.
+Their common 64 × 64 model inputs span about 15.6 m per input pixel. Matching array
+size is not matching Enki's physical scale. The galleries display original chips.
 `paired_site` joins the two images of a pair; `tile_id` identifies one image.
 The table ranks all twelve images; the first gallery previews four.
 
@@ -265,17 +282,24 @@ right, with ranks and scores for reference. Ask learners for a two- or three-sen
 comparison that names the images, records an observation and explains the missing
 evidence needed to judge a detection error. They can edit the supplied Markdown notes cell.
 
-For the default DINOv2 run, `CY5_background` scores 0.232614 and `CY5_site` 0.004146.
-The direction reverses for `CY479`: its catalogued tile scores 0.214828 and its unlabelled
-neighbour 0.014940. The `CY5` images show larger bright angular patches in the catalogued
+Read both models' current score distributions against Enki validation before the pair
+exercise. An overall shift towards zero or one, or disagreement between the models,
+exposes a transfer concern; it does not measure Cyprus accuracy or establish causality.
+Read the current pair table to compare `CY5` and `CY479`. The `CY5` images show larger bright angular patches in the catalogued
 tile and winding pale lines through darker terrain in the other. These observations
 do not show which cues the classifier used. Neither ordering is evidence of a false
 positive or false negative without suitable independent image labels.
 
-Use current outputs if settings change. The colour/texture model can score both tiles
-very close to 1; displayed scores can round to the same value. High scores do not
+Use current outputs if settings change. Either model can give extreme scores;
+displayed scores can round to the same value. High scores do not
 establish presence, and close scores should not invite a strong interpretation of rank.
 Accept uncertainty about what is visible in these small images.
+
+Do not tune preprocessing, thresholds or model selection to make these twelve
+unlabelled images look convincing. The preprocessing correction is fixed by the
+source-data audit. Local detection work needs a defined visible target, suitable
+imagery, expert annotations and a geographic holdout; catalogue membership cannot
+supply those labels automatically.
 
 The main task stops at identifying the missing evidence. Lab C combines the local
 evaluation design and decision-rule prompts, avoiding two separate proposals.
@@ -300,7 +324,8 @@ If learners chose lab C, use its proposed next study in the recommendation;
 otherwise one concrete next step is sufficient. Do not require a second study plan.
 
 **Export:** the cell predicts test scores without using test labels and packages the
-ranked CSV, settings, validation results, Cyprus scores and recommendation. It records
+ranked CSV, settings, validation results, Cyprus scores, recommendation, size/duplicate
+audit, within-size validation diagnostics and transfer score distributions. It records
 the current run; it does not prevent later edits or serialize the fitted estimator.
 Rerunning replaces the ZIP. An empty recommendation produces a draft message, so have
 learners finish their prose, rerun export, download the ZIP and save their notebook.
